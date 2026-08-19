@@ -89,6 +89,13 @@
   .cal .d.today { border-color:var(--mint); border-width:2px; }
   .cal .d i { display:block; font-style:normal; font-size:8.5px; margin-top:3px; font-weight:700; }
   .cal .d i.m { color:var(--mint-dark); } .cal .d i.l { color:#B07A2A; }
+  /* สลิปแบบฟอร์มจริงบนหน้าจอ */
+  .slipdoc { font-size:11.5px; min-width:440px; }
+  .slipdoc table { border-collapse:collapse; width:100%; margin-top:8px; }
+  .slipdoc th, .slipdoc td { border:1px solid #8A9793; padding:6px 7px; text-align:left; }
+  .slipdoc th { background:#EFF4F2; font-size:10.5px; }
+  .slipdoc .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .slipdoc .lbl { font-size:9.5px; color:var(--dim); display:block; }
   /* สลิป */
   .slip-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
   .slip-row:last-child { border-bottom:0; }
@@ -207,13 +214,7 @@
   <div class="body flat">
     <button style="width:100%; background:var(--mint-soft); color:var(--mint-dark); border-color:var(--mint-soft); font-weight:700;"
       onclick="printSlipFormal()">ดาวน์โหลดสลิป (บันทึกเป็น PDF)</button>
-    <h2>ข้อมูลส่วนตัว</h2>
-    <div class="card kv" id="sd-personal"></div>
-    <h2>รายได้ / รายการหัก</h2>
-    <div class="card kv" id="sd-lines"></div>
-    <div class="card" style="display:flex; justify-content:space-between; align-items:center; background:var(--mint-soft); border-color:var(--mint);">
-      <b>เงินได้สุทธิ</b><b style="font-size:20px; color:var(--mint-dark);" id="sd-net">—</b>
-    </div>
+    <div class="card" style="overflow-x:auto; padding:13px;" id="sd-formal"></div>
   </div>
 </div>
 
@@ -440,45 +441,50 @@ async function loadSlips() {
     || '<span class="dim">ยังไม่มีสลิป — รอหลังบ้านปิดงวดเงินเดือน</span>';
 }
 function thMonth(m) { const [y, mm] = m.split('-'); return new Date(+y, +mm - 1, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); }
-function printSlipFormal() {
-  const p = slips[window._curSlip]; if (!p) return window.print();
+function slipDocHTML(p) {
   const upto = slips.filter(x => x.month <= p.month);
   const cumInc = upto.reduce((n, x) => n + x.base + x.ot, 0);
   const cumTax = upto.reduce((n, x) => n + x.tax, 0);
   const cumSso = upto.reduce((n, x) => n + x.sso, 0);
   const payDate = (meInfo.payday || 28) + ' ' + thMonth(p.month);
-  const w = window.open('', '_blank');
-  if (!w) return window.print(); // popup ถูกบล็อก → พิมพ์หน้านี้แทน
-  w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบจ่ายเงินเดือน (PAY SLIP)</title><style>
-    body { font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; color:#1D2B2A; padding:28px; }
-    .co { font-weight:800; font-size:16px; display:flex; justify-content:space-between; align-items:center; }
-    .st { border-collapse:collapse; width:100%; font-size:12.5px; margin-top:10px; }
-    .st th, .st td { border:1px solid #555; padding:7px 9px; }
-    .st th { background:#F0F0EC; font-size:11.5px; text-align:left; }
-    .num { text-align:right; font-variant-numeric:tabular-nums; }
-    .lbl { font-size:10.5px; color:#666; display:block; }
-  </style></head><body>
-  <div class="co"><span><img src="/logo-wide.png" style="height:22px; vertical-align:middle;"/> DEMO HR</span><span>ใบจ่ายเงินเดือน (PAY SLIP)</span></div>
-  <table class="st"><tr>
+  return `
+  <table><tr>
     <td><span class="lbl">รหัส</span><b>${meInfo.employee_no || ''}</b></td>
     <td><span class="lbl">ชื่อ-สกุล</span><b>${meInfo.name || ''}</b></td>
     <td><span class="lbl">แผนก</span><b>${meInfo.dept || '-'}</b></td>
     <td><span class="lbl">ตำแหน่ง</span><b>${meInfo.role || '-'}</b></td>
   </tr></table>
-  <table class="st">
-    <tr><th style="width:22%;">รายได้ Earnings</th><th style="width:14%;" class="num">จำนวนเงิน Amount</th>
-        <th style="width:22%;">รายการหัก Deductions</th><th style="width:14%;" class="num">จำนวนเงิน Amount</th>
-        <th style="width:20%; text-align:center;">วันจ่าย Payroll Date</th></tr>
+  <table>
+    <tr><th style="width:22%;">รายได้ Earnings</th><th style="width:15%;" class="num">จำนวนเงิน Amount</th>
+        <th style="width:22%;">รายการหัก Deductions</th><th style="width:15%;" class="num">จำนวนเงิน Amount</th>
+        <th style="width:18%; text-align:center;">วันจ่าย Payroll Date</th></tr>
     <tr><td>เงินเดือน</td><td class="num">${money(p.base)}</td><td>เงินประกันสังคม</td><td class="num">${money(p.sso)}</td>
         <td rowspan="2" style="text-align:center; vertical-align:middle;">${payDate}</td></tr>
     <tr><td>ค่าล่วงเวลา (OT)</td><td class="num">${money(p.ot)}</td><td>ภาษีเงินได้</td><td class="num">${money(p.tax)}</td></tr>
     <tr><td>&nbsp;</td><td></td><td></td><td></td>
-        <td rowspan="2" style="text-align:center; vertical-align:middle;"><span class="lbl">เงินได้สุทธิ Net To Pay</span><b style="font-size:17px;">${money(p.net)}</b></td></tr>
+        <td rowspan="2" style="text-align:center; vertical-align:middle;"><span class="lbl">เงินได้สุทธิ Net To Pay</span><b style="font-size:15px;">${money(p.net)}</b></td></tr>
     <tr><th>รวมเงินได้ Total Earnings</th><th class="num">${money(p.base + p.ot)}</th>
         <th>รวมรายการหัก Total Deduction</th><th class="num">${money(p.sso + p.tax)}</th></tr>
   </table>
-  <table class="st"><tr><th class="num">เงินได้สะสมต่อปี</th><th class="num">ภาษีสะสมต่อปี</th><th class="num">เงินประกันสังคมสะสม</th></tr>
-  <tr><td class="num">${money(cumInc)}</td><td class="num">${money(cumTax)}</td><td class="num">${money(cumSso)}</td></tr></table>
+  <table><tr><th class="num">เงินได้สะสมต่อปี</th><th class="num">ภาษีสะสมต่อปี</th><th class="num">เงินประกันสังคมสะสม</th></tr>
+  <tr><td class="num">${money(cumInc)}</td><td class="num">${money(cumTax)}</td><td class="num">${money(cumSso)}</td></tr></table>`;
+}
+function printSlipFormal() {
+  const p = slips[window._curSlip]; if (!p) return window.print();
+  const w = window.open('', '_blank');
+  if (!w) return window.print(); // popup ถูกบล็อก → พิมพ์หน้าปัจจุบัน (แสดงฟอร์มเดียวกันอยู่แล้ว)
+  w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบจ่ายเงินเดือน (PAY SLIP)</title><style>
+    body { font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; color:#1D2B2A; padding:28px; }
+    table { border-collapse:collapse; width:100%; margin-top:8px; font-size:12.5px; }
+    th, td { border:1px solid #555; padding:7px 9px; text-align:left; }
+    th { background:#F0F0EC; font-size:11.5px; }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .lbl { font-size:10.5px; color:#666; display:block; }
+  </style></head><body>
+  <div style="display:flex; justify-content:space-between; align-items:center; font-weight:800;">
+    <span><img src="/logo-wide.png" style="height:22px; vertical-align:middle;"/> DEMO HR</span>
+    <span>ใบจ่ายเงินเดือน (PAY SLIP)</span></div>
+  ${slipDocHTML(p)}
   <p style="font-size:11px; color:#888; margin-top:10px;">เอกสารลับ — สลิปนี้ออกโดยระบบอัตโนมัติ · พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}</p>
   <script>window.onload = () => setTimeout(() => window.print(), 250);<\/script></body></html>`);
   w.document.close();
@@ -487,28 +493,11 @@ function openSlip(i) {
   window._curSlip = i;
   const p = slips[i];
   $('#sd-title').textContent = 'สลิป ' + thMonth(p.month);
-  const [py, pm] = p.month.split('-').map(Number);
-  const lastDay = new Date(py, pm, 0).getDate();
-  let workDays = 0;
-  for (let d = 1; d <= lastDay; d++) if (new Date(py, pm - 1, d).getDay() !== 0) workDays++;
-  $('#sd-personal').innerHTML = `
-    <div><span>รหัสพนักงาน</span><b>${meInfo.employee_no || ''}</b></div>
-    <div><span>ชื่อ</span><b>${meInfo.name || ''}</b></div>
-    <div><span>แผนก</span><b>${meInfo.dept || '-'}</b></div>
-    <div><span>ตำแหน่ง</span><b>${meInfo.role || ''}</b></div>
-    <div><span>สาขา</span><b>${meInfo.branch || ''}</b></div>
-    <div><span>วันเริ่มงาน</span><b>${meInfo.hire_date ? new Date(meInfo.hire_date).toLocaleDateString('th-TH') : '-'}</b></div>
-    <div><span>ประเภทการจ้าง</span><b>รายเดือน / Monthly</b></div>
-    <div><span>เงินเดือนตามสัญญา</span><b>${money(meInfo.pay || p.base)} ฿</b></div>
-    <div><span>งวดจ่าย</span><b>1 – ${lastDay} ${thMonth(p.month)}</b></div>
-    <div><span>วันทำงานในงวด</span><b>${workDays} วัน</b></div>
-    <div><span>วันที่จ่าย</span><b>${meInfo.payday || 28} ${thMonth(p.month)}</b></div>`;
-  $('#sd-lines').innerHTML = `
-    <div><span>เงินเดือนพื้นฐาน</span><b>${money(p.base)} ฿</b></div>
-    <div><span>ค่าล่วงเวลา (OT)</span><b>${money(p.ot)} ฿</b></div>
-    <div><span>หัก ประกันสังคม</span><b style="color:var(--warn)">-${money(p.sso)} ฿</b></div>
-    <div><span>หัก ภาษี ณ ที่จ่าย</span><b style="color:var(--warn)">-${money(p.tax)} ฿</b></div>`;
-  $('#sd-net').textContent = money(p.net) + ' ฿';
+  $('#sd-formal').innerHTML = `<div class="slipdoc">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <img src="/logo-wide.png" alt="JIAN CHA" style="height:15px;"/>
+      <b style="font-size:12px;">ใบจ่ายเงินเดือน (PAY SLIP)</b></div>
+    ${slipDocHTML(p)}</div>`;
   document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
   $('#p-slipdetail').classList.add('on');
 }

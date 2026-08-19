@@ -449,8 +449,13 @@ function calcMonth(db, month) {
   return db.employees.map(e => {
     const ot = db.ot.filter(o => o.emp_id === e.id && o.date.startsWith(month) && o.status === 'approved')
       .reduce((t, o) => t + o.hours, 0) * Math.round(e.pay / 30 / 8 * 1.5);
-    const sso = Math.min(Math.round(e.pay * db.company.sso_rate / 100), db.company.sso_cap);
-    const tax = e.pay > 26000 ? Math.round((e.pay - 26000) * 0.05) : 0;
+    // เกณฑ์หักเงิน ตั้งค่าได้จากหลังบ้าน (Preferences)
+    const c = db.company;
+    const ssoRate = +c.sso_rate || 0, ssoCap = +c.sso_cap || 0;
+    const taxTh = c.tax_threshold != null ? +c.tax_threshold : 26000;
+    const taxRate = c.tax_rate != null ? +c.tax_rate : 5;
+    const sso = Math.min(Math.round(e.pay * ssoRate / 100), ssoCap);
+    const tax = e.pay > taxTh ? Math.round((e.pay - taxTh) * taxRate / 100) : 0;
     return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot, sso, tax, net: e.pay + ot - sso - tax };
   });
 }
@@ -486,7 +491,26 @@ app.get('/api/admin/report', (req, res) => { if (!admin(req, res)) return;
     return { name: e.name, branch: db.branches.find(b => b.id === e.branch_id)?.name, sched, attended: cks.length, late, leave, absent: Math.max(0, sched - cks.length - leave) };
   });
   res.json({ month, rows }); });
-app.get('/api/admin/settings', (req, res) => { if (!admin(req, res)) return; const db = load(); res.json({ company: db.company, branches: db.branches }); });
+app.get('/api/admin/settings', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const c = { tax_threshold: 26000, tax_rate: 5, ...db.company };
+  res.json({ company: c, branches: db.branches }); });
+// บันทึกเกณฑ์หักเงิน ประกันสังคม / ภาษี + วันจ่าย
+app.put('/api/admin/settings', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  const b = req.body || {};
+  const num = (v, min, max) => { const n = +v; return Number.isFinite(n) && n >= min && n <= max ? n : null; };
+  const fields = {
+    payday: num(b.payday, 1, 31),
+    sso_rate: num(b.sso_rate, 0, 30),
+    sso_cap: num(b.sso_cap, 0, 100000),
+    tax_threshold: num(b.tax_threshold, 0, 10000000),
+    tax_rate: num(b.tax_rate, 0, 60),
+  };
+  for (const [k, v] of Object.entries(fields)) {
+    if (k in b && v === null) return res.status(400).json({ error: 'ค่า ' + k + ' ไม่ถูกต้อง' });
+    if (v !== null) db.company[k] = v;
+  }
+  save(db); res.json({ ok: true, company: db.company }); });
 app.get('/api/admin/departments', (req, res) => { if (!admin(req, res)) return; const db = load();
   const map = {};
   db.employees.forEach(e => { const k = e.dept || 'ไม่ระบุแผนก'; (map[k] = map[k] || []).push(e.name); });

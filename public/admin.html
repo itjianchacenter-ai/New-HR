@@ -415,6 +415,18 @@
     <h1>ตั้งค่าวันลา</h1><div class="sub">โควต้าวันลา (แก้แล้วมีผลทุกคนทันที) และค่าบริษัท</div>
     <div class="card"><h2>ประเภท & โควต้าวันลา</h2>
       <table><thead><tr><th>ประเภท</th><th class="num">วัน/ปี</th><th>จ่ายค่าจ้าง</th><th></th></tr></thead><tbody id="lt-rows"></tbody></table></div>
+    <div class="card" style="max-width:720px;"><h2>เกณฑ์หักเงิน ประกันสังคม / ภาษี</h2>
+      <div class="dim" style="font-size:12px; margin-bottom:12px;">มีผลกับงวดที่ยังไม่ปิดทันที · งวดที่ปิดไปแล้วไม่เปลี่ยนย้อนหลัง</div>
+      <div class="mgrid">
+        <div class="mf"><label>อัตราประกันสังคม (% ของเงินเดือน)</label><input id="cr-sso_rate" type="number" step="0.5" min="0"/></div>
+        <div class="mf"><label>เพดานหักประกันสังคม (บาท/เดือน)</label><input id="cr-sso_cap" type="number" min="0"/></div>
+        <div class="mf"><label>ฐานเงินเดือนเริ่มคำนวณภาษี (บาท)</label><input id="cr-tax_threshold" type="number" min="0"/></div>
+        <div class="mf"><label>อัตราภาษี (% ของส่วนที่เกินฐาน)</label><input id="cr-tax_rate" type="number" step="0.5" min="0"/></div>
+        <div class="mf"><label>วันจ่ายเงินเดือน (วันที่ของเดือน)</label><input id="cr-payday" type="number" min="1" max="31"/></div>
+      </div>
+      <div id="cr-preview" class="dim" style="font-size:12.5px; margin-top:12px; background:var(--mint-soft); border-radius:10px; padding:10px 14px;"></div>
+      <div style="margin-top:14px; text-align:right;"><button class="yes" onclick="saveCriteria()">บันทึกเกณฑ์หักเงิน</button></div>
+    </div>
     <div class="card" id="pref-co"></div>
   </div>
 </div>
@@ -616,7 +628,8 @@ async function loadView(v, sub) {
     const html = `<h2>${st.company.name}</h2>
       <div class="kv" style="grid-template-columns:1fr;">
         <div><span>วันจ่ายเงินเดือน</span><b>ทุกวันที่ ${st.company.payday}</b></div>
-        <div><span>ประกันสังคม</span><b>${st.company.sso_rate}% (เพดาน ${st.company.sso_cap} บาท)</b></div>
+        <div><span>ประกันสังคม</span><b>${st.company.sso_rate}% (เพดาน ${money(st.company.sso_cap)} บาท)</b></div>
+        <div><span>ภาษีเงินได้</span><b>${st.company.tax_rate}% ของส่วนที่เกิน ${money(st.company.tax_threshold)} บาท</b></div>
         <div><span>จำนวนสาขา</span><b>${st.branches.length} สาขา</b></div>
       </div>`;
     if (v === 'company') $('#co-card').innerHTML = html; else $('#pref-co').innerHTML = html;
@@ -626,6 +639,14 @@ async function loadView(v, sub) {
         <td class="num"><input style="width:70px; text-align:right;" value="${t.days}" id="lt-${t.key}"/></td>
         <td>${t.paid ? '<span class="pill ok">จ่ายค่าจ้าง</span>' : '<span class="pill">ไม่จ่าย</span>'}</td>
         <td><button class="yes" onclick="saveLt('${t.key}')">บันทึก</button></td></tr>`).join('');
+      // เกณฑ์หักเงิน
+      $('#cr-sso_rate').value = st.company.sso_rate;
+      $('#cr-sso_cap').value = st.company.sso_cap;
+      $('#cr-tax_threshold').value = st.company.tax_threshold;
+      $('#cr-tax_rate').value = st.company.tax_rate;
+      $('#cr-payday').value = st.company.payday;
+      criteriaPreview();
+      ['cr-sso_rate', 'cr-sso_cap', 'cr-tax_threshold', 'cr-tax_rate'].forEach(id => $('#' + id).oninput = criteriaPreview);
     }
   }
   if (v === 'branches') {
@@ -992,6 +1013,28 @@ async function approve(kind, id, status) {
   const comment = prompt(status === 'approved' ? 'ความคิดเห็นถึงพนักงาน (ไม่บังคับ)' : 'เหตุผลที่ไม่อนุมัติ (แนะนำให้ระบุ)', '') ?? '';
   await fetch('/api/admin/approve', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, id, status, comment }) });
   renderApprove();
+}
+// ── เกณฑ์หักเงิน ประกันสังคม / ภาษี ──
+function criteriaPreview() {
+  const rate = +$('#cr-sso_rate').value || 0, cap = +$('#cr-sso_cap').value || 0;
+  const th = +$('#cr-tax_threshold').value || 0, tr = +$('#cr-tax_rate').value || 0;
+  const ex = 30000; // เงินเดือนตัวอย่าง
+  const sso = Math.min(Math.round(ex * rate / 100), cap);
+  const tax = ex > th ? Math.round((ex - th) * tr / 100) : 0;
+  $('#cr-preview').innerHTML = `<b>ตัวอย่าง:</b> เงินเดือน ${money(ex)} บาท → หักประกันสังคม ${money(sso)}
+    (${rate}% เพดาน ${money(cap)}) · หักภาษี ${money(tax)} (${tr}% ของส่วนที่เกิน ${money(th)}) →
+    <b>สุทธิ ${money(ex - sso - tax)} บาท</b>`;
+}
+async function saveCriteria() {
+  const body = {
+    sso_rate: $('#cr-sso_rate').value, sso_cap: $('#cr-sso_cap').value,
+    tax_threshold: $('#cr-tax_threshold').value, tax_rate: $('#cr-tax_rate').value,
+    payday: $('#cr-payday').value,
+  };
+  const r = await fetch('/api/admin/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) return alert((await r.json()).error || 'บันทึกไม่สำเร็จ');
+  alert('บันทึกเกณฑ์หักเงินแล้ว — งวดที่ยังไม่ปิดจะคำนวณตามเกณฑ์ใหม่ทันที');
+  loadView('prefs');
 }
 async function saveLt(key) {
   await fetch('/api/admin/leave-types', { method: 'PUT', headers: { 'content-type': 'application/json' },
