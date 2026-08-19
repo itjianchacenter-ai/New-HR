@@ -1,0 +1,516 @@
+// ═══════════════════════════════════════════════════════════════
+// JIANCHA DEMO HR — เดโม่ระบบ HR ฟูลฟังก์ชัน (แยกจาก production เดิม 100%)
+// โครงเมนูอิง ByteHR: Dashboard · พนักงาน · กะ · ลงเวลา · คำขอ ·
+// วันลา · เงินเดือน · ประกาศ · QR สาขา · รายงาน · ตั้งค่า
+// ═══════════════════════════════════════════════════════════════
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3010;
+const DATA = path.join(__dirname, 'data.json');
+
+app.use(express.json());
+app.use(cookieParser('jc-byte-demo'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+const iso = d => new Date(d).toISOString().slice(0, 10);
+const now = () => new Date().toISOString();
+
+// ── SEED: ข้อมูลตัวอย่างครบทุกเมนู ──
+function seed() {
+  const t = new Date();
+  const day = n => iso(new Date(t.getTime() - n * 86400000));
+  const month = t.toISOString().slice(0, 7);
+  const lastMonth = new Date(t.getFullYear(), t.getMonth() - 1, 15).toISOString().slice(0, 7);
+  const prevMonth = new Date(t.getFullYear(), t.getMonth() - 2, 15).toISOString().slice(0, 7);
+
+  const E = (id, name, no, role, dept, branch, pin, birth, hire, phone, pay, bank, acct) => ({
+    id, name, employee_no: no, role, dept, branch_id: branch, pin, birth_date: birth, hire_date: hire, phone,
+    pay, bank, bank_account: acct, status: 'active',
+    leave: { sick: { total: 30, used: 3 }, personal: { total: 3, used: 1 }, vacation: { total: 6, used: 2 },
+      maternity: { total: 98, used: 0 }, ordination: { total: 15, used: 0 } },
+  });
+  const employees = [
+    E('e1', 'สมชาย ใจดี', '900001', 'บาริสต้า', 'Operations', 'b2', '111111', '1998-08-21', '2024-03-01', '0811111111', 15000, 'KBANK', '045-1-11111-1'),
+    E('e2', 'น้องแพรว วรรณดี', '900002', 'หัวหน้าสาขา', 'Operations', 'b2', '222222', '1996-02-14', '2023-06-15', '0822222222', 22000, 'SCB', '234-2-22222-2'),
+    E('e3', 'กัญภัคภัชสร ภาคสุวรรณ', '900003', 'Web Application & PMO Supervisor', 'Information Technology', 'b1', '333333', '1997-05-22', '2025-10-27', '0634515323', 45000, 'KBANK', '045-3-33333-3'),
+    E('e4', 'ต่อพงศ์ ศิริลักษณ์', '900004', 'IT Support', 'Information Technology', 'b1', '444444', '1995-08-30', '2025-01-10', '0844444444', 28000, 'BBL', '101-4-44444-4'),
+    E('e5', 'ทรรศนวรรณ นาคนุ', '900005', 'Head Of Human Resource', 'Human Resource', 'b1', '555555', '1993-11-02', '2025-10-27', '0974241915', 55000, 'KBANK', '045-5-55555-5'),
+    E('e6', 'มินตรา แสงทอง', '900006', 'บาริสต้า', 'Operations', 'b2', '666666', '2000-08-05', '2025-05-01', '0866666666', 15000, 'KTB', '678-6-66666-6'),
+  ];
+  const persona = { e1: ['ชาย', 'โสด'], e2: ['หญิง', 'โสด'], e3: ['หญิง', 'โสด'], e4: ['ชาย', 'สมรส'], e5: ['หญิง', 'สมรส'], e6: ['หญิง', 'โสด'] };
+  // ระดับตำแหน่ง: staff < supervisor < manager < director
+  const levels = { e1: 'staff', e2: 'manager', e3: 'manager', e4: 'staff', e5: 'director', e6: 'staff' };
+  employees.forEach(e => {
+    const [g, m] = persona[e.id] || ['-', '-'];
+    e.level = levels[e.id] || 'staff';
+    e.gender = g; e.marital = m; e.nationality = 'ไทย';
+    e.email = 'emp' + e.employee_no + '@jcbyte-demo.co.th';
+    e.tax_no = '0-' + e.employee_no.slice(0, 4) + '-56789-01-2';
+    e.sso_no = '11-' + e.employee_no + '-90';
+    e.address = e.branch_id === 'b1' ? 'เขตปทุมวัน กรุงเทพมหานคร' : 'อ.บางใหญ่ จ.นนทบุรี';
+  });
+
+  const shifts = [];
+  const SHIFT = { morning: ['09:00', '18:00'], late: ['12:00', '21:00'] };
+  for (let n = -7; n <= 7; n++) {
+    const date = iso(new Date(t.getTime() + n * 86400000));
+    const dow = new Date(date).getDay();
+    if (dow === 0) continue; // อาทิตย์หยุด
+    for (const e of employees) {
+      const s = (e.id === 'e6') ? 'late' : 'morning';
+      shifts.push({ id: `sh-${e.id}-${date}`, emp_id: e.id, date, name: s === 'morning' ? 'กะเช้า' : 'กะบ่าย', start: SHIFT[s][0], end: SHIFT[s][1] });
+    }
+  }
+
+  const checkins = [];
+  for (let n = 7; n >= 1; n--) {
+    const date = iso(new Date(t.getTime() - n * 86400000));
+    if (new Date(date).getDay() === 0) continue;
+    for (const e of employees) {
+      if (e.id === 'e1' && n === 3) continue; // สมชายขาด 1 วัน
+      const late = (e.id === 'e6' && n % 2) ? 22 : 0;
+      checkins.push({ id: `ck-${e.id}-${date}-i`, emp_id: e.id, type: 'in', method: n % 3 ? 'gps' : 'qr', note: '', at: `${date}T0${9 + (late ? 0 : 0)}:${String(late || 0).padStart(2, '0')}:00.000Z`, late_min: late });
+      checkins.push({ id: `ck-${e.id}-${date}-o`, emp_id: e.id, type: 'out', method: 'gps', note: '', at: `${date}T18:0${n % 6}:00.000Z`, late_min: 0 });
+    }
+  }
+
+  const payslips = [];
+  for (const m of [prevMonth, lastMonth]) {
+    for (const e of employees) {
+      const sso = Math.min(Math.round(e.pay * 0.05), 750);
+      const ot = e.id === 'e1' ? 800 : 0;
+      payslips.push({ id: `ps-${e.id}-${m}`, emp_id: e.id, month: m, base: e.pay, ot, sso, tax: e.pay > 26000 ? Math.round((e.pay - 26000) * 0.05) : 0, net: e.pay + ot - sso - (e.pay > 26000 ? Math.round((e.pay - 26000) * 0.05) : 0) });
+    }
+  }
+
+  return {
+    company: { name: 'JIANCHA DEMO HR Co., Ltd.', payday: 28, sso_rate: 5, sso_cap: 750 },
+    branches: [
+      { id: 'b1', name: 'Head Office สำนักงานใหญ่', lat: 13.7563, lng: 100.5018, radius: 120, qr_token: crypto.randomBytes(8).toString('hex') },
+      { id: 'b2', name: 'Central Westgate', lat: 13.8770, lng: 100.4110, radius: 90, qr_token: crypto.randomBytes(8).toString('hex') },
+    ],
+    leave_types: [
+      { key: 'sick', name: 'ลาป่วย', days: 30, paid: true },
+      { key: 'personal', name: 'ลากิจ', days: 3, paid: true },
+      { key: 'vacation', name: 'ลาพักร้อน', days: 6, paid: true },
+      { key: 'maternity', name: 'ลาคลอด', days: 98, paid: true },
+      { key: 'ordination', name: 'ลาอุปสมบท', days: 15, paid: false },
+    ],
+    employees, shifts, checkins, payslips,
+    leaves: [
+      { id: 'lv1', emp_id: 'e1', type: 'sick', from: day(3), to: day(3), days: 1, reason: 'ไข้หวัด มีใบรับรองแพทย์', status: 'pending', at: now() },
+      { id: 'lv2', emp_id: 'e6', type: 'vacation', from: day(-4), to: day(-3), days: 2, reason: 'กลับบ้านต่างจังหวัด', status: 'pending', at: now() },
+      { id: 'lv3', emp_id: 'e2', type: 'personal', from: day(10), to: day(10), days: 1, reason: 'ติดต่อราชการ', status: 'approved', at: now() },
+    ],
+    ot: [
+      { id: 'ot1', emp_id: 'e1', date: day(1), hours: 2, reason: 'ปิดยอดสิ้นวัน', status: 'pending', at: now() },
+      { id: 'ot2', emp_id: 'e6', date: day(2), hours: 3, reason: 'จัดของเข้าสาขา', status: 'approved', at: now() },
+    ],
+    claims: [
+      { id: 'cl1', emp_id: 'e4', title: 'ค่าเดินทางไปซ่อมเครื่องสาขา', amount: 350, status: 'pending', at: now() },
+    ],
+    announcements: [
+      { id: 'a1', title: 'ยินดีต้อนรับสู่ JIANCHA DEMO HR (เดโม่)', body: 'ระบบทดลองฟูลฟังก์ชัน แยกจากระบบจริง กดเล่นได้ทุกเมนู ข้อมูลเป็นตัวอย่างทั้งหมด', at: now() },
+      { id: 'a2', title: 'เงินเดือนออกวันที่ 28 นี้', body: 'สลิปจะเด้งเข้าแอปอัตโนมัติหลังปิดงวด', at: now() },
+    ],
+    recruitment: [
+      { id: 'rc1', name: 'ปวีณา สุขใจ', position: 'บาริสต้า', branch: 'Central Westgate', stage: 'สัมภาษณ์', applied: day(5), phone: '0891112222', expected: 15500 },
+      { id: 'rc2', name: 'ธนกร วัฒนชัย', position: 'IT Support', branch: 'Head Office', stage: 'คัดกรองใบสมัคร', applied: day(2), phone: '0893334444', expected: 26000 },
+      { id: 'rc3', name: 'อรทัย บุญมาก', position: 'หัวหน้าสาขา', branch: 'Central Westgate', stage: 'เสนอสัญญา', applied: day(12), phone: '0895556666', expected: 23000 },
+      { id: 'rc4', name: 'จิรายุ พงศ์พันธ์', position: 'บาริสต้า', branch: 'Central Westgate', stage: 'ไม่ผ่าน', applied: day(20), phone: '0897778888', expected: 16000 },
+    ],
+    admin_pw: 'byte@2026',
+  };
+}
+function load() { if (!fs.existsSync(DATA)) fs.writeFileSync(DATA, JSON.stringify(seed(), null, 2)); return JSON.parse(fs.readFileSync(DATA, 'utf8')); }
+function save(db) { fs.writeFileSync(DATA + '.tmp', JSON.stringify(db, null, 2)); fs.renameSync(DATA + '.tmp', DATA); }
+
+function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax' }); }
+function sess(req) { try { return JSON.parse(req.signedCookies.s || 'null'); } catch { return null; } }
+const dist = (a, b, c, d) => { const R = 6371e3, r = x => x * Math.PI / 180;
+  const p = r(c - a), q = r(d - b), s = Math.sin(p / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(q / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))); };
+const nm = (db, id) => db.employees.find(e => e.id === id)?.name || id;
+// ── ลำดับการอนุมัติ: manager อนุมัติตำแหน่งต่ำกว่าในแผนกตัวเอง · เหนือ manager อนุมัติ manager ได้ทุกแผนก ──
+const LEVEL_RANK = { staff: 1, supervisor: 2, manager: 3, director: 4 };
+const rank = e => LEVEL_RANK[e?.level] || 1;
+function canApprove(approver, target) {
+  if (!approver || !target || approver.id === target.id) return false;
+  const ra = rank(approver), rt = rank(target);
+  if (ra <= rt) return false;                    // อนุมัติได้เฉพาะตำแหน่งที่ต่ำกว่า
+  if (ra >= 4) return true;                      // director/head อนุมัติได้ทุกแผนก (รวม manager)
+  if (ra === 3) return approver.dept === target.dept; // manager ล็อกเฉพาะแผนกตัวเอง
+  return false;
+}
+function applyDecision(db, kind, it, status, byName, comment) {
+  it.status = status === 'approved' ? 'approved' : 'rejected';
+  it.approved_by = byName; it.comment = String(comment || ''); it.decided_at = now();
+  if (kind === 'leave' && it.status === 'approved') {
+    const e = db.employees.find(x => x.id === it.emp_id);
+    if (e?.leave[it.type]) e.leave[it.type].used += it.days;
+  }
+}
+
+// ═══ AUTH ═══
+app.post('/api/login', (req, res) => {
+  const { pin, password } = req.body || {};
+  const db = load();
+  if (password === db.admin_pw) { setSess(res, { role: 'admin' }); return res.json({ role: 'admin' }); }
+  const e = db.employees.find(x => x.pin === String(pin || password || ''));
+  if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+  setSess(res, { role: 'employee', id: e.id });
+  res.json({ role: 'employee', name: e.name });
+});
+app.post('/api/logout', (req, res) => { res.clearCookie('s'); res.json({ ok: true }); });
+
+// ═══ ฝั่งพนักงาน ═══
+function me(req, res) { const s = sess(req); if (!s || s.role !== 'employee') { res.status(401).json({ error: 'login' }); return null; }
+  const db = load(); return { db, emp: db.employees.find(e => e.id === s.id) }; }
+
+app.get('/api/me/dashboard', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  const month = iso(new Date()).slice(0, 7);
+  const today = iso(new Date());
+  const myOt = db.ot.filter(o => o.emp_id === emp.id && o.date.startsWith(month) && o.status === 'approved').reduce((t, o) => t + o.hours, 0);
+  const pending = ['leaves', 'ot', 'claims'].reduce((n, k) => n + db[k].filter(x => x.emp_id === emp.id && x.status === 'pending').length, 0);
+  const todayCk = db.checkins.filter(x => x.emp_id === emp.id && x.at.slice(0, 10) === today);
+  const m = new Date().getMonth();
+  res.json({
+    name: emp.name, role: emp.role, branch: db.branches.find(b => b.id === emp.branch_id)?.name,
+    employee_no: emp.employee_no, dept: emp.dept, hire_date: emp.hire_date, pay: emp.pay, payday: db.company.payday,
+    approver: rank(emp) >= 3, level: emp.level || 'staff',
+    leave: emp.leave, ot_hours_month: myOt, pending_requests: pending,
+    today: { in: todayCk.find(x => x.type === 'in')?.at || null, out: todayCk.filter(x => x.type === 'out').pop()?.at || null },
+    shift_today: db.shifts.find(s => s.emp_id === emp.id && s.date === today) || null,
+    announcements: db.announcements.slice(-3).reverse(),
+    birthdays: db.employees.filter(e => e.birth_date && new Date(e.birth_date).getMonth() === m).map(e => ({ name: e.name, day: new Date(e.birth_date).getDate() })),
+  });
+});
+app.post('/api/checkin', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  const { lat, lng, qr_token, type } = req.body || {};
+  const br = db.branches.find(b => b.id === emp.branch_id);
+  let method, note;
+  if (qr_token) {
+    const hit = db.branches.find(b => b.qr_token === qr_token);
+    if (!hit) return res.status(400).json({ error: 'QR ไม่ถูกต้อง' });
+    method = 'qr'; note = hit.name;
+  } else if (lat && lng) {
+    const d = dist(+lat, +lng, br.lat, br.lng);
+    if (d > br.radius) return res.status(400).json({ error: `อยู่นอกระยะ (${d} ม. / รัศมี ${br.radius} ม.) — สแกน QR ที่ร้านแทนได้` });
+    method = 'gps'; note = `${d} ม. จาก ${br.name}`;
+  } else return res.status(400).json({ error: 'ไม่มีพิกัดหรือ QR' });
+  const shift = db.shifts.find(s => s.emp_id === emp.id && s.date === iso(new Date()));
+  let late = 0;
+  if (type !== 'out' && shift && shift.start) {
+    const sched = new Date(`${shift.date}T${shift.start}:00`);
+    late = Math.max(0, Math.round((Date.now() - sched) / 60000));
+  }
+  const rec = { id: 'ck' + Date.now(), emp_id: emp.id, type: type === 'out' ? 'out' : 'in', method, note, at: now(), late_min: late };
+  db.checkins.push(rec); save(db);
+  res.json({ ok: true, rec });
+});
+app.get('/api/me/requests', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  res.json({
+    leaves: db.leaves.filter(l => l.emp_id === emp.id).reverse(),
+    ot: db.ot.filter(o => o.emp_id === emp.id).reverse(),
+    claims: db.claims.filter(x => x.emp_id === emp.id).reverse(),
+    types: db.leave_types,
+  });
+});
+app.post('/api/me/requests', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  const { kind } = req.body || {};
+  if (kind === 'leave') {
+    const { type, from, to, days, reason } = req.body;
+    if (!type || !from || !to) return res.status(400).json({ error: 'กรอกให้ครบ' });
+    db.leaves.push({ id: 'lv' + Date.now(), emp_id: emp.id, type, from, to, days: +days || 1, reason: String(reason || ''), status: 'pending', at: now() });
+  } else if (kind === 'ot') {
+    const { date, hours, reason } = req.body;
+    db.ot.push({ id: 'ot' + Date.now(), emp_id: emp.id, date, hours: +hours || 1, reason: String(reason || ''), status: 'pending', at: now() });
+  } else if (kind === 'claim') {
+    const { title, amount } = req.body;
+    db.claims.push({ id: 'cl' + Date.now(), emp_id: emp.id, title: String(title || ''), amount: +amount || 0, status: 'pending', at: now() });
+  } else return res.status(400).json({ error: 'kind?' });
+  save(db); res.json({ ok: true });
+});
+// คิวรออนุมัติของหัวหน้า (ตามกติกา canApprove)
+app.get('/api/me/approvals', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  if (rank(emp) < 3) return res.json({ approver: false, leaves: [], ot: [], claims: [] });
+  const mine = list => list.filter(x => x.status === 'pending' && canApprove(emp, db.employees.find(e => e.id === x.emp_id)));
+  res.json({
+    approver: true,
+    leaves: mine(db.leaves).map(l => ({ ...l, name: nm(db, l.emp_id), type_name: db.leave_types.find(t => t.key === l.type)?.name || l.type })),
+    ot: mine(db.ot).map(o => ({ ...o, name: nm(db, o.emp_id) })),
+    claims: mine(db.claims).map(x => ({ ...x, name: nm(db, x.emp_id) })),
+  });
+});
+app.post('/api/me/approve', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  const { kind, id, status, comment } = req.body || {};
+  const list = { leave: db.leaves, ot: db.ot, claim: db.claims }[kind];
+  const it = list?.find(x => x.id === id);
+  if (!it) return res.status(404).json({ error: 'ไม่พบรายการ' });
+  if (it.status !== 'pending') return res.status(409).json({ error: 'รายการนี้ตัดสินไปแล้ว' });
+  const target = db.employees.find(e => e.id === it.emp_id);
+  if (!canApprove(emp, target)) return res.status(403).json({ error: 'ไม่มีสิทธิ์อนุมัติรายการนี้ (คนละแผนกหรือตำแหน่งไม่ต่ำกว่า)' });
+  applyDecision(db, kind, it, status, emp.name, comment);
+  save(db); res.json({ ok: true });
+});
+app.get('/api/me/payslips', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  res.json(c.db.payslips.filter(p => p.emp_id === c.emp.id).reverse());
+});
+app.get('/api/me/calendar', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  res.json(c.db.shifts.filter(s => s.emp_id === c.emp.id && !s.off));
+});
+app.get('/api/me/timesheet', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  res.json(c.db.checkins.filter(x => x.emp_id === c.emp.id).slice(-30).reverse());
+});
+
+// ═══ หลังบ้าน ═══
+function admin(req, res) { const s = sess(req); if (!s || s.role !== 'admin') { res.status(403).json({ error: 'admin only' }); return null; } return s; }
+
+app.get('/api/admin/overview', (req, res) => {
+  if (!admin(req, res)) return;
+  const db = load();
+  const today = iso(new Date());
+  const ins = db.checkins.filter(x => x.at.slice(0, 10) === today && x.type === 'in');
+  res.json({
+    employees: db.employees.length, branches: db.branches.length,
+    today_in: ins.length, today_late: ins.filter(x => x.late_min > 15).length,
+    pending: db.leaves.filter(l => l.status === 'pending').length + db.ot.filter(o => o.status === 'pending').length + db.claims.filter(x => x.status === 'pending').length,
+    payroll_month: iso(new Date()).slice(0, 7),
+  });
+});
+app.get('/api/admin/employees', (req, res) => { if (!admin(req, res)) return; const db = load();
+  res.json(db.employees.map(e => ({ ...e, branch: db.branches.find(b => b.id === e.branch_id)?.name }))); });
+app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
+  const { name, employee_no, role, dept, branch_id, pin, pay, phone, email, hire_date } = req.body || {};
+  if (!name || !pin) return res.status(400).json({ error: 'กรอกชื่อและ PIN' });
+  const db = load();
+  const quota = {}; db.leave_types.forEach(t => quota[t.key] = { total: t.days, used: 0 });
+  const obj = { id: 'e' + Date.now(), name, employee_no: employee_no || '', role: role || '', dept: dept || '',
+    branch_id: branch_id || db.branches[0].id, pin: String(pin), pay: +pay || 15000, phone: phone || '',
+    email: email || '', birth_date: null, hire_date: hire_date || iso(new Date()), bank: '', bank_account: '', status: 'active',
+    leave: quota };
+  ['tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address', 'salutation', 'name_en', 'bank', 'bank_account', 'birth_date', 'photo', 'level']
+    .forEach(k => { if (req.body[k]) obj[k] = String(req.body[k]); });
+  if (!obj.level) obj.level = 'staff';
+  db.employees.push(obj);
+  save(db); res.json({ ok: true, id: obj.id }); });
+// แก้ไขข้อมูลพนักงาน (ปุ่มบันทึกในหน้า Employee Detail)
+app.put('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  const e = db.employees.find(x => x.id === req.params.id);
+  if (!e) return res.status(404).json({ error: 'not found' });
+  const allow = ['name', 'employee_no', 'role', 'dept', 'branch_id', 'phone', 'email', 'bank', 'bank_account',
+    'birth_date', 'hire_date', 'tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address',
+    'salutation', 'name_en', 'photo', 'level'];
+  for (const k of allow) if (k in (req.body || {}) && req.body[k] !== null) e[k] = String(req.body[k]);
+  if ('pay' in (req.body || {})) e.pay = +req.body.pay || e.pay;
+  save(db); res.json({ ok: true }); });
+// ── Setup กะการทำงาน: รูปแบบกะ (เพิ่ม/ลบ) + บันทึกตารางกะรายวัน ──
+function patterns(db) {
+  if (!db.shift_patterns) {
+    db.shift_patterns = [
+      { key: 'm', name: 'กะเช้า', start: '09:00', end: '18:00', brk: '12:00 – 13:00' },
+      { key: 'l', name: 'กะบ่าย', start: '12:00', end: '21:00', brk: '16:00 – 17:00' },
+    ];
+    save(db);
+  }
+  return db.shift_patterns;
+}
+app.get('/api/admin/shift-patterns', (req, res) => { if (!admin(req, res)) return; res.json(patterns(load())); });
+app.post('/api/admin/shift-patterns', (req, res) => { if (!admin(req, res)) return;
+  const { name, start, end, brk } = req.body || {};
+  if (!name || !start || !end) return res.status(400).json({ error: 'กรอกชื่อกะและเวลาให้ครบ' });
+  const db = load(); patterns(db);
+  db.shift_patterns.push({ key: 'p' + Date.now(), name: String(name), start: String(start), end: String(end), brk: String(brk || '') });
+  save(db); res.json({ ok: true }); });
+app.delete('/api/admin/shift-patterns/:key', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); patterns(db);
+  if (db.shift_patterns.length <= 1) return res.status(400).json({ error: 'ต้องเหลือรูปแบบกะอย่างน้อย 1 แบบ' });
+  db.shift_patterns = db.shift_patterns.filter(p => p.key !== req.params.key);
+  save(db); res.json({ ok: true }); });
+// บันทึกตารางกะ: days = { '2026-08-19': 'm' | 'off' } — ทับของเดิมทั้งวันนั้น
+app.post('/api/admin/shifts-save', (req, res) => { if (!admin(req, res)) return;
+  const { emp_id, days } = req.body || {};
+  const db = load(); patterns(db);
+  const e = db.employees.find(x => x.id === emp_id);
+  if (!e || !days || typeof days !== 'object') return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+  let saved = 0;
+  for (const [date, key] of Object.entries(days)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+    db.shifts = db.shifts.filter(s => !(s.emp_id === emp_id && s.date === date));
+    if (key === 'off') { db.shifts.push({ id: `sh-${emp_id}-${date}`, emp_id, date, name: 'หยุด', off: true, start: null, end: null }); saved++; continue; }
+    const p = db.shift_patterns.find(x => x.key === key);
+    if (!p) continue;
+    db.shifts.push({ id: `sh-${emp_id}-${date}`, emp_id, date, name: p.name, start: p.start, end: p.end, pattern: p.key });
+    saved++;
+  }
+  save(db); res.json({ ok: true, saved }); });
+// ปฏิทินกะรายเดือนต่อคน (มุมมองแบบ Shift Schedules ของ ByteHR)
+app.get('/api/admin/shift-calendar', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  const emp = req.query.emp || db.employees[0].id;
+  const month = req.query.month || iso(new Date()).slice(0, 7);
+  const e = db.employees.find(x => x.id === emp);
+  if (!e) return res.status(404).json({ error: 'no emp' });
+  const [y, m] = month.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const rows = [];
+  for (let d = 1; d <= days; d++) {
+    const date = `${month}-${String(d).padStart(2, '0')}`;
+    const real = db.shifts.find(s => s.emp_id === emp && s.date === date);
+    if (real) { if (!real.off) rows.push({ date, name: real.name, start: real.start, end: real.end, pattern: real.pattern }); continue; }
+    if (new Date(date).getDay() === 0) continue; // อาทิตย์หยุด
+    const late = e.id === 'e6';
+    rows.push({ date, name: late ? 'กะบ่าย' : 'กะเช้า', start: late ? '12:00' : '09:00', end: late ? '21:00' : '18:00', pattern: late ? 'l' : 'm' });
+  }
+  res.json({ emp: { id: e.id, name: e.name }, month, rows }); });
+app.get('/api/admin/shifts', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const from = req.query.from || iso(new Date());
+  res.json(db.shifts.filter(s => !s.off && s.date >= from && s.date <= iso(new Date(new Date(from).getTime() + 6 * 86400000)))
+    .map(s => ({ ...s, name_emp: nm(db, s.emp_id) }))); });
+app.get('/api/admin/timesheet', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const date = req.query.date || iso(new Date());
+  res.json(db.checkins.filter(x => x.at.slice(0, 10) === date).map(x => ({ ...x, name: nm(db, x.emp_id) }))); });
+app.get('/api/admin/approvals', (req, res) => { if (!admin(req, res)) return; const db = load();
+  res.json({
+    leaves: db.leaves.filter(l => l.status === 'pending').map(l => ({ ...l, name: nm(db, l.emp_id), type_name: db.leave_types.find(t => t.key === l.type)?.name || l.type })),
+    ot: db.ot.filter(o => o.status === 'pending').map(o => ({ ...o, name: nm(db, o.emp_id) })),
+    claims: db.claims.filter(x => x.status === 'pending').map(x => ({ ...x, name: nm(db, x.emp_id) })),
+  }); });
+app.post('/api/admin/approve', (req, res) => { if (!admin(req, res)) return;
+  const { kind, id, status, comment } = req.body || {}; const db = load();
+  const list = { leave: db.leaves, ot: db.ot, claim: db.claims }[kind];
+  const it = list?.find(x => x.id === id); if (!it) return res.status(404).json({ error: 'not found' });
+  if (it.status !== 'pending') return res.status(409).json({ error: 'รายการนี้ตัดสินไปแล้ว' });
+  applyDecision(db, kind, it, status, 'ฝ่ายบุคคล (HR)', comment);
+  save(db); res.json({ ok: true }); });
+// ยกเลิกคำขอของตัวเอง (เฉพาะที่ยังรออนุมัติ) — แบบ "ยกเลิกการลา" ใน Power Apps
+app.post('/api/me/requests/cancel', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c; const { kind, id } = req.body || {};
+  const list = { leave: db.leaves, ot: db.ot, claim: db.claims }[kind];
+  const it = list?.find(x => x.id === id && x.emp_id === emp.id);
+  if (!it) return res.status(404).json({ error: 'ไม่พบรายการ' });
+  if (it.status !== 'pending') return res.status(409).json({ error: 'ยกเลิกได้เฉพาะรายการที่รออนุมัติ' });
+  it.status = 'cancelled'; it.decided_at = now();
+  save(db); res.json({ ok: true }); });
+// Dashboard การลาแบบ BI: KPI + ตามประเภท + ตามแผนก + Top ผู้ลา
+app.get('/api/admin/leave-analytics', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  const byStatus = s => db.leaves.filter(l => l.status === s).length;
+  const approved = db.leaves.filter(l => l.status === 'approved');
+  const byType = db.leave_types.map(t => ({ name: t.name, days: approved.filter(l => l.type === t.key).reduce((n, l) => n + l.days, 0) }));
+  const deptOf = id => db.employees.find(e => e.id === id)?.dept || 'ไม่ระบุ';
+  const byDept = {};
+  approved.forEach(l => { byDept[deptOf(l.emp_id)] = (byDept[deptOf(l.emp_id)] || 0) + l.days; });
+  const perEmp = {};
+  approved.forEach(l => { perEmp[l.emp_id] = (perEmp[l.emp_id] || 0) + l.days; });
+  const top = Object.entries(perEmp).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([id, days]) => ({ name: nm(db, id), days }));
+  const t0 = new Date(); const by_month = [];
+  for (let i = 5; i >= 0; i--) {
+    const m = new Date(t0.getFullYear(), t0.getMonth() - i, 15).toISOString().slice(0, 7);
+    by_month.push({ month: m, days: approved.filter(l => (l.from || '').startsWith(m)).reduce((n, l) => n + l.days, 0) });
+  }
+  res.json({
+    total: db.leaves.length, approved: byStatus('approved'), pending: byStatus('pending'),
+    rejected: byStatus('rejected'), cancelled: byStatus('cancelled'),
+    by_type: byType, by_dept: Object.entries(byDept).map(([name, days]) => ({ name, days })), top, by_month,
+  }); });
+app.get('/api/admin/leave-types', (req, res) => { if (!admin(req, res)) return; res.json(load().leave_types); });
+app.put('/api/admin/leave-types', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const { key, days } = req.body || {};
+  const t = db.leave_types.find(x => x.key === key); if (!t) return res.status(404).json({ error: 'no type' });
+  t.days = +days || t.days; db.employees.forEach(e => { if (e.leave[key]) e.leave[key].total = t.days; });
+  save(db); res.json({ ok: true }); });
+
+// เงินเดือน: คำนวณงวดปัจจุบัน + ปิดงวด (สร้าง payslip) + bank file
+function calcMonth(db, month) {
+  return db.employees.map(e => {
+    const ot = db.ot.filter(o => o.emp_id === e.id && o.date.startsWith(month) && o.status === 'approved')
+      .reduce((t, o) => t + o.hours, 0) * Math.round(e.pay / 30 / 8 * 1.5);
+    const sso = Math.min(Math.round(e.pay * db.company.sso_rate / 100), db.company.sso_cap);
+    const tax = e.pay > 26000 ? Math.round((e.pay - 26000) * 0.05) : 0;
+    return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot, sso, tax, net: e.pay + ot - sso - tax };
+  });
+}
+app.get('/api/admin/payroll', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const closed = db.payslips.some(p => p.month === month);
+  res.json({ month, closed, rows: closed ? db.payslips.filter(p => p.month === month).map(p => ({ ...p, name: nm(db, p.emp_id) })) : calcMonth(db, month) }); });
+app.post('/api/admin/payroll/close', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = (req.body || {}).month || iso(new Date()).slice(0, 7);
+  if (db.payslips.some(p => p.month === month)) return res.status(409).json({ error: 'งวดนี้ปิดแล้ว' });
+  calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, sso: r.sso, tax: r.tax, net: r.net }));
+  save(db); res.json({ ok: true, month }); });
+app.get('/api/admin/bankfile.csv', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const rows = ['ลำดับ,ชื่อบัญชี,เลขบัญชี,ธนาคาร,จำนวนเงิน'];
+  calcMonth(db, month).forEach((r, i) => rows.push(`${i + 1},${r.name},${r.bank_account},${r.bank},${r.net.toFixed(2)}`));
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="bankfile-${month}.csv"`);
+  res.send('﻿' + rows.join('\n')); });
+app.get('/api/admin/announcements', (req, res) => { if (!admin(req, res)) return; res.json(load().announcements.slice().reverse()); });
+app.post('/api/admin/announcements', (req, res) => { if (!admin(req, res)) return;
+  const { title, body } = req.body || {}; if (!title) return res.status(400).json({ error: 'ใส่หัวข้อ' });
+  const db = load(); db.announcements.push({ id: 'a' + Date.now(), title, body: String(body || ''), at: now() });
+  save(db); res.json({ ok: true }); });
+app.get('/api/admin/branches', (req, res) => { if (!admin(req, res)) return; res.json(load().branches); });
+app.get('/api/admin/report', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const rows = db.employees.map(e => {
+    const cks = db.checkins.filter(x => x.emp_id === e.id && x.at.slice(0, 10).startsWith(month) && x.type === 'in');
+    const sched = db.shifts.filter(s => s.emp_id === e.id && s.date.startsWith(month) && s.date <= iso(new Date())).length;
+    const late = cks.filter(x => x.late_min > 15).length;
+    const leave = db.leaves.filter(l => l.emp_id === e.id && l.status === 'approved' && l.from.startsWith(month)).reduce((t, l) => t + l.days, 0);
+    return { name: e.name, branch: db.branches.find(b => b.id === e.branch_id)?.name, sched, attended: cks.length, late, leave, absent: Math.max(0, sched - cks.length - leave) };
+  });
+  res.json({ month, rows }); });
+app.get('/api/admin/settings', (req, res) => { if (!admin(req, res)) return; const db = load(); res.json({ company: db.company, branches: db.branches }); });
+app.get('/api/admin/departments', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const map = {};
+  db.employees.forEach(e => { const k = e.dept || 'ไม่ระบุแผนก'; (map[k] = map[k] || []).push(e.name); });
+  res.json(Object.entries(map).map(([name, members]) => ({ name, count: members.length, members }))); });
+app.get('/api/admin/recruitment', (req, res) => { if (!admin(req, res)) return; res.json(load().recruitment || []); });
+app.get('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const e = db.employees.find(x => x.id === req.params.id);
+  if (!e) return res.status(404).json({ error: 'not found' });
+  const no = e.employee_no || '000000';
+  res.json({ ...e, branch: db.branches.find(b => b.id === e.branch_id)?.name,
+    email: e.email || 'emp' + no + '@jcbyte-demo.co.th',
+    tax_no: e.tax_no || '0-' + no.slice(0, 4) + '-56789-01-2',
+    sso_no: e.sso_no || '11-' + no + '-90',
+    address: e.address || (e.branch_id === 'b1' ? 'เขตปทุมวัน กรุงเทพมหานคร' : 'อ.บางใหญ่ จ.นนทบุรี'),
+    leaves: db.leaves.filter(l => l.emp_id === e.id).map(l => ({ ...l, type_name: db.leave_types.find(t => t.key === l.type)?.name || l.type })).reverse(),
+    checkins: db.checkins.filter(x => x.emp_id === e.id).slice(-10).reverse(),
+    payslips: db.payslips.filter(p => p.emp_id === e.id).reverse() }); });
+
+app.get('/scan', (req, res) => res.sendFile(path.join(__dirname, 'public', 'scan.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
+
+app.listen(PORT, '0.0.0.0', () => {
+  const os = require('os');
+  const lan = Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal)?.address;
+  console.log(`JIANCHA DEMO HR — local: http://localhost:${PORT}` + (lan ? ` · LAN: http://${lan}:${PORT}` : '') + ' · admin: byte@2026 · PIN: 111111/333333');
+});

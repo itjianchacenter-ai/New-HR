@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>JIANCHA DEMO HR · ลงเวลา QR</title>
+<style>
+  body { margin:0; font-family:-apple-system,'SF Pro Text','Thonburi','Sarabun',sans-serif;
+    background:#12343B; display:grid; place-items:center; min-height:100vh; }
+  .card { background:#fff; border:0; border-radius:20px; padding:30px; width:min(340px,90vw); text-align:center; }
+  .big { font-size:46px; }
+  b { font-size:18px; display:block; margin:8px 0 4px; }
+  p { color:#7B8A88; font-size:13.5px; margin:4px 0 16px; }
+  button { font:inherit; width:100%; padding:13px; border-radius:12px; border:0; background:#3FBFA8; color:#fff; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="card" id="c"><div class="big">⏳</div><b>กำลังลงเวลา…</b><p>QR สาขาถูกต้อง กำลังบันทึก</p></div>
+<script>
+(async () => {
+  const t = new URLSearchParams(location.search).get('t');
+  const c = document.getElementById('c');
+  // เข้า/ออกอัตโนมัติ: ถ้าวันนี้ยังไม่เข้า = เข้า · เข้าแล้ว = ออก
+  const dash = await fetch('/api/me/dashboard');
+  if (!dash.ok) {
+    c.innerHTML = '<div class="big">🔐</div><b>ยังไม่ได้เข้าสู่ระบบ</b><p>เปิดแอปแล้วล็อกอินก่อน จากนั้นสแกน QR อีกครั้ง</p><button onclick="location.href=\'/\'">ไปหน้าเข้าสู่ระบบ</button>';
+    return;
+  }
+  const d = await dash.json();
+  const type = (d.today.in && !d.today.out) ? 'out' : 'in';
+  const r = await fetch('/api/checkin', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ qr_token: t, type }) });
+  const res = await r.json();
+  c.innerHTML = r.ok
+    ? `<div class="big">✅</div><b>ลงเวลา${type === 'out' ? 'ออก' : 'เข้า'}งานสำเร็จ</b><p>${res.rec.note} · ${new Date(res.rec.at).toLocaleTimeString('th-TH')}</p><button onclick="location.href='/'">กลับหน้าหลัก</button>`
+    : `<div class="big">❌</div><b>ลงเวลาไม่สำเร็จ</b><p>${res.error || ''}</p><button onclick="location.href='/'">กลับหน้าหลัก</button>`;
+})();
+</script>
+</body>
+</html>

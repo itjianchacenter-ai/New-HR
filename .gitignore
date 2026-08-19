@@ -1,0 +1,6 @@
+# ข้อมูลรันไทม์ — แยกจากโค้ด ห้าม commit (ข้อมูลพนักงาน/รูป/PIN อยู่ในนี้)
+data.json
+data.json.tmp
+*.log
+node_modules/
+.DS_Store

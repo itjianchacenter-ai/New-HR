@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<title>JIANCHA DEMO HR · พนักงาน</title>
+<style>
+  :root { --bg:#F4F7F6; --card:#fff; --ink:#1D2B2A; --dim:#7B8A88; --line:#E3EAE8;
+    --mint:#3FBFA8; --mint-dark:#2A9C88; --mint-soft:#E4F5F1; --navy:#12343B; --warn:#C9614C; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,'SF Pro Text','Thonburi','Sarabun',sans-serif;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action:manipulation; }
+  .page { display:none; max-width:430px; margin:0 auto; padding-bottom:calc(84px + env(safe-area-inset-bottom)); min-height:100vh; }
+  .page.on { display:block; }
+  /* ── หัวเขียวเข้มแบบ ByteHR ── */
+  .hero { background:linear-gradient(180deg,var(--navy),#1C4A50); color:#fff; text-align:center;
+    padding:calc(24px + env(safe-area-inset-top)) 20px 60px; border-radius:0 0 30px 30px; }
+  .hero .d { font-size:13px; opacity:.8; }
+  .hero .t { font-size:44px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  .hero .nm { font-size:16px; font-weight:700; opacity:1; margin-top:10px; }
+  .hero .sh { font-size:12.5px; opacity:.72; margin-top:3px; }
+  .hd { background:var(--navy); color:#fff; padding:calc(20px + env(safe-area-inset-top)) 20px 18px; border-radius:0 0 24px 24px;
+    display:flex; justify-content:space-between; align-items:center; }
+  .hd h1 { font-size:20px; margin:0; font-weight:800; }
+  .body { padding:16px; margin-top:-40px; }
+  .body.flat { margin-top:0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; }
+  h2 { font-size:13px; margin:16px 2px 8px; color:var(--dim); font-weight:700; }
+  .dim { color:var(--dim); font-size:12.5px; }
+  button { font:inherit; cursor:pointer; border-radius:12px; border:1px solid var(--line); background:#fff; padding:12px; color:var(--ink); }
+  .primary { background:var(--mint); color:#fff; border-color:var(--mint); font-weight:800; font-size:15px; }
+  .btnrow { display:flex; gap:10px; }
+  .btnrow .primary { flex:1; }
+  .btnrow .qrbtn { flex:1; font-weight:600; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  .stat b { display:block; font-size:20px; color:var(--mint-dark); }
+  .stat span { font-size:11.5px; color:var(--dim); }
+  .lv { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+  .lv:last-child { border-bottom:0; }
+  .lv .left b { font-size:13.5px; }
+  .lv .bar { height:5px; background:#EDF2F0; border-radius:99px; margin-top:5px; width:150px; overflow:hidden; }
+  .lv .bar i { display:block; height:100%; background:var(--mint); }
+  .lv .n { font-weight:800; font-size:15px; }
+  .lv .n small { font-weight:400; color:var(--dim); }
+  .pill { font-size:10.5px; padding:2px 10px; border-radius:99px; background:#EEF2F1; color:var(--dim); font-weight:700; }
+  .pill.ok { background:var(--mint-soft); color:var(--mint-dark); }
+  .pill.warn { background:#F8E7E2; color:var(--warn); }
+  .pill.info { background:#E7EFF8; color:#3A6EA5; }
+  /* ── แท็บล่าง 4 ปุ่ม ── */
+  .tabbar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line);
+    display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom)); z-index:30; }
+  .tabbar button { flex:1; border:0; background:none; border-radius:10px; padding:7px 2px; font-size:10.5px; color:var(--dim); }
+  .tabbar button svg { display:block; width:21px; height:21px; margin:0 auto 3px; fill:none; stroke:currentColor;
+    stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .tabbar button.on { color:var(--mint-dark); font-weight:700; }
+  /* ── modal ลงเวลาสำเร็จ (แบบภาพ ByteHR) ── */
+  .modal { position:fixed; inset:0; background:rgba(10,30,32,.45); display:none; place-items:center; z-index:40; padding:20px; }
+  .modal.on { display:grid; }
+  .modal .box { background:#fff; border-radius:22px; padding:26px 22px; width:min(320px,90vw); text-align:center; }
+  .modal .tick { width:74px; height:74px; border-radius:99px; background:var(--mint-soft); color:var(--mint-dark);
+    font-size:38px; display:grid; place-items:center; margin:12px auto 16px; }
+  .modal .row { font-size:12px; color:var(--dim); margin-top:10px; }
+  .modal .row b { display:block; font-size:14.5px; color:var(--ink); }
+  .modal .primary { width:100%; margin-top:18px; }
+  /* คำขอ ── การ์ดสไตล์ ByteHR ── */
+  .seg { display:flex; gap:8px; margin:0 0 12px; overflow-x:auto; }
+  .seg button { border-radius:99px; padding:8px 16px; font-size:12.5px; white-space:nowrap; }
+  .seg button.on { background:var(--navy); color:#fff; border-color:var(--navy); font-weight:700; }
+  .req { position:relative; }
+  .req b { font-size:13.5px; }
+  .req .st { position:absolute; top:14px; right:14px; }
+  .req .meta { display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--dim); }
+  .fab { position:fixed; right:18px; bottom:calc(92px + env(safe-area-inset-bottom)); width:54px; height:54px; border-radius:99px;
+    background:var(--mint); color:#fff; font-size:26px; border:0; box-shadow:0 6px 18px rgba(42,156,136,.4); z-index:30; }
+  .sheet { position:fixed; inset:auto 0 0 0; background:#fff; border-radius:22px 22px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(105%); transition:transform .25s; z-index:45; max-width:430px; margin:0 auto; box-shadow:0 -8px 30px rgba(0,0,0,.15); }
+  .sheet.on { transform:translateY(0); }
+  .sheet h3 { margin:0 0 12px; font-size:15px; }
+  .sheet .fg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .sheet input, .sheet select { font:inherit; padding:11px; border:1px solid var(--line); border-radius:11px; width:100%; }
+  .sheet .full { grid-column:1/-1; }
+  /* ปฏิทิน */
+  .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .cal .h { font-size:10.5px; color:var(--dim); font-weight:700; padding:4px 0; }
+  .cal .d { border:1px solid var(--line); border-radius:10px; padding:6px 2px; font-size:12px; min-height:44px; background:#fff; }
+  .cal .d.off { background:transparent; border-color:transparent; color:var(--dim); }
+  .cal .d.today { border-color:var(--mint); border-width:2px; }
+  .cal .d i { display:block; font-style:normal; font-size:8.5px; margin-top:3px; font-weight:700; }
+  .cal .d i.m { color:var(--mint-dark); } .cal .d i.l { color:#B07A2A; }
+  /* สลิป */
+  .slip-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .slip-row:last-child { border-bottom:0; }
+  .slip-row b { font-size:14px; }
+  .slip-row .amt { font-weight:800; color:var(--mint-dark); }
+  .kv div { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .kv div:last-child { border-bottom:0; }
+  .kv div span { color:var(--dim); }
+  .toast { position:fixed; left:16px; right:16px; bottom:calc(96px + env(safe-area-inset-bottom));
+    background:var(--navy); color:#fff; padding:13px 16px; border-radius:14px; font-size:13.5px;
+    opacity:0; transition:opacity .25s; pointer-events:none; text-align:center; z-index:60; }
+  .toast.on { opacity:1; }
+  #login { position:fixed; inset:0; background:var(--navy); display:grid; place-items:center; z-index:50; padding:20px;
+    font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; }
+  #login input, #login button { font-family:inherit; }
+  #login .card { width:min(340px,90vw); text-align:center; border:0; border-radius:20px; padding:28px 22px; }
+  #login input { width:100%; font:inherit; font-size:22px; text-align:center; letter-spacing:.4em;
+    padding:12px; border:1.5px solid var(--line); border-radius:12px; margin:14px 0; }
+  /* พิมพ์เป็น PDF: เอาเฉพาะหน้าที่เปิดอยู่ ไม่ติดเมนู/ปุ่ม */
+  @media print {
+    body { background:#fff; }
+    .tabbar, .fab, .toast, .sheet, .modal, .hd button, .page .body > button { display:none !important; }
+    .page { display:none; }
+    .page.on { display:block; padding-bottom:0; }
+    .hd { border-radius:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .card { border-color:#ccc; break-inside:avoid; }
+  }
+  .ann b { display:block; font-size:13.5px; }
+  .ann p { margin:3px 0 0; font-size:12.5px; color:var(--dim); }
+  .bd { display:flex; gap:8px; flex-wrap:wrap; }
+  .bd span { background:var(--mint-soft); color:var(--mint-dark); border-radius:99px; padding:5px 12px; font-size:12px; font-weight:600; }
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="card">
+    <img src="/logo-wide.png" alt="JIAN CHA" style="width:160px; max-width:70%;"/>
+    <div class="dim" style="margin-top:10px;">DEMO HR · แอปพนักงาน · แยกจากระบบจริง</div>
+    <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN 6 หลัก"/>
+    <button class="primary" style="width:100%" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <p class="dim" style="margin-bottom:0">PIN ตัวอย่าง: 111111 · 333333 · 666666</p>
+  </div>
+</div>
+
+<!-- ═ TAB 1 : หน้าหลัก ═ -->
+<div class="page on" id="p-home">
+  <div class="hero">
+    <div class="d" id="date">—</div>
+    <div class="t" id="clock">--:--</div>
+    <div class="nm" id="who">—</div>
+    <div class="sh" id="shift-line"></div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div id="today-state" class="dim" style="text-align:center; margin-bottom:12px;"></div>
+      <div class="btnrow">
+        <button class="primary" id="ck-btn" onclick="gpsCheckin()">ลงเวลาเข้างาน</button>
+        <button class="qrbtn" onclick="toast('เปิดกล้องมือถือแล้วสแกน QR ที่หน้าร้านได้เลย')">สแกน QR</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="stat"><b id="st-ot">0 ชม.</b><span>OT เดือนนี้ (อนุมัติแล้ว)</span></div>
+      <div class="stat"><b id="st-pending">0</b><span>คำขอรออนุมัติ</span></div>
+    </div>
+    <h2>วันลาคงเหลือ</h2>
+    <div class="card" id="leave-cards"></div>
+    <h2>ประกาศบริษัท</h2>
+    <div class="card" id="ann"></div>
+    <h2>วันเกิดเดือนนี้</h2>
+    <div class="card bd" id="bd"></div>
+    <button style="width:100%; color:var(--warn); margin-top:6px;" onclick="logout()">ออกจากระบบ</button>
+  </div>
+</div>
+
+<!-- ═ TAB 2 : คำขอ ═ -->
+<div class="page" id="p-req">
+  <div class="hd"><h1>คำขอของฉัน</h1><span class="pill" style="background:rgba(255,255,255,.15); color:#fff;">DEMO</span></div>
+  <div class="body flat">
+    <div class="seg" id="req-seg">
+      <button class="on" data-k="leave">ลางาน</button>
+      <button data-k="ot">ล่วงเวลา</button>
+      <button data-k="claim">เบิกจ่าย</button>
+      <button data-k="approve" id="seg-ap" style="display:none; border-color:var(--mint); color:var(--mint-dark); font-weight:700;">รออนุมัติ (หัวหน้า)</button>
+    </div>
+    <div id="req-list"></div>
+  </div>
+  <button class="fab" onclick="openSheet()">＋</button>
+</div>
+
+<!-- ═ TAB 3 : ปฏิทิน ═ -->
+<div class="page" id="p-cal">
+  <div class="hd"><h1>ปฏิทินกะ</h1><span class="dim" id="cal-month" style="color:#fff; opacity:.85;"></span></div>
+  <div class="body flat">
+    <div class="card"><div class="cal" id="cal"></div></div>
+    <div class="card" style="display:flex; gap:16px; font-size:11.5px;">
+      <span><i style="color:var(--mint-dark); font-style:normal;">●</i> กะเช้า 09:00–18:00</span>
+      <span><i style="color:#B07A2A; font-style:normal;">●</i> กะบ่าย 12:00–21:00</span>
+      <span class="dim">ว่าง = วันหยุด</span>
+    </div>
+    <h2>ประวัติลงเวลาล่าสุด</h2>
+    <div class="card" id="my-time"></div>
+  </div>
+</div>
+
+<!-- ═ TAB 4 : สลิปเงินเดือน ═ -->
+<div class="page" id="p-slip">
+  <div class="hd"><h1>สลิปเงินเดือน</h1></div>
+  <div class="body flat">
+    <div class="card" id="slip-list"></div>
+  </div>
+</div>
+
+<!-- ═ Payslip Detail (แบบภาพ ByteHR) ═ -->
+<div class="page" id="p-slipdetail">
+  <div class="hd"><h1 id="sd-title">Payslip Detail</h1><button style="background:rgba(255,255,255,.15); color:#fff; border:0; font-size:12px;" onclick="show('slip')">← กลับ</button></div>
+  <div class="body flat">
+    <button style="width:100%; background:var(--mint-soft); color:var(--mint-dark); border-color:var(--mint-soft); font-weight:700;"
+      onclick="printSlipFormal()">ดาวน์โหลดสลิป (บันทึกเป็น PDF)</button>
+    <h2>ข้อมูลส่วนตัว</h2>
+    <div class="card kv" id="sd-personal"></div>
+    <h2>รายได้ / รายการหัก</h2>
+    <div class="card kv" id="sd-lines"></div>
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center; background:var(--mint-soft); border-color:var(--mint);">
+      <b>เงินได้สุทธิ</b><b style="font-size:20px; color:var(--mint-dark);" id="sd-net">—</b>
+    </div>
+  </div>
+</div>
+
+<!-- modal ลงเวลาสำเร็จ -->
+<div class="modal" id="ck-modal">
+  <div class="box">
+    <b style="font-size:16px;">ลงเวลาสำเร็จ</b>
+    <div class="tick">✓</div>
+    <div class="row">วันที่ <b id="ckm-date">—</b></div>
+    <div class="row">เวลา <b id="ckm-time">—</b></div>
+    <div class="row">สถานที่ <b id="ckm-loc">—</b></div>
+    <button class="primary" onclick="closeCkModal()">ตกลง</button>
+  </div>
+</div>
+
+<!-- sheet ยื่นคำขอ -->
+<div class="sheet" id="sheet">
+  <h3 id="sheet-title">ยื่นคำขอ</h3>
+  <div class="fg" id="sheet-body"></div>
+  <div class="btnrow" style="margin-top:14px;">
+    <button style="flex:1;" onclick="closeSheet()">ยกเลิก</button>
+    <button class="primary" style="flex:2;" onclick="submitReq()">ส่งคำขอ</button>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="on" data-p="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>หน้าหลัก</button>
+  <button data-p="req"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>คำขอ</button>
+  <button data-p="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/></svg>ปฏิทิน</button>
+  <button data-p="slip"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>สลิป</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let outMode = false, reqKind = 'leave', reqData = null, leaveTypes = [], slips = [], meInfo = {};
+const LV_TH = { sick: 'ลาป่วย', personal: 'ลากิจ', vacation: 'ลาพักร้อน', maternity: 'ลาคลอด', ordination: 'ลาอุปสมบท' };
+const money = n => (+n).toLocaleString('th-TH');
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2600); }
+
+setInterval(() => {
+  const n = new Date();
+  $('#clock').textContent = n.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  $('#date').textContent = n.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}, 500);
+
+// ── แท็บล่าง ──
+document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => show(b.dataset.p)));
+function show(p) {
+  document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x.dataset.p === p));
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+  $('#p-' + p).classList.add('on');
+  if (p === 'home') loadDash();
+  if (p === 'req') loadReqs();
+  if (p === 'cal') loadCal();
+  if (p === 'slip') loadSlips();
+}
+
+async function doLogin() {
+  const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin: $('#pin').value }) });
+  if (!r.ok) return toast('PIN ไม่ถูกต้อง');
+  $('#login').style.display = 'none'; loadDash();
+}
+async function logout() { await fetch('/api/logout', { method: 'POST' }); location.reload(); }
+
+async function loadDash() {
+  const r = await fetch('/api/me/dashboard');
+  if (!r.ok) { $('#login').style.display = ''; return; }
+  const d = await r.json(); meInfo = d;
+  $('#who').textContent = `${d.name} · ${d.role}`;
+  $('#shift-line').textContent = d.shift_today ? `กะวันนี้ ${d.shift_today.name} ${d.shift_today.start}–${d.shift_today.end} · ${d.branch}` : `วันนี้วันหยุด · ${d.branch}`;
+  $('#st-ot').textContent = d.ot_hours_month + ' ชม.';
+  $('#st-pending').textContent = d.pending_requests;
+  $('#seg-ap').style.display = d.approver ? '' : 'none';
+  outMode = !!d.today.in && !d.today.out;
+  $('#ck-btn').textContent = outMode ? 'ลงเวลาออกงาน' : 'ลงเวลาเข้างาน';
+  $('#today-state').innerHTML = d.today.in
+    ? `เข้างาน ${new Date(d.today.in).toLocaleTimeString('th-TH')} ` + (d.today.out ? `· ออก ${new Date(d.today.out).toLocaleTimeString('th-TH')}` : '<span class="pill ok">กำลังทำงาน</span>')
+    : '<span class="pill">วันนี้ยังไม่ลงเวลา</span>';
+  $('#leave-cards').innerHTML = Object.keys(d.leave).map(k => {
+    const total = d.leave[k].total, used = d.leave[k].used, left = total - used;
+    return `<div class="lv"><div class="left"><b>${LV_TH[k]}</b>
+      <div class="bar"><i style="width:${Math.min(100, used / total * 100)}%"></i></div></div>
+      <div class="n">${left}<small> / ${total} วัน</small></div></div>`;
+  }).join('');
+  $('#ann').innerHTML = d.announcements.map(a => `<div class="ann" style="margin-bottom:8px;"><b>${a.title}</b><p>${a.body}</p></div>`).join('') || '<span class="dim">ไม่มีประกาศ</span>';
+  $('#bd').innerHTML = d.birthdays.map(b => `<span>${b.name.split(' ')[0]} · วันที่ ${b.day}</span>`).join('') || '<span class="dim">เดือนนี้ไม่มีวันเกิด</span>';
+}
+
+// ── ลงเวลา + modal สำเร็จแบบ ByteHR ──
+function showCkModal(rec) {
+  const at = new Date(rec.at);
+  $('#ckm-date').textContent = at.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  $('#ckm-time').textContent = at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  $('#ckm-loc').textContent = rec.note || meInfo.branch || '—';
+  $('#ck-modal').classList.add('on');
+}
+function closeCkModal() { $('#ck-modal').classList.remove('on'); show('home'); }
+function gpsCheckin() {
+  toast('กำลังหาตำแหน่ง…');
+  navigator.geolocation.getCurrentPosition(async p => {
+    const r = await fetch('/api/checkin', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude, type: outMode ? 'out' : 'in' }) });
+    const d = await r.json();
+    if (!r.ok) return toast(d.error);
+    showCkModal(d.rec);
+  }, () => toast('หาตำแหน่งไม่ได้ — สแกน QR ที่ร้านแทนได้'), { enableHighAccuracy: true, timeout: 8000 });
+}
+
+// ── คำขอ 3 ชนิด ──
+document.querySelectorAll('#req-seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#req-seg button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); reqKind = b.dataset.k; renderReqs();
+}));
+const stPill = s => s === 'approved' ? '<span class="pill ok">อนุมัติแล้ว</span>' : s === 'rejected' ? '<span class="pill warn">ไม่อนุมัติ</span>' : s === 'cancelled' ? '<span class="pill">ยกเลิกแล้ว</span>' : '<span class="pill info">รออนุมัติ</span>';
+const decideLine = x => x.status === 'pending'
+  ? `<button style="width:100%; margin-top:8px; color:var(--warn); padding:9px;" onclick="cancelReq('${x._kind}','${x.id}')">ยกเลิกคำขอนี้</button>`
+  : (x.approved_by ? `<div class="dim" style="margin-top:6px;">โดย ${x.approved_by}${x.comment ? ' · “' + x.comment + '”' : ''}</div>` : '');
+async function cancelReq(kind, id) {
+  const r = await fetch('/api/me/requests/cancel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, id }) });
+  toast(r.ok ? '✓ ยกเลิกคำขอแล้ว' : (await r.json()).error);
+  if (r.ok) loadReqs();
+}
+async function loadReqs() {
+  const r = await fetch('/api/me/requests'); if (!r.ok) return;
+  reqData = await r.json(); leaveTypes = reqData.types;
+  const ap = await fetch('/api/me/approvals');
+  reqData.approvals = ap.ok ? await ap.json() : { approver: false, leaves: [], ot: [], claims: [] };
+  renderReqs();
+}
+async function appApprove(kind, id, status) {
+  const comment = prompt(status === 'approved' ? 'ความคิดเห็นถึงพนักงาน (ไม่บังคับ)' : 'เหตุผลที่ไม่อนุมัติ', '') ?? '';
+  const r = await fetch('/api/me/approve', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ kind, id, status, comment }) });
+  toast(r.ok ? (status === 'approved' ? '✓ อนุมัติแล้ว' : '✓ บันทึกไม่อนุมัติแล้ว') : (await r.json()).error);
+  if (r.ok) loadReqs();
+}
+function renderReqs() {
+  if (!reqData) return;
+  document.querySelector('.fab').style.display = reqKind === 'approve' ? 'none' : '';
+  if (reqKind === 'approve') {
+    const a = reqData.approvals || {};
+    const rows = [
+      ...(a.leaves || []).map(l => ({ kind: 'leave', id: l.id, name: l.name, head: l.type_name, detail: `${l.from} → ${l.to} · ${l.days} วัน · ${l.reason || ''}` })),
+      ...(a.ot || []).map(o => ({ kind: 'ot', id: o.id, name: o.name, head: `OT ${o.hours} ชม.`, detail: `วันที่ ${o.date} · ${o.reason || ''}` })),
+      ...(a.claims || []).map(c => ({ kind: 'claim', id: c.id, name: c.name, head: c.title, detail: `จำนวนเงิน ${money(c.amount)} บาท` })),
+    ];
+    $('#req-list').innerHTML = rows.map(r => `<div class="card req"><b>${r.name}</b>
+      <div class="dim" style="margin-top:2px;"><b style="color:var(--ink);">${r.head}</b> · ${r.detail}</div>
+      <div class="btnrow" style="margin-top:10px;">
+        <button class="primary" style="font-size:13px; padding:10px;" onclick="appApprove('${r.kind}','${r.id}','approved')">อนุมัติ</button>
+        <button style="flex:1; color:var(--warn); font-size:13px;" onclick="appApprove('${r.kind}','${r.id}','rejected')">ไม่อนุมัติ</button>
+      </div></div>`).join('')
+      || '<div class="card dim" style="text-align:center;">ไม่มีรายการรออนุมัติในทีมของคุณ</div>';
+    return;
+  }
+  let html = '';
+  if (reqKind === 'leave') html = reqData.leaves.map(l => `<div class="card req"><b>${LV_TH[l.type] || l.type}</b><span class="st">${stPill(l.status)}</span>
+    <div class="dim">${l.from} → ${l.to} · ${l.days} วัน</div><div class="dim">${l.reason || ''}</div>
+    <div class="meta"><span>ID: ${l.id}</span><span>ยื่นเมื่อ ${new Date(l.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...l, _kind: 'leave' })}</div>`).join('');
+  if (reqKind === 'ot') html = reqData.ot.map(o => `<div class="card req"><b>OT ${o.hours} ชั่วโมง</b><span class="st">${stPill(o.status)}</span>
+    <div class="dim">วันที่ ${o.date} · ${o.reason || ''}</div>
+    <div class="meta"><span>ID: ${o.id}</span><span>ยื่นเมื่อ ${new Date(o.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...o, _kind: 'ot' })}</div>`).join('');
+  if (reqKind === 'claim') html = reqData.claims.map(c => `<div class="card req"><b>${c.title}</b><span class="st">${stPill(c.status)}</span>
+    <div class="dim">จำนวนเงิน ${money(c.amount)} บาท</div>
+    <div class="meta"><span>ID: ${c.id}</span><span>ยื่นเมื่อ ${new Date(c.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...c, _kind: 'claim' })}</div>`).join('');
+  $('#req-list').innerHTML = html || '<div class="card dim" style="text-align:center;">ยังไม่มีรายการในหมวดนี้ — กดปุ่ม ＋ เพื่อยื่นคำขอ</div>';
+}
+function openSheet() {
+  const titles = { leave: 'ยื่นใบลา', ot: 'ขอทำ OT', claim: 'ขอเบิกค่าใช้จ่าย' };
+  $('#sheet-title').textContent = titles[reqKind];
+  if (reqKind === 'leave') $('#sheet-body').innerHTML = `
+    <select id="q-type" class="full">${leaveTypes.map(t => `<option value="${t.key}">${t.name}</option>`).join('')}</select>
+    <input id="q-from" type="date"/><input id="q-to" type="date"/>
+    <input id="q-days" type="number" min="1" value="1" placeholder="จำนวนวัน"/>
+    <input id="q-reason" placeholder="เหตุผล"/>`;
+  if (reqKind === 'ot') $('#sheet-body').innerHTML = `
+    <input id="q-date" type="date"/><input id="q-hours" type="number" min="1" value="2" placeholder="ชั่วโมง"/>
+    <input id="q-reason" class="full" placeholder="เหตุผล"/>`;
+  if (reqKind === 'claim') $('#sheet-body').innerHTML = `
+    <input id="q-title" class="full" placeholder="รายการ เช่น ค่าเดินทาง"/>
+    <input id="q-amount" type="number" min="1" placeholder="จำนวนเงิน (บาท)" class="full"/>`;
+  $('#sheet').classList.add('on');
+}
+function closeSheet() { $('#sheet').classList.remove('on'); }
+async function submitReq() {
+  let body = { kind: reqKind };
+  if (reqKind === 'leave') body = { ...body, type: $('#q-type').value, from: $('#q-from').value, to: $('#q-to').value, days: $('#q-days').value, reason: $('#q-reason').value };
+  if (reqKind === 'ot') body = { ...body, date: $('#q-date').value, hours: $('#q-hours').value, reason: $('#q-reason').value };
+  if (reqKind === 'claim') body = { ...body, title: $('#q-title').value, amount: $('#q-amount').value };
+  const r = await fetch('/api/me/requests', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) return toast((await r.json()).error || 'กรอกให้ครบ');
+  closeSheet(); toast('✓ ส่งคำขอแล้ว รออนุมัติ'); loadReqs();
+}
+
+// ── ปฏิทินกะ ──
+async function loadCal() {
+  const shifts = await fetch('/api/me/calendar').then(r => r.json());
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+  $('#cal-month').textContent = n.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  const first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
+  let html = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(d => `<div class="h">${d}</div>`).join('');
+  for (let i = 0; i < first.getDay(); i++) html += '<div class="d off"></div>';
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const s = shifts.find(x => x.date === ds);
+    html += `<div class="d${d === n.getDate() ? ' today' : ''}">${d}${s ? `<i class="${s.name === 'กะเช้า' ? 'm' : 'l'}">${s.start}</i>` : ''}</div>`;
+  }
+  $('#cal').innerHTML = html;
+  const ts = await fetch('/api/me/timesheet').then(r => r.json());
+  $('#my-time').innerHTML = ts.slice(0, 8).map(c => `<div class="lv"><div class="left"><b>${c.type === 'in' ? 'เข้างาน' : 'ออกงาน'} · ${c.method === 'qr' ? 'QR' : 'GPS'}</b>
+    <div class="dim">${new Date(c.at).toLocaleString('th-TH')}</div></div>
+    ${c.late_min > 15 ? `<span class="pill warn">สาย ${c.late_min} น.</span>` : '<span class="pill ok">ปกติ</span>'}</div>`).join('')
+    || '<span class="dim">ยังไม่มีข้อมูล</span>';
+}
+
+// ── สลิป + หน้า detail แบบ ByteHR ──
+async function loadSlips() {
+  slips = await fetch('/api/me/payslips').then(r => r.json());
+  $('#slip-list').innerHTML = slips.map((p, i) => `<div class="slip-row" onclick="openSlip(${i})">
+    <div><b>${thMonth(p.month)}</b><div class="dim">แตะเพื่อดูรายละเอียด</div></div>
+    <span class="amt">${money(p.net)} ฿</span></div>`).join('')
+    || '<span class="dim">ยังไม่มีสลิป — รอหลังบ้านปิดงวดเงินเดือน</span>';
+}
+function thMonth(m) { const [y, mm] = m.split('-'); return new Date(+y, +mm - 1, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); }
+function printSlipFormal() {
+  const p = slips[window._curSlip]; if (!p) return window.print();
+  const upto = slips.filter(x => x.month <= p.month);
+  const cumInc = upto.reduce((n, x) => n + x.base + x.ot, 0);
+  const cumTax = upto.reduce((n, x) => n + x.tax, 0);
+  const cumSso = upto.reduce((n, x) => n + x.sso, 0);
+  const payDate = (meInfo.payday || 28) + ' ' + thMonth(p.month);
+  const w = window.open('', '_blank');
+  if (!w) return window.print(); // popup ถูกบล็อก → พิมพ์หน้านี้แทน
+  w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบจ่ายเงินเดือน (PAY SLIP)</title><style>
+    body { font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; color:#1D2B2A; padding:28px; }
+    .co { font-weight:800; font-size:16px; display:flex; justify-content:space-between; align-items:center; }
+    .st { border-collapse:collapse; width:100%; font-size:12.5px; margin-top:10px; }
+    .st th, .st td { border:1px solid #555; padding:7px 9px; }
+    .st th { background:#F0F0EC; font-size:11.5px; text-align:left; }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .lbl { font-size:10.5px; color:#666; display:block; }
+  </style></head><body>
+  <div class="co"><span><img src="/logo-wide.png" style="height:22px; vertical-align:middle;"/> DEMO HR</span><span>ใบจ่ายเงินเดือน (PAY SLIP)</span></div>
+  <table class="st"><tr>
+    <td><span class="lbl">รหัส</span><b>${meInfo.employee_no || ''}</b></td>
+    <td><span class="lbl">ชื่อ-สกุล</span><b>${meInfo.name || ''}</b></td>
+    <td><span class="lbl">แผนก</span><b>${meInfo.dept || '-'}</b></td>
+    <td><span class="lbl">ตำแหน่ง</span><b>${meInfo.role || '-'}</b></td>
+  </tr></table>
+  <table class="st">
+    <tr><th style="width:22%;">รายได้ Earnings</th><th style="width:14%;" class="num">จำนวนเงิน Amount</th>
+        <th style="width:22%;">รายการหัก Deductions</th><th style="width:14%;" class="num">จำนวนเงิน Amount</th>
+        <th style="width:20%; text-align:center;">วันจ่าย Payroll Date</th></tr>
+    <tr><td>เงินเดือน</td><td class="num">${money(p.base)}</td><td>เงินประกันสังคม</td><td class="num">${money(p.sso)}</td>
+        <td rowspan="2" style="text-align:center; vertical-align:middle;">${payDate}</td></tr>
+    <tr><td>ค่าล่วงเวลา (OT)</td><td class="num">${money(p.ot)}</td><td>ภาษีเงินได้</td><td class="num">${money(p.tax)}</td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td>
+        <td rowspan="2" style="text-align:center; vertical-align:middle;"><span class="lbl">เงินได้สุทธิ Net To Pay</span><b style="font-size:17px;">${money(p.net)}</b></td></tr>
+    <tr><th>รวมเงินได้ Total Earnings</th><th class="num">${money(p.base + p.ot)}</th>
+        <th>รวมรายการหัก Total Deduction</th><th class="num">${money(p.sso + p.tax)}</th></tr>
+  </table>
+  <table class="st"><tr><th class="num">เงินได้สะสมต่อปี</th><th class="num">ภาษีสะสมต่อปี</th><th class="num">เงินประกันสังคมสะสม</th></tr>
+  <tr><td class="num">${money(cumInc)}</td><td class="num">${money(cumTax)}</td><td class="num">${money(cumSso)}</td></tr></table>
+  <p style="font-size:11px; color:#888; margin-top:10px;">เอกสารลับ — สลิปนี้ออกโดยระบบอัตโนมัติ · พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}</p>
+  <script>window.onload = () => setTimeout(() => window.print(), 250);<\/script></body></html>`);
+  w.document.close();
+}
+function openSlip(i) {
+  window._curSlip = i;
+  const p = slips[i];
+  $('#sd-title').textContent = 'สลิป ' + thMonth(p.month);
+  const [py, pm] = p.month.split('-').map(Number);
+  const lastDay = new Date(py, pm, 0).getDate();
+  let workDays = 0;
+  for (let d = 1; d <= lastDay; d++) if (new Date(py, pm - 1, d).getDay() !== 0) workDays++;
+  $('#sd-personal').innerHTML = `
+    <div><span>รหัสพนักงาน</span><b>${meInfo.employee_no || ''}</b></div>
+    <div><span>ชื่อ</span><b>${meInfo.name || ''}</b></div>
+    <div><span>แผนก</span><b>${meInfo.dept || '-'}</b></div>
+    <div><span>ตำแหน่ง</span><b>${meInfo.role || ''}</b></div>
+    <div><span>สาขา</span><b>${meInfo.branch || ''}</b></div>
+    <div><span>วันเริ่มงาน</span><b>${meInfo.hire_date ? new Date(meInfo.hire_date).toLocaleDateString('th-TH') : '-'}</b></div>
+    <div><span>ประเภทการจ้าง</span><b>รายเดือน / Monthly</b></div>
+    <div><span>เงินเดือนตามสัญญา</span><b>${money(meInfo.pay || p.base)} ฿</b></div>
+    <div><span>งวดจ่าย</span><b>1 – ${lastDay} ${thMonth(p.month)}</b></div>
+    <div><span>วันทำงานในงวด</span><b>${workDays} วัน</b></div>
+    <div><span>วันที่จ่าย</span><b>${meInfo.payday || 28} ${thMonth(p.month)}</b></div>`;
+  $('#sd-lines').innerHTML = `
+    <div><span>เงินเดือนพื้นฐาน</span><b>${money(p.base)} ฿</b></div>
+    <div><span>ค่าล่วงเวลา (OT)</span><b>${money(p.ot)} ฿</b></div>
+    <div><span>หัก ประกันสังคม</span><b style="color:var(--warn)">-${money(p.sso)} ฿</b></div>
+    <div><span>หัก ภาษี ณ ที่จ่าย</span><b style="color:var(--warn)">-${money(p.tax)} ฿</b></div>`;
+  $('#sd-net').textContent = money(p.net) + ' ฿';
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
+  $('#p-slipdetail').classList.add('on');
+}
+
+// เข้าหน้าด้วย session เดิม
+fetch('/api/me/dashboard').then(r => { if (r.ok) { $('#login').style.display = 'none'; loadDash(); } });
+</script>
+</body>
+</html>
