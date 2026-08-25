@@ -437,11 +437,15 @@ function startClock() {
   };
   tick(); clearInterval(clkIv); clkIv = setInterval(tick, 1000);
 }
+const setAv = (el, ini) => {
+  if (ME.photo) el.innerHTML = `<img src="${ME.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt=""/>`;
+  else el.textContent = ini;
+};
 async function renderHome() {
   ME = await api('/api/me/dashboard');
   const ini = (ME.name_en || ME.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
   $('#hiName').textContent = `สวัสดี, ${ME.nickname || ME.name.split(' ')[0]} 👋`;
-  $('#homeAv').textContent = ini;
+  setAv($('#homeAv'), ini);
   $('#homeName').textContent = ME.name;
   $('#homeRole').textContent = `${ME.role} · ${ME.name_en || ''}`;
   $('#homeNo').textContent = ME.employee_no;
@@ -510,15 +514,38 @@ function camShot() {
 }
 function camSkip() { stopCam(); submitCheckin(null); }
 function camCancel() { stopCam(); }
-async function submitCheckin(photo) {
+let pendingPhoto = null;
+async function submitCheckin(photo, extra) {
   try {
-    const r = await api('/api/checkin', { method: 'POST', body: { lat: GEO.lat, lng: GEO.lng, type: camMode, photo } });
-    $('#okT').textContent = camMode === 'in' ? 'ลงเวลาเข้าสำเร็จ' : 'ลงเวลาออกสำเร็จ';
+    const r = await api('/api/checkin', { method: 'POST', body: { lat: GEO.lat, lng: GEO.lng, type: camMode, photo, ...(extra || {}) } });
+    closeSheet();
+    $('#okT').textContent = (camMode === 'in' ? 'ลงเวลาเข้าสำเร็จ' : 'ลงเวลาออกสำเร็จ') + (extra?.offsite ? ' (นอกสถานที่)' : '');
     $('#okD').textContent = `${hm(r.rec.at)} · ${r.rec.note}${r.rec.late_min > 15 ? ` · สาย ${r.rec.late_min} นาที` : ''}`;
     $('#okImgWrap').innerHTML = photo ? `<img src="${photo}"/>` : '<div class="cir">✓</div>';
     $('#okpop').classList.add('on');
     renderHome();
-  } catch (e) { toast(e.message); }
+  } catch (e) {
+    // อยู่นอกรัศมีสาขา → เสนอเช็คอินนอกสถานที่ (ต้องระบุเหตุผล)
+    if (/อยู่นอกระยะ/.test(e.message)) { pendingPhoto = photo; openOffsiteSheet(e.message); }
+    else toast(e.message);
+  }
+}
+function openOffsiteSheet(msg) {
+  openSheet(`<h3>📍 เช็คอินนอกสถานที่</h3>
+    <p style="margin:0 0 14px;color:var(--soft);font-size:.9rem">${esc(msg)}<br/>หากปฏิบัติงานนอกสถานที่ (ออกบูธ / ประชุม / ส่งของ) ระบุเหตุผลเพื่อบันทึกให้ HR ตรวจสอบ</p>
+    <div class="fld"><label>เหตุผล *</label><input id="osReason" placeholder="เช่น ออกบูธที่สยามพารากอน"/></div>
+    <div class="fld"><label>สถานที่ (ระบบหาให้อัตโนมัติ)</label><input id="osPlace" placeholder="กำลังค้นหาตำแหน่ง…"/></div>
+    <button class="go" onclick="submitOffsite()">ยืนยันเช็คอินนอกสถานที่</button>`);
+  // reverse geocode ฟรีด้วย OpenStreetMap Nominatim (ไม่ต้องมี API key)
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${GEO.lat}&lon=${GEO.lng}&format=json&accept-language=th`)
+    .then(r => r.json())
+    .then(j => { const el = $('#osPlace'); if (el && !el.value) el.value = j.display_name?.split(',').slice(0, 3).join(',') || ''; })
+    .catch(() => {});
+}
+function submitOffsite() {
+  const reason = $('#osReason').value.trim();
+  if (!reason) return toast('ระบุเหตุผลก่อนครับ');
+  submitCheckin(pendingPhoto, { offsite: true, reason, place: $('#osPlace').value.trim() });
 }
 
 // ═══ REQUESTS PAGE ═══
@@ -629,7 +656,7 @@ function renderDay() {
 async function renderMe() {
   ME = await api('/api/me/dashboard');
   const ini = (ME.name_en || ME.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
-  $('#meAv').textContent = ini;
+  setAv($('#meAv'), ini);
   $('#meName').textContent = ME.name_en || ME.name;
   $('#meRole').textContent = `${ME.role} · ${ME.dept}`;
   $('#meBranch').textContent = ME.branch;
@@ -671,6 +698,7 @@ function viewSlip(p) {
       <div class="row"><span class="k">หัก ภาษี</span><b style="color:var(--red)">-${THB(p.tax)}</b></div>
       <div class="row"><span class="k" style="font-weight:800;color:var(--ink)">เงินได้สุทธิ</span><b style="font-size:1.2rem">${THB(p.net)}</b></div>
     </div>
+    <a class="go" style="display:block;text-align:center;text-decoration:none;background:var(--gold);margin-bottom:10px" href="/api/me/payslip-print?month=${p.month}">🖨 สลิปเต็มรูปแบบ · บันทึก PDF</a>
     <button class="go" onclick="openNoti()">← กลับไปแจ้งเตือน</button>`);
 }
 

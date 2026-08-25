@@ -179,6 +179,7 @@ main{margin-left:var(--side);min-height:100vh}
 #modal{position:fixed;inset:0;background:rgba(30,25,15,.5);z-index:50;display:none;place-items:center;padding:20px}
 #modal.on{display:grid}
 #modal .mbox{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);max-width:560px;width:100%;max-height:90vh;overflow-y:auto;padding:26px}
+#modal .mbox:has(.slip2){max-width:880px;background:#fff}
 #modal h3{margin:0 0 14px}
 .prm{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 16px;font-size:.88rem;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line)}
 .prm:last-child{border-bottom:0}
@@ -186,6 +187,35 @@ main{margin-left:var(--side);min-height:100vh}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 22px;border-radius:99px;font-size:.9rem;font-weight:600;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
 
+/* slip แบบฟอร์แมตมาตรฐาน (เงินได้/รายการหัก/YTD) */
+.slip2{font-size:.82rem;color:#1a1712}
+.slip2 .s2head{display:grid;grid-template-columns:1.2fr auto 1.1fr;gap:14px;align-items:start;margin-bottom:14px}
+.slip2 .s2co b{font-size:.95rem}
+.slip2 .s2logo{align-self:center}
+.slip2 .s2logo img{height:34px}
+.slip2 .s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right}
+.slip2 .kv2{display:flex;gap:10px;justify-content:space-between;margin-top:7px;font-size:.78rem}
+.slip2 .kv2 span{color:#555;line-height:1.25}
+.slip2 .kv2 i{font-size:.66rem;color:#999;font-style:normal}
+.slip2 .kv2 b{text-align:right;white-space:nowrap}
+.slip2 .s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
+.slip2 .s2cols table{border-collapse:collapse;width:100%}
+.slip2 .s2cols table:not(:last-child){border-right:1px solid #1a1712}
+.slip2 th{border-bottom:1px solid #1a1712;padding:6px;font-size:.78rem;text-align:center}
+.slip2 th i{font-size:.64rem;color:#777;font-style:normal;font-weight:400}
+.slip2 td{padding:5px 8px;vertical-align:top}
+.slip2 td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.8rem;white-space:nowrap}
+.slip2 .l1{font-size:.76rem}
+.slip2 .l2{font-size:.62rem;color:#999}
+.slip2 tr.sep td{border-top:1px solid #1a1712}
+.slip2 tr.net2 td{font-weight:800}
+.slip2 tr.net2 .l1{font-size:.8rem}
+.slip2 .s2foot{display:flex;justify-content:space-between;margin-top:14px;font-size:.76rem;color:#555}
+.slip2 .s2foot i{font-size:.64rem;color:#999;font-style:normal}
+.slip2 .sig{text-align:right}
+.slip2 .sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
+.slip2 .s2legal{border-top:1px solid #ccc;margin-top:16px;padding-top:8px;text-align:center;font-size:.62rem;color:#777}
+.slip2 .s2legal i{font-style:normal;color:#999}
 /* slip print */
 .slip{font-size:.92rem}
 .slip .shead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:14px}
@@ -208,15 +238,8 @@ main{margin-left:var(--side);min-height:100vh}
     <p class="d">Human Resource Management System</p>
     <input id="pw" type="password" placeholder="รหัสผ่านผู้ดูแลระบบ" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div style="display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:var(--faint);font-size:.78rem">
-      <span style="flex:1;height:1px;background:var(--line)"></span>หรือ พนักงาน HR ที่มีสิทธิ์แอดมิน<span style="flex:1;height:1px;background:var(--line)"></span>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <input id="empId4" inputmode="numeric" maxlength="4" placeholder="เลขท้ายบัตร 4 ตัว" style="margin:0"/>
-      <input id="empPin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN 6 หลัก" style="margin:0" onkeydown="if(event.key==='Enter')doEmpLogin()"/>
-    </div>
-    <button style="margin-top:14px;background:var(--gold)" onclick="doEmpLogin()">เข้าสู่ระบบด้วยรหัสพนักงาน</button>
     <div class="err" id="loginErr"></div>
+    <div style="margin-top:16px;font-size:.8rem;color:var(--faint)">พนักงาน HR ที่มีสิทธิ์แอดมิน: ล็อกอินผ่าน<a href="/" style="color:var(--gold);font-weight:700">แอปพนักงาน</a> แล้วเลือก Role Admin</div>
   </div>
 </div>
 
@@ -270,8 +293,13 @@ main{margin-left:var(--side);min-height:100vh}
     <section class="page" id="p-tna">
       <div class="bar">
         <select class="in" id="tnaBranch" onchange="renderTna()"></select>
+        <span style="font-size:.78rem;color:var(--green);font-weight:700">● Live · อัปเดตทุก 5 วิ</span>
         <span class="sp"></span>
-        <button class="btn" onclick="tnaCsv()">⬇ Download</button>
+        <div><span class="flabel">Export ช่วงวัน</span>
+          <input class="in" type="date" id="tnaFrom" style="width:145px"/> –
+          <input class="in" type="date" id="tnaTo" style="width:145px"/>
+          <button class="btn sm green" onclick="tnaRangeCsv()">⬇ Export</button></div>
+        <button class="btn" onclick="tnaCsv()">⬇ วันนี้</button>
       </div>
       <div class="panel">
         <div class="ph">
@@ -291,6 +319,7 @@ main{margin-left:var(--side);min-height:100vh}
       <div class="bar">
         <select class="in" id="shBranch" onchange="renderShifts()"></select>
         <span class="sp"></span>
+        <button class="btn green" onclick="openFixedShift()">📌 ตั้งกะถาวร</button>
         <button class="btn" onclick="shiftsCsv()">⬇ Download</button>
         <button class="btn dark" onclick="$('#shUp').click()">⬆ Upload Schedule</button>
         <input type="file" id="shUp" accept=".csv" style="display:none" onchange="shiftsUpload(this)"/>
@@ -450,7 +479,18 @@ main{margin-left:var(--side);min-height:100vh}
       <div class="panel"><div class="ph"><h3>เกณฑ์เงินเดือนและการหักเงิน</h3></div>
         <div style="padding:18px 20px" id="setForm"></div>
       </div>
-      <div class="panel"><div class="ph"><h3>สาขาและจุดลงเวลา (Geofence)</h3></div>
+      <div class="panel"><div class="ph"><h3>สาขาและจุดลงเวลา (Geofence)</h3><div class="r"><button class="btn sm dark" onclick="brFormNew()">+ เพิ่มสาขา</button></div></div>
+        <div id="brForm" style="display:none;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--surface)">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div><span class="flabel">ชื่อสาขา</span><input class="in" id="bfName" placeholder="เช่น JIAN CHA – Siam Paragon" style="min-width:240px"/></div>
+            <div><span class="flabel">Latitude</span><input class="in" id="bfLat" type="number" step="0.0001" style="width:130px"/></div>
+            <div><span class="flabel">Longitude</span><input class="in" id="bfLng" type="number" step="0.0001" style="width:130px"/></div>
+            <div><span class="flabel">รัศมี (เมตร)</span><input class="in" id="bfRad" type="number" value="100" style="width:100px"/></div>
+            <button class="btn dark" id="bfSave" onclick="brSave()">บันทึกสาขา</button>
+            <button class="btn" onclick="$('#brForm').style.display='none'">ยกเลิก</button>
+          </div>
+          <div style="font-size:.78rem;color:var(--faint);margin-top:8px">พิกัดหาได้จาก Google Maps → คลิกขวาที่ร้าน → คัดลอกตัวเลข lat, lng</div>
+        </div>
         <div class="tblwrap"><table class="tbl" id="setBr"></table></div>
       </div>
     </section>
@@ -482,7 +522,9 @@ const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('
 const AV = ['#221f19', '#a5843f', '#2f6a53', '#4a5fc4', '#7a5c46', '#3d7d8a'];
 const avColor = n => AV[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
 const initials = e => { const en = e.name_en || ''; if (en.trim()) return en.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(); return String(e.name || '?').trim().slice(0, 2); };
-const avatar = e => `<span class="av" style="background:${avColor(e.name)}">${esc(initials(e))}</span>`;
+const avatar = e => e.photo
+  ? `<img class="av" src="${e.photo}" style="object-fit:cover" alt=""/>`
+  : `<span class="av" style="background:${avColor(e.name)}">${esc(initials(e))}</span>`;
 const iso = d => d.toISOString().slice(0, 10);
 const thDate = s => new Date(s + 'T00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const hm = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '–';
@@ -500,30 +542,6 @@ const active = () => EMPS.filter(e => e.status !== 'resigned');
 async function doLogin() {
   try { await api('/api/login', { method: 'POST', body: { password: $('#pw').value } }); boot(); }
   catch (e) { $('#loginErr').textContent = 'รหัสผ่านไม่ถูกต้อง'; }
-}
-async function doEmpLogin() {
-  $('#loginErr').textContent = '';
-  try {
-    const r = await api('/api/login', { method: 'POST', body: { id_last4: $('#empId4').value, pin: $('#empPin').value } });
-    if (r.step === 'role') return openRolePopup(r.name || r.nickname); // popup เลือก Role ตาม flow ปกติ
-    if (r.role === 'employee') location.href = '/'; // พนักงานทั่วไป → ไปแอปพนักงาน
-  } catch (e) { $('#loginErr').textContent = e.message; }
-}
-function openRolePopup(name) {
-  openModal(`<div style="text-align:center">
-    <div style="width:64px;height:64px;border-radius:50%;background:color-mix(in srgb,var(--gold) 14%,#fff);color:var(--gold);display:grid;place-items:center;margin:0 auto 12px;font-size:1.6rem">🔑</div>
-    <h3 style="margin:0 0 4px">เลือกโหมดการใช้งาน</h3>
-    <p style="margin:0 0 18px;color:var(--soft);font-size:.9rem">ยินดีต้อนรับ ${esc(name)} — บัญชีนี้มีสิทธิ์ผู้ดูแลระบบ</p>
-    <button class="btn dark" style="width:100%;justify-content:center;padding:13px" onclick="pickRole('admin')">🖥️ Role Admin · หลังบ้าน HR</button>
-    <button class="btn" style="width:100%;justify-content:center;padding:13px;margin-top:10px;background:var(--gold);border-color:var(--gold);color:#fff" onclick="pickRole('employee')">👤 Role Employee · แอปพนักงาน</button>
-  </div>`);
-}
-async function pickRole(as) {
-  try {
-    await api('/api/login', { method: 'POST', body: { id_last4: $('#empId4').value, pin: $('#empPin').value, as } });
-    closeModal();
-    if (as === 'admin') boot(); else location.href = '/';
-  } catch (e) { closeModal(); $('#loginErr').textContent = e.message; }
 }
 async function boot() {
   try { await api('/api/admin/overview'); } catch { return; } // ยังไม่ล็อกอิน
@@ -590,15 +608,36 @@ async function loadDash() {
 }
 
 // ═══ TIME & ATTENDANCE ═══
-let TNA = { cks: [], shifts: [] };
+let TNA = { cks: [], shifts: [] }, tnaIv = null;
 function brSelect(el, allLabel) { el.innerHTML = `<option value="">${allLabel}</option>` + BRANCHES.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join(''); }
 async function loadTna() {
   if (!$('#tnaDate').value) $('#tnaDate').value = iso(new Date());
+  if (!$('#tnaFrom').value) { $('#tnaFrom').value = iso(new Date()).slice(0, 8) + '01'; $('#tnaTo').value = iso(new Date()); }
   if (!$('#tnaBranch').options.length) brSelect($('#tnaBranch'), 'All Branches');
   const d = $('#tnaDate').value;
   const [cks, shifts] = await Promise.all([api('/api/admin/timesheet?date=' + d), api('/api/admin/shifts?from=' + d)]);
   TNA = { cks, shifts: shifts.filter(s => s.date === d) };
   renderTna();
+  // อัปเดตเรียลไทม์ทุก 5 วินาที ระหว่างเปิดหน้านี้
+  clearInterval(tnaIv);
+  tnaIv = setInterval(async () => {
+    if (!$('#p-tna').classList.contains('on')) return clearInterval(tnaIv);
+    const dd = $('#tnaDate').value;
+    try {
+      const [c2, s2] = await Promise.all([api('/api/admin/timesheet?date=' + dd), api('/api/admin/shifts?from=' + dd)]);
+      TNA = { cks: c2, shifts: s2.filter(s => s.date === dd) };
+      renderTna();
+    } catch {}
+  }, 5000);
+}
+async function tnaRangeCsv() {
+  const from = $('#tnaFrom').value, to = $('#tnaTo').value;
+  if (!from || !to) return toast('เลือกช่วงวันก่อน');
+  const list = await api(`/api/admin/timesheet-range?from=${from}&to=${to}`);
+  const br = $('#tnaBranch').value;
+  const rows = list.filter(c => !br || EMPS.find(e => e.id === c.emp_id)?.branch_id === br);
+  dl(`attendance-${from}_${to}.csv`, csv([['วันที่', 'พนักงาน', 'สาขา', 'ประเภท', 'เวลา', 'วิธี', 'สาย(นาที)', 'สถานที่'],
+    ...rows.map(c => [c.at.slice(0, 10), c.name, brName(EMPS.find(e => e.id === c.emp_id)?.branch_id), c.type === 'in' ? 'เข้า' : 'ออก', hm(c.at), c.method.toUpperCase(), c.late_min || 0, c.note || ''])]));
 }
 function tnaShift(n) { const d = new Date($('#tnaDate').value + 'T00:00'); d.setDate(d.getDate() + n); $('#tnaDate').value = iso(d); loadTna(); }
 function tnaToday() { $('#tnaDate').value = iso(new Date()); loadTna(); }
@@ -615,6 +654,7 @@ function tnaRows() {
     else if (cin && cout) st = '<span class="pill ok"><span class="dot"></span>Done</span>';
     else if (cin) st = cin.late_min > 15 ? `<span class="pill bad"><span class="dot"></span>Late ${cin.late_min} น.</span>` : '<span class="pill ok"><span class="dot"></span>On duty</span>';
     else if (d < iso(new Date())) st = '<span class="pill bad"><span class="dot"></span>Absent</span>';
+    if (cin?.offsite || cout?.offsite) st += ' <span class="pill warn"><span class="dot"></span>Off-site</span>';
     return { e, sh, cin, cout, hours, st };
   });
 }
@@ -699,6 +739,40 @@ function shiftsCsv() {
     rows.push([e.employee_no, e.name, d, s ? (s.pattern || 'm') : 'off']);
   }));
   dl(`shifts-${SH.from}.csv`, csv(rows));
+}
+// ── ตั้งกะถาวร: เลือกพนักงาน + รูปแบบกะ + ช่วงวัน แล้วลงตารางให้อัตโนมัติ ──
+function openFixedShift() {
+  const from = iso(new Date());
+  const to = new Date(); to.setMonth(to.getMonth() + 1);
+  openModal(`<h3>📌 ตั้งกะถาวร</h3>
+    <div style="display:grid;gap:12px">
+      <div><span class="flabel">พนักงาน</span><select class="in" id="fsEmp" style="width:100%">
+        <option value="__all__">— ทุกคนตามตัวกรองสาขา (${$('#shBranch').value ? esc(brName($('#shBranch').value)) : 'ทุกสาขา'}) —</option>
+        ${active().filter(e => !$('#shBranch').value || e.branch_id === $('#shBranch').value).map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select></div>
+      <div><span class="flabel">รูปแบบกะ</span><select class="in" id="fsPat" style="width:100%">
+        ${PATTERNS.map(p => `<option value="${p.key}">${esc(p.name)} (${p.start}-${p.end})</option>`).join('')}<option value="off">วันหยุด (OFF)</option></select></div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><span class="flabel">ตั้งแต่</span><input class="in" type="date" id="fsFrom" value="${from}" style="width:100%"/></div>
+        <div style="flex:1"><span class="flabel">ถึง</span><input class="in" type="date" id="fsTo" value="${iso(to)}" style="width:100%"/></div>
+      </div>
+      <label style="font-size:.88rem;font-weight:600;display:flex;gap:8px;align-items:center"><input type="checkbox" id="fsSun"/> รวมวันอาทิตย์ด้วย (ปกติเว้นอาทิตย์เป็นวันหยุด)</label>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn dark" onclick="applyFixedShift()">ลงตารางกะ</button></div>
+    </div>`);
+}
+async function applyFixedShift() {
+  const empSel = $('#fsEmp').value, pat = $('#fsPat').value, from = $('#fsFrom').value, to = $('#fsTo').value, incSun = $('#fsSun').checked;
+  if (!from || !to || to < from) return toast('เลือกช่วงวันให้ถูกต้อง');
+  const emps = empSel === '__all__' ? active().filter(e => !$('#shBranch').value || e.branch_id === $('#shBranch').value) : [EMPS.find(e => e.id === empSel)];
+  const days = {};
+  for (let d = new Date(from + 'T00:00'); iso(d) <= to; d.setDate(d.getDate() + 1)) {
+    if (!incSun && d.getDay() === 0) { days[iso(d)] = 'off'; continue; }
+    days[iso(d)] = pat;
+  }
+  let n = 0;
+  for (const e of emps) { const r = await api('/api/admin/shifts-save', { method: 'POST', body: { emp_id: e.id, days } }); n += r.saved; }
+  closeModal(); toast(`ตั้งกะถาวรแล้ว ${emps.length} คน · ${n} รายการ`); loadShifts();
 }
 async function shiftsUpload(inp) {
   const text = await inp.files[0].text(); inp.value = '';
@@ -809,9 +883,11 @@ async function openProfile(id) {
         ${f('Phone', esc(e.phone))}${f('Email', esc(e.email))}<div class="f w"><div class="k">Address</div><div class="v">${esc(e.address)}</div></div></div>
       <div class="sec-t">Employment</div>
       <div class="kv">${f('Department', esc(e.dept))}${f('Position', esc(e.role))}${f('Branch', esc(e.branch))}${f('Employee ID', esc(e.employee_no))}
-        ${f('Start date', e.hire_date)}${f('Level', esc(e.level))}${f('Contract type', esc(e.contract || 'Full Time'))}${f('Payment type', 'Monthly')}</div>
+        ${f('Start date', e.hire_date)}${f('Probation end', e.probation_end || '–')}${f('Level', esc(e.level))}${f('Contract type', esc(e.contract || 'Full Time'))}${f('Payment type', esc(e.payment_type || 'Monthly'))}</div>
       <div class="sec-t">Payroll</div>
-      <div class="kv">${f('Base salary', THB(e.pay))}${f('Bank', esc(e.bank) + ' <small>' + esc(e.bank_account) + '</small>')}
+      <div class="kv">${f('Base salary', THB(e.pay))}${f('Bonus', THB(e.bonus || 0))}
+        ${f('Position allowance', THB(e.allowance_pos || 0))}${f('Living allowance', THB(e.allowance_living || 0))}
+        ${f('Bank', esc(e.bank) + ' <small>' + esc(e.bank_account) + '</small>')}
         ${f('SSO No.', esc(e.sso_no))}${f('Tax No.', esc(e.tax_no))}</div>
       <div class="sec-t">Leave · เวลา · สลิปล่าสุด</div>
       <div style="font-size:.88rem;color:var(--soft)">
@@ -833,6 +909,14 @@ async function openEmpForm(id) {
     <div class="db"><form id="empForm">
       <div class="sec-t">Personal Information</div>
       <div class="kv">
+        <div class="f w"><div class="k">รูปพนักงาน · Photo</div>
+          <div style="display:flex;gap:14px;align-items:center;margin-top:4px">
+            <span id="phPrev">${e.photo ? `<img src="${e.photo}" class="av" style="width:58px;height:58px;object-fit:cover"/>` : `<span class="av" style="width:58px;height:58px;background:#b3a789">${isNew ? '📷' : esc(initials(e))}</span>`}</span>
+            <input type="hidden" name="photo" id="photoData" value="${esc(e.photo ?? '')}"/>
+            <button type="button" class="btn sm" onclick="document.getElementById('photoFile').click()">📷 อัปโหลดรูป</button>
+            ${e.photo ? '<button type="button" class="btn sm danger" onclick="clearPhoto()">ลบรูป</button>' : ''}
+            <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="pickPhoto(this)"/>
+          </div></div>
         ${sel('salutation', 'Title (คำนำหน้า)', e.salutation, [['', '— Select —'], ['นาย', 'นาย'], ['นางสาว', 'นางสาว'], ['นาง', 'นาง']])}
         ${inp('nickname', 'Nickname', e.nickname, 'e.g. Bank')}
         ${inp('name', 'Name (TH)', e.name, 'ชื่อ-สกุล')}${inp('name_en', 'Name (EN)', e.name_en, 'Full name')}
@@ -847,7 +931,9 @@ async function openEmpForm(id) {
         ${inp('dept', 'Department', e.dept, 'e.g. Operations')}${inp('role', 'Position', e.role, 'e.g. Barista')}
         ${sel('branch_id', 'Branch', e.branch_id || HQ_ID, BRANCHES.map(b => [b.id, b.name]))}${inp('employee_no', 'Employee ID', e.employee_no, 'e.g. 900007')}
         ${inp('hire_date', 'Start date', e.hire_date, '', 'date')}
+        ${inp('probation_end', 'Probation end (พ้นทดลองงาน)', e.probation_end, '', 'date')}
         ${sel('level', 'Level', e.level || 'staff', [['staff', 'Staff'], ['supervisor', 'Supervisor'], ['manager', 'Manager'], ['director', 'Director']])}
+        ${sel('payment_type', 'Payment type', e.payment_type || 'Monthly', [['Monthly', 'Monthly'], ['Daily', 'Daily']])}
         ${sel('contract', 'Contract type', e.contract || 'Full Time', [['Full Time', 'Full Time'], ['Part Time', 'Part Time']])}
         ${isNew ? inp('pin', 'PIN (6 หลัก · ใช้ล็อกอิน)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
         ${sel('is_admin', 'สิทธิ์แอดมิน (เข้าหลังบ้านได้)', String(!!e.is_admin), [['false', 'ไม่มี — พนักงานทั่วไป'], ['true', 'มี — เลือก Role ตอนล็อกอิน']])}
@@ -855,12 +941,33 @@ async function openEmpForm(id) {
       <div class="sec-t">Payroll</div>
       <div class="kv">
         ${inp('pay', 'Base salary (฿/เดือน)', e.pay ?? 15000, '', 'number')}
+        ${inp('bonus', 'Bonus · โบนัส (฿/เดือน)', e.bonus ?? 0, '', 'number')}
+        ${inp('allowance_pos', 'Position allowance · เบี้ยเลี้ยงตำแหน่ง', e.allowance_pos ?? 0, '', 'number')}
+        ${inp('allowance_living', 'Living allowance · ค่าครองชีพ', e.allowance_living ?? 0, '', 'number')}
         ${inp('bank', 'Bank', e.bank, 'KBANK')}${inp('bank_account', 'Bank account', e.bank_account, 'xxx-x-xxxxx-x')}
         ${inp('sso_no', 'SSO No.', e.sso_no, '')}
       </div>
     </form></div>
     <div class="df"><button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn dark" onclick="saveEmp(${isNew ? 'null' : JSON.stringify(id)})">Save Employee</button></div>`);
 }
+// ── อัปโหลดรูปพนักงาน: ย่อเป็น 280px JPEG ก่อนเก็บ ──
+function pickPhoto(inp) {
+  const f = inp.files[0]; inp.value = '';
+  if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    const side = Math.min(img.width, img.height);
+    c.width = c.height = 280;
+    c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 280, 280);
+    const data = c.toDataURL('image/jpeg', 0.85);
+    $('#photoData').value = data;
+    $('#phPrev').innerHTML = `<img src="${data}" class="av" style="width:58px;height:58px;object-fit:cover"/>`;
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+}
+function clearPhoto() { $('#photoData').value = ''; $('#phPrev').innerHTML = '<span class="av" style="width:58px;height:58px;background:#b3a789">📷</span>'; }
 async function saveEmp(id) {
   const data = Object.fromEntries(new FormData($('#empForm')));
   try {
@@ -984,23 +1091,68 @@ async function prClose() {
   catch (e) { toast(e.message); }
 }
 function prBank() { location.href = '/api/admin/bankfile.csv?month=' + PR.month; $('#prMenu').style.display = 'none'; }
+// ── สลิปเงินเดือนฟอร์แมตมาตรฐาน: เงินได้ / รายการหัก / สะสมทั้งปี + ลายเซ็น ──
+const money = n => (+n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 function openSlip(empId) {
   const r = PR.rows.find(x => x.emp_id === empId); const e = EMPS.find(x => x.id === empId) || {};
-  openModal(`<div class="slip">
-    <div class="shead"><div><h3>PAY SLIP · สลิปเงินเดือน</h3><div style="color:var(--soft);font-size:.85rem">JIANCHA DEMO HR Co., Ltd. · งวด ${PR.month}</div></div>
-      <img src="/logo-wide.png" style="height:30px"/></div>
-    <div style="display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:12px">
-      <div><b>${esc(e.name || r.name)}</b><br/><span style="color:var(--soft)">${esc(e.role || '')} · ${esc(brName(e.branch_id))}</span></div>
-      <div style="text-align:right;color:var(--soft)">รหัส ${esc(e.employee_no || '')}<br/>${esc(e.bank || '')} ${esc(e.bank_account || '')}</div></div>
-    <table>
-      <tr><td>เงินเดือน (Base salary)</td><td>${THB(r.base)}</td></tr>
-      <tr><td>ค่าล่วงเวลา (OT)</td><td>${THB(r.ot)}</td></tr>
-      <tr><td>หัก ประกันสังคม (SSO)</td><td>-${THB(r.sso)}</td></tr>
-      <tr><td>หัก ภาษี ณ ที่จ่าย</td><td>-${THB(r.tax)}</td></tr>
-      <tr class="net"><td>เงินได้สุทธิ (NET PAY)</td><td>${THB(r.net)}</td></tr>
-    </table>
-    <div class="noprint" style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn" onclick="closeModal()">ปิด</button><button class="btn dark" onclick="print()">🖨 พิมพ์สลิป</button></div>
+  const [y, m] = PR.month.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const period = `01-${days} ${TH_M[m - 1]} ${y + 543}`;
+  const payDate = `${PR.payday || 28} ${TH_M[m - 1]} ${y + 543}`;
+  const ytd = r.ytd || { earn: r.base + r.ot, tax: r.tax, sso: r.sso };
+  const totalEarn = r.base + r.ot + (r.allow_pos || 0) + (r.allow_living || 0) + (r.bonus || 0), totalDeduct = r.sso + r.tax;
+  const L = (th, en) => `<div class="l1">${th}</div><div class="l2">${en}</div>`;
+  const row = (th, en, v) => `<tr><td>${L(th, en)}</td><td class="amt">${v}</td></tr>`;
+  openModal(`<div class="slip2">
+    <div class="s2head">
+      <div class="s2co">
+        <b>${esc(PR.company || 'JIANCHA DEMO HR Co., Ltd.')}</b>
+        <div class="kv2"><span>ชื่อนามสกุล(รหัส):<br/><i>Emp. name (Code)</i></span><b>${esc(e.name || r.name)} (${esc(e.employee_no || '-')})</b></div>
+        <div class="kv2"><span>ตำแหน่ง:<br/><i>Position</i></span><b>${esc(e.role || '-')}</b></div>
+      </div>
+      <div class="s2logo"><img src="/logo-wide.png" alt="JIANCHA"/></div>
+      <div class="s2meta">
+        <h3>สลิปเงินเดือน / Pay Slip</h3>
+        <div class="kv2"><span>รอบเงินเดือน:<br/><i>Payroll Period</i></span><b>${period}</b></div>
+        <div class="kv2"><span>วันที่ชำระ:<br/><i>Payment Date</i></span><b>${payDate}</b></div>
+        <div class="kv2"><span>เลขที่บัญชี:<br/><i>Bank Account</i></span><b>${esc(e.bank_account || '-')}</b></div>
+      </div>
+    </div>
+    <div class="s2cols">
+      <table><thead><tr><th colspan="2">เงินได้<br/><i>Earnings</i></th></tr></thead><tbody>
+        ${row('เงินเดือน/ค่าจ้าง', 'Salary/Wage', money(r.base))}
+        ${row('ค่าล่วงเวลา', 'Overtime', money(r.ot))}
+        ${row('ค่านายหน้า', 'Commission', money(0))}
+        ${row('ค่าเบี้ยเลี้ยง/ค่าครองชีพ', 'Allowances/Cost of livings', money((r.allow_pos || 0) + (r.allow_living || 0)))}
+        ${row('โบนัส', 'Bonus', money(r.bonus || 0))}
+        ${row('เงินได้อื่นๆ', 'Others', money(0))}
+      </tbody></table>
+      <table><thead><tr><th colspan="2">รายการหัก<br/><i>Deductions</i></th></tr></thead><tbody>
+        ${row('ประกันสังคม', 'Social Security Fund', money(r.sso))}
+        ${row('ภาษีหัก ณ ที่จ่าย', 'Withholding tax', money(r.tax))}
+        ${row('เงินกู้ยืม กยศ./กรอ.', 'Student Loan Fund', money(0))}
+        ${row('เงินประกัน', 'Deposit', money(0))}
+        ${row('ขาด/ลา/มาสาย', 'Absent/Leave/Late', money(0))}
+        ${row('รายการหักอื่นๆ', 'Others', money(0))}
+      </tbody></table>
+      <table><thead><tr><th colspan="2">ปี<br/><i>${y + 543}</i></th></tr></thead><tbody>
+        ${row('เงินได้สะสม', 'YTD earnings', money(ytd.earn))}
+        ${row('ภาษีหัก ณ ที่จ่ายสะสม', 'YTD Withholding tax', money(ytd.tax))}
+        ${row('เงินประกันสังคมสะสม', 'Accumulated SSF', money(ytd.sso))}
+        <tr class="sep"><td>${L('รวมเงินได้', 'Total earnings')}</td><td class="amt">${money(totalEarn)}</td></tr>
+        ${row('รวมรายการหัก', 'Total deductions', money(totalDeduct))}
+        <tr class="net2"><td>${L('เงินได้สุทธิ', 'Net pay')}</td><td class="amt">${money(r.net)}</td></tr>
+      </tbody></table>
+    </div>
+    <div class="s2foot">
+      <div>หมายเหตุ:<br/><i>Remarks</i></div>
+      <div class="sig">ลายเซ็นผู้จ่ายเงิน:<br/><i>Employer's Signature</i><span class="line"></span></div>
+    </div>
+    <div class="s2legal">ข้อมูลเงินเดือนและค่าจ้างเป็นข้อมูลส่วนบุคคล ห้ามเปิดเผยโดยเด็ดขาด เอกสารนี้จะสมบูรณ์เมื่อมีลายเซ็นผู้มีอำนาจลงนามและตราประทับเท่านั้น<br/>
+      <i>Salary and wages are confidential information. Disclosure is strictly prohibited. This document is only valid with an authorized signature and company stamp.</i></div>
+    <div class="noprint" style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">ปิด</button><button class="btn dark" onclick="print()">🖨 พิมพ์ / บันทึก PDF</button></div>
   </div>`);
 }
 
@@ -1063,9 +1215,35 @@ async function loadSettings() {
     ${f('payday', 'วันจ่ายเงินเดือน', c.payday, 'ของเดือน')}${f('sso_rate', 'ประกันสังคม', c.sso_rate, '%')}${f('sso_cap', 'เพดาน ปกส.', c.sso_cap, '฿/เดือน')}
     ${f('tax_threshold', 'เกณฑ์เริ่มหักภาษี', c.tax_threshold, '฿/เดือน')}${f('tax_rate', 'อัตราภาษี', c.tax_rate, '%')}
     <button class="btn dark" onclick="saveSettings()">บันทึก</button></div>`;
-  $('#setBr').innerHTML = `<tr><th>สาขา</th><th>พิกัด</th><th>รัศมี</th><th>QR ลงเวลา</th></tr>` +
-    s.branches.map(b => `<tr><td style="font-weight:700">${esc(b.name)}</td><td class="mono" style="font-size:.8rem">${b.lat}, ${b.lng}</td><td>${b.radius} ม.</td>
-      <td><a href="/scan" target="_blank" style="color:var(--gold);font-weight:700">เปิดหน้า QR สาขา ↗</a></td></tr>`).join('');
+  $('#setBr').innerHTML = `<tr><th>สาขา</th><th>พิกัด (lat, lng)</th><th>รัศมี</th><th>พนักงาน</th><th>QR ลงเวลา</th><th></th></tr>` +
+    s.branches.map(b => {
+      const cnt = EMPS.filter(e => e.branch_id === b.id && e.status !== 'resigned').length;
+      return `<tr><td style="font-weight:700">${esc(b.name)}</td><td class="mono" style="font-size:.8rem">${b.lat}, ${b.lng}</td><td>${b.radius} ม.</td>
+      <td>${cnt} คน</td>
+      <td><a href="/scan" target="_blank" style="color:var(--gold);font-weight:700">เปิดหน้า QR ↗</a></td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick='brFormEdit(${JSON.stringify(b)})'>แก้ไข</button>
+        <button class="btn sm danger" onclick="brDelete('${b.id}')">ลบ</button></td></tr>`;
+    }).join('');
+}
+// ── จัดการสาขา ──
+let BR_EDIT = null;
+function brFormNew() { BR_EDIT = null; $('#brForm').style.display = 'block'; $('#bfName').value = ''; $('#bfLat').value = '13.7563'; $('#bfLng').value = '100.5018'; $('#bfRad').value = '100'; $('#bfSave').textContent = 'บันทึกสาขาใหม่'; $('#bfName').focus(); }
+function brFormEdit(b) { BR_EDIT = b.id; $('#brForm').style.display = 'block'; $('#bfName').value = b.name; $('#bfLat').value = b.lat; $('#bfLng').value = b.lng; $('#bfRad').value = b.radius; $('#bfSave').textContent = 'บันทึกการแก้ไข'; }
+async function brSave() {
+  const body = { name: $('#bfName').value, lat: $('#bfLat').value, lng: $('#bfLng').value, radius: $('#bfRad').value };
+  if (!body.name.trim()) return toast('ใส่ชื่อสาขาก่อน');
+  try {
+    if (BR_EDIT) await api('/api/admin/branches/' + BR_EDIT, { method: 'PUT', body });
+    else await api('/api/admin/branches', { method: 'POST', body });
+    toast(BR_EDIT ? 'แก้ไขสาขาแล้ว' : 'เพิ่มสาขาแล้ว');
+    $('#brForm').style.display = 'none';
+    await refreshBase(); loadSettings();
+  } catch (e) { toast(e.message); }
+}
+async function brDelete(id) {
+  if (!confirm('ลบสาขานี้?')) return;
+  try { await api('/api/admin/branches/' + id, { method: 'DELETE' }); toast('ลบสาขาแล้ว'); await refreshBase(); loadSettings(); }
+  catch (e) { toast(e.message); }
 }
 async function saveSettings() {
   const body = {}; $$('.setf').forEach(i => body[i.dataset.k] = +i.value);

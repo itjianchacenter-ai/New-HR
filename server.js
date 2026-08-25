@@ -221,7 +221,7 @@ app.get('/api/me/dashboard', (req, res) => {
   const myBranch = db.branches.find(b => b.id === emp.branch_id);
   res.json({
     name: emp.name, role: emp.role, branch: myBranch?.name,
-    nickname: emp.nickname || '', name_en: emp.name_en || '', phone: emp.phone || '',
+    nickname: emp.nickname || '', name_en: emp.name_en || '', phone: emp.phone || '', photo: emp.photo || '',
     email: emp.email || '', national_id: emp.national_id || '', contract: emp.contract || 'Full Time',
     branch_geo: myBranch ? { lat: myBranch.lat, lng: myBranch.lng, radius: myBranch.radius } : null,
     employee_no: emp.employee_no, dept: emp.dept, hire_date: emp.hire_date, pay: emp.pay, payday: db.company.payday,
@@ -236,17 +236,23 @@ app.get('/api/me/dashboard', (req, res) => {
 app.post('/api/checkin', (req, res) => {
   const c = me(req, res); if (!c) return;
   const { db, emp } = c;
-  const { lat, lng, qr_token, type, photo } = req.body || {};
+  const { lat, lng, qr_token, type, photo, offsite, reason, place } = req.body || {};
   const br = db.branches.find(b => b.id === emp.branch_id);
-  let method, note;
+  let method, note, isOffsite = false;
   if (qr_token) {
     const hit = db.branches.find(b => b.qr_token === qr_token);
     if (!hit) return res.status(400).json({ error: 'QR ไม่ถูกต้อง' });
     method = 'qr'; note = hit.name;
   } else if (lat && lng) {
     const d = dist(+lat, +lng, br.lat, br.lng);
-    if (d > br.radius) return res.status(400).json({ error: `อยู่นอกระยะ (${d} ม. / รัศมี ${br.radius} ม.) — สแกน QR ที่ร้านแทนได้` });
-    method = 'gps'; note = `${d} ม. จาก ${br.name}`;
+    if (d > br.radius) {
+      // เช็คอินนอกสถานที่: ต้องแจ้งเหตุผล — บันทึกพิกัด/ชื่อสถานที่จริงให้ HR ตรวจ
+      if (!offsite) return res.status(400).json({ error: `อยู่นอกระยะ (${d.toLocaleString()} ม. / รัศมี ${br.radius} ม.)`, out_of_range: true, distance: d });
+      if (!String(reason || '').trim()) return res.status(400).json({ error: 'เช็คอินนอกสถานที่ต้องระบุเหตุผล' });
+      isOffsite = true;
+      method = 'gps';
+      note = `นอกสถานที่: ${String(place || '').trim() || `${d.toLocaleString()} ม. จาก ${br.name}`} · ${String(reason).trim()}`;
+    } else { method = 'gps'; note = `${d} ม. จาก ${br.name}`; }
   } else return res.status(400).json({ error: 'ไม่มีพิกัดหรือ QR' });
   const shift = db.shifts.find(s => s.emp_id === emp.id && s.date === iso(new Date()));
   let late = 0;
@@ -255,6 +261,7 @@ app.post('/api/checkin', (req, res) => {
     late = Math.max(0, Math.round((Date.now() - sched) / 60000));
   }
   const rec = { id: 'ck' + Date.now(), emp_id: emp.id, type: type === 'out' ? 'out' : 'in', method, note, at: now(), late_min: late };
+  if (isOffsite) { rec.offsite = true; rec.lat = +lat; rec.lng = +lng; }
   // รูปถ่ายยืนยันตอนลงเวลา (data URL — จำกัดขนาดกันไฟล์บวม)
   if (typeof photo === 'string' && photo.startsWith('data:image/') && photo.length < 400000) rec.photo = photo;
   db.checkins.push(rec); save(db);
@@ -317,6 +324,95 @@ app.get('/api/me/payslips', (req, res) => {
   const c = me(req, res); if (!c) return;
   res.json(c.db.payslips.filter(p => p.emp_id === c.emp.id).reverse());
 });
+// หน้าสลิปเต็มรูปแบบ (พิมพ์/บันทึก PDF ได้) — เปิดจากแอปพนักงาน
+app.get('/api/me/payslip-print', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  const { db, emp } = c;
+  const month = String(req.query.month || '');
+  const p = db.payslips.find(x => x.emp_id === emp.id && x.month === month);
+  if (!p) return res.status(404).send('ไม่พบสลิปงวดนี้');
+  const year = month.slice(0, 4);
+  const past = db.payslips.filter(x => x.emp_id === emp.id && x.month.startsWith(year) && x.month <= month);
+  const ytd = {
+    earn: past.reduce((n, x) => n + x.base + x.ot + (x.allow_pos || 0) + (x.allow_living || 0) + (x.bonus || 0), 0),
+    tax: past.reduce((n, x) => n + x.tax, 0),
+    sso: past.reduce((n, x) => n + x.sso, 0),
+  };
+  const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const [y, m] = month.split('-').map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const money = n => (+n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const L = (th, en) => `<div class="l1">${th}</div><div class="l2">${en}</div>`;
+  const row = (th, en, v) => `<tr><td>${L(th, en)}</td><td class="amt">${v}</td></tr>`;
+  res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pay Slip ${month} · ${esc(emp.name)}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px}
+.sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.82rem}
+.s2head{display:grid;grid-template-columns:1.2fr auto 1.1fr;gap:14px;align-items:start;margin-bottom:14px}
+.s2co b{font-size:.95rem}.s2logo{align-self:center}.s2logo img{height:34px}
+.s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right}
+.kv2{display:flex;gap:10px;justify-content:space-between;margin-top:7px;font-size:.78rem}
+.kv2 span{color:#555;line-height:1.25}.kv2 i{font-size:.66rem;color:#999;font-style:normal}.kv2 b{text-align:right;white-space:nowrap}
+.s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
+.s2cols table{border-collapse:collapse;width:100%}
+.s2cols table:not(:last-child){border-right:1px solid #1a1712}
+th{border-bottom:1px solid #1a1712;padding:6px;font-size:.78rem;text-align:center}
+th i{font-size:.64rem;color:#777;font-style:normal;font-weight:400}
+td{padding:5px 8px;vertical-align:top}
+td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.8rem;white-space:nowrap}
+.l1{font-size:.76rem}.l2{font-size:.62rem;color:#999}
+tr.sep td{border-top:1px solid #1a1712}
+tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
+.s2foot{display:flex;justify-content:space-between;margin-top:14px;font-size:.76rem;color:#555}
+.s2foot i{font-size:.64rem;color:#999;font-style:normal}
+.sig{text-align:right}.sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
+.s2legal{border-top:1px solid #ccc;margin-top:16px;padding-top:8px;text-align:center;font-size:.62rem;color:#777}
+.s2legal i{font-style:normal;color:#999}
+.bar{max-width:860px;margin:0 auto 12px;display:flex;gap:10px;justify-content:space-between}
+.bar button{font:inherit;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer}
+.bar .p{background:#221f19;color:#fff;border-color:#221f19}
+@media(max-width:720px){.s2cols{grid-template-columns:1fr}.s2cols table:not(:last-child){border-right:0;border-bottom:1px solid #1a1712}.s2head{grid-template-columns:1fr;text-align:left}.s2meta h3{text-align:left}}
+@media print{body{background:#fff;padding:0}.bar{display:none}.sheet{box-shadow:none;border-radius:0;max-width:100%}}
+</style></head><body>
+<div class="bar"><button onclick="history.back()">← กลับ</button><button class="p" onclick="print()">🖨 พิมพ์ / บันทึก PDF</button></div>
+<div class="sheet">
+  <div class="s2head">
+    <div class="s2co"><b>${esc(db.company.name)}</b>
+      <div class="kv2"><span>ชื่อนามสกุล(รหัส):<br/><i>Emp. name (Code)</i></span><b>${esc(emp.name)} (${esc(emp.employee_no)})</b></div>
+      <div class="kv2"><span>ตำแหน่ง:<br/><i>Position</i></span><b>${esc(emp.role)}</b></div></div>
+    <div class="s2logo"><img src="/logo-wide.png" alt="JIANCHA"/></div>
+    <div class="s2meta"><h3>สลิปเงินเดือน / Pay Slip</h3>
+      <div class="kv2"><span>รอบเงินเดือน:<br/><i>Payroll Period</i></span><b>01-${days} ${TH_M[m - 1]} ${y + 543}</b></div>
+      <div class="kv2"><span>วันที่ชำระ:<br/><i>Payment Date</i></span><b>${db.company.payday} ${TH_M[m - 1]} ${y + 543}</b></div>
+      <div class="kv2"><span>เลขที่บัญชี:<br/><i>Bank Account</i></span><b>${esc(emp.bank_account || '-')}</b></div></div>
+  </div>
+  <div class="s2cols">
+    <table><thead><tr><th colspan="2">เงินได้<br/><i>Earnings</i></th></tr></thead><tbody>
+      ${row('เงินเดือน/ค่าจ้าง', 'Salary/Wage', money(p.base))}${row('ค่าล่วงเวลา', 'Overtime', money(p.ot))}
+      ${row('ค่านายหน้า', 'Commission', money(0))}${row('ค่าเบี้ยเลี้ยง/ค่าครองชีพ', 'Allowances/Cost of livings', money((p.allow_pos || 0) + (p.allow_living || 0)))}
+      ${row('โบนัส', 'Bonus', money(p.bonus || 0))}${row('เงินได้อื่นๆ', 'Others', money(0))}</tbody></table>
+    <table><thead><tr><th colspan="2">รายการหัก<br/><i>Deductions</i></th></tr></thead><tbody>
+      ${row('ประกันสังคม', 'Social Security Fund', money(p.sso))}${row('ภาษีหัก ณ ที่จ่าย', 'Withholding tax', money(p.tax))}
+      ${row('เงินกู้ยืม กยศ./กรอ.', 'Student Loan Fund', money(0))}${row('เงินประกัน', 'Deposit', money(0))}
+      ${row('ขาด/ลา/มาสาย', 'Absent/Leave/Late', money(0))}${row('รายการหักอื่นๆ', 'Others', money(0))}</tbody></table>
+    <table><thead><tr><th colspan="2">ปี<br/><i>${y + 543}</i></th></tr></thead><tbody>
+      ${row('เงินได้สะสม', 'YTD earnings', money(ytd.earn))}${row('ภาษีหัก ณ ที่จ่ายสะสม', 'YTD Withholding tax', money(ytd.tax))}
+      ${row('เงินประกันสังคมสะสม', 'Accumulated SSF', money(ytd.sso))}
+      <tr class="sep"><td>${L('รวมเงินได้', 'Total earnings')}</td><td class="amt">${money(p.base + p.ot + (p.allow_pos || 0) + (p.allow_living || 0) + (p.bonus || 0))}</td></tr>
+      ${row('รวมรายการหัก', 'Total deductions', money(p.sso + p.tax))}
+      <tr class="net2"><td>${L('เงินได้สุทธิ', 'Net pay')}</td><td class="amt">${money(p.net)}</td></tr></tbody></table>
+  </div>
+  <div class="s2foot"><div>หมายเหตุ:<br/><i>Remarks</i></div>
+    <div class="sig">ลายเซ็นผู้จ่ายเงิน:<br/><i>Employer's Signature</i><span class="line"></span></div></div>
+  <div class="s2legal">ข้อมูลเงินเดือนและค่าจ้างเป็นข้อมูลส่วนบุคคล ห้ามเปิดเผยโดยเด็ดขาด เอกสารนี้จะสมบูรณ์เมื่อมีลายเซ็นผู้มีอำนาจลงนามและตราประทับเท่านั้น<br/>
+    <i>Salary and wages are confidential information. Disclosure is strictly prohibited. This document is only valid with an authorized signature and company stamp.</i></div>
+</div>
+</body></html>`);
+});
 app.get('/api/me/calendar', (req, res) => {
   const c = me(req, res); if (!c) return;
   res.json(c.db.shifts.filter(s => s.emp_id === c.emp.id && !s.off));
@@ -373,8 +469,9 @@ app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
     branch_id: branch_id || db.branches[0].id, pin: String(pin), pay: +pay || 15000, phone: phone || '',
     email: email || '', birth_date: null, hire_date: hire_date || iso(new Date()), bank: '', bank_account: '', status: 'active',
     leave: quota };
-  ['tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address', 'salutation', 'name_en', 'bank', 'bank_account', 'birth_date', 'photo', 'level', 'nickname', 'national_id', 'contract']
+  ['tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address', 'salutation', 'name_en', 'bank', 'bank_account', 'birth_date', 'photo', 'level', 'nickname', 'national_id', 'contract', 'probation_end', 'payment_type']
     .forEach(k => { if (req.body[k]) obj[k] = String(req.body[k]); });
+  ['bonus', 'allowance_pos', 'allowance_living'].forEach(k => { if (k in req.body) obj[k] = +req.body[k] || 0; });
   if (!obj.level) obj.level = 'staff';
   obj.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
   db.employees.push(obj);
@@ -386,9 +483,10 @@ app.put('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return
   if (!e) return res.status(404).json({ error: 'not found' });
   const allow = ['name', 'employee_no', 'role', 'dept', 'branch_id', 'phone', 'email', 'bank', 'bank_account',
     'birth_date', 'hire_date', 'tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address',
-    'salutation', 'name_en', 'photo', 'level', 'nickname', 'national_id', 'contract', 'status'];
+    'salutation', 'name_en', 'photo', 'level', 'nickname', 'national_id', 'contract', 'status', 'probation_end', 'payment_type'];
   for (const k of allow) if (k in (req.body || {}) && req.body[k] !== null) e[k] = String(req.body[k]);
   if ('pay' in (req.body || {})) e.pay = +req.body.pay || e.pay;
+  ['bonus', 'allowance_pos', 'allowance_living'].forEach(k => { if (k in (req.body || {})) e[k] = +req.body[k] || 0; });
   if ('is_admin' in (req.body || {})) e.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
   save(db); res.json({ ok: true }); });
 // ── Setup กะการทำงาน: รูปแบบกะ (เพิ่ม/ลบ) + บันทึกตารางกะรายวัน ──
@@ -457,6 +555,11 @@ app.get('/api/admin/shifts', (req, res) => { if (!admin(req, res)) return; const
 app.get('/api/admin/timesheet', (req, res) => { if (!admin(req, res)) return; const db = load();
   const date = req.query.date || iso(new Date());
   res.json(db.checkins.filter(x => x.at.slice(0, 10) === date).map(x => ({ ...x, name: nm(db, x.emp_id) }))); });
+// บันทึกเวลาแบบช่วงวัน (สำหรับ export)
+app.get('/api/admin/timesheet-range', (req, res) => { if (!admin(req, res)) return; const db = load();
+  const from = String(req.query.from || iso(new Date())), to = String(req.query.to || from);
+  res.json(db.checkins.filter(x => { const d = x.at.slice(0, 10); return d >= from && d <= to; })
+    .map(({ photo, ...x }) => ({ ...x, name: nm(db, x.emp_id) }))); });
 app.get('/api/admin/approvals', (req, res) => { if (!admin(req, res)) return; const db = load();
   res.json({
     leaves: db.leaves.filter(l => l.status === 'pending').map(l => ({ ...l, name: nm(db, l.emp_id), type_name: db.leave_types.find(t => t.key === l.type)?.name || l.type })),
@@ -522,17 +625,33 @@ function calcMonth(db, month) {
     const taxRate = c.tax_rate != null ? +c.tax_rate : 5;
     const sso = Math.min(Math.round(e.pay * ssoRate / 100), ssoCap);
     const tax = e.pay > taxTh ? Math.round((e.pay - taxTh) * taxRate / 100) : 0;
-    return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot, sso, tax, net: e.pay + ot - sso - tax };
+    // เงินเพิ่ม: เบี้ยเลี้ยงตำแหน่ง / ค่าครองชีพ / โบนัส (ตั้งค่ารายคนในฟอร์มพนักงาน)
+    const allow_pos = +e.allowance_pos || 0, allow_living = +e.allowance_living || 0, bonus = +e.bonus || 0;
+    return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot,
+      allow_pos, allow_living, bonus, sso, tax,
+      net: e.pay + ot + allow_pos + allow_living + bonus - sso - tax };
   });
 }
 app.get('/api/admin/payroll', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
   const closed = db.payslips.some(p => p.month === month);
-  res.json({ month, closed, rows: closed ? db.payslips.filter(p => p.month === month).map(p => ({ ...p, name: nm(db, p.emp_id) })) : calcMonth(db, month) }); });
+  const year = month.slice(0, 4);
+  const rows = (closed ? db.payslips.filter(p => p.month === month).map(p => ({ ...p, name: nm(db, p.emp_id) })) : calcMonth(db, month))
+    .map(r => {
+      // ยอดสะสมทั้งปี (YTD) จากสลิปที่ปิดงวดแล้ว + งวดปัจจุบันถ้ายังไม่ปิด
+      const past = db.payslips.filter(p => p.emp_id === r.emp_id && p.month.startsWith(year) && p.month <= month);
+      const ytd = {
+        earn: past.reduce((n, p) => n + p.base + p.ot + (p.allow_pos || 0) + (p.allow_living || 0) + (p.bonus || 0), 0) + (closed ? 0 : r.base + r.ot + r.allow_pos + r.allow_living + r.bonus),
+        tax: past.reduce((n, p) => n + p.tax, 0) + (closed ? 0 : r.tax),
+        sso: past.reduce((n, p) => n + p.sso, 0) + (closed ? 0 : r.sso),
+      };
+      return { ...r, ytd };
+    });
+  res.json({ month, closed, payday: db.company.payday, company: db.company.name, rows }); });
 app.post('/api/admin/payroll/close', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = (req.body || {}).month || iso(new Date()).slice(0, 7);
   if (db.payslips.some(p => p.month === month)) return res.status(409).json({ error: 'งวดนี้ปิดแล้ว' });
-  calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, sso: r.sso, tax: r.tax, net: r.net }));
+  calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, allow_pos: r.allow_pos, allow_living: r.allow_living, bonus: r.bonus, sso: r.sso, tax: r.tax, net: r.net }));
   save(db); res.json({ ok: true, month }); });
 app.get('/api/admin/bankfile.csv', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
@@ -547,6 +666,29 @@ app.post('/api/admin/announcements', (req, res) => { if (!admin(req, res)) retur
   const db = load(); db.announcements.push({ id: 'a' + Date.now(), title, body: String(body || ''), at: now() });
   save(db); res.json({ ok: true }); });
 app.get('/api/admin/branches', (req, res) => { if (!admin(req, res)) return; res.json(load().branches); });
+// ── จัดการสาขา: เพิ่ม / แก้ไข / ลบ ──
+app.post('/api/admin/branches', (req, res) => { if (!admin(req, res)) return;
+  const { name, lat, lng, radius } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'ใส่ชื่อสาขา' });
+  const db = load();
+  const b = { id: 'b' + Date.now(), name: String(name), lat: +lat || 13.7563, lng: +lng || 100.5018, radius: +radius || 100, qr_token: crypto.randomBytes(8).toString('hex') };
+  db.branches.push(b); save(db); res.json({ ok: true, branch: b }); });
+app.put('/api/admin/branches/:id', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const b = db.branches.find(x => x.id === req.params.id);
+  if (!b) return res.status(404).json({ error: 'ไม่พบสาขา' });
+  const { name, lat, lng, radius } = req.body || {};
+  if (name) b.name = String(name);
+  if (lat != null) b.lat = +lat || b.lat;
+  if (lng != null) b.lng = +lng || b.lng;
+  if (radius != null) b.radius = +radius || b.radius;
+  save(db); res.json({ ok: true, branch: b }); });
+app.delete('/api/admin/branches/:id', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  if (db.branches.length <= 1) return res.status(400).json({ error: 'ต้องเหลือสาขาอย่างน้อย 1 สาขา' });
+  const used = db.employees.filter(e => e.branch_id === req.params.id && e.status !== 'resigned').length;
+  if (used) return res.status(409).json({ error: `ลบไม่ได้ — มีพนักงาน ${used} คนสังกัดสาขานี้ ย้ายสังกัดก่อน` });
+  db.branches = db.branches.filter(x => x.id !== req.params.id);
+  save(db); res.json({ ok: true }); });
 app.get('/api/admin/report', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
   const rows = db.employees.map(e => {
