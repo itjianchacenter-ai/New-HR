@@ -6,6 +6,9 @@
 <title>JIANCHA People · พนักงาน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<!-- แผนที่ฟรี OpenStreetMap + Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --bg:#f1ede4; --surface:#fbf9f4; --card:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
@@ -248,7 +251,10 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <div class="c"><div class="k">เข้างาน · IN</div><b id="ioIn">--:--</b><div class="s" id="ioInS">ยังไม่ลงเวลา</div></div>
     <div class="c"><div class="k">ออกงาน · OUT</div><b id="ioOut">--:--</b><div class="s" id="ioOutS">ยังไม่ลงเวลา</div></div>
   </div>
-  <a class="qrlink" onclick="toast('เปิดกล้องมือถือแล้วสแกน QR ที่หน้าร้านได้เลย')">สแกน QR ที่ร้านแทน →</a>
+  <div style="display:flex;gap:18px;justify-content:center">
+    <a class="qrlink" onclick="openMap()">🗺 แผนที่จุดเช็คอิน</a>
+    <a class="qrlink" onclick="toast('เปิดกล้องมือถือแล้วสแกน QR ที่หน้าร้านได้เลย')">สแกน QR แทน →</a>
+  </div>
 </div>
 
 <!-- ═══ REQUESTS ═══ -->
@@ -548,6 +554,29 @@ function submitOffsite() {
   submitCheckin(pendingPhoto, { offsite: true, reason, place: $('#osPlace').value.trim() });
 }
 
+// ── แผนที่จุดเช็คอิน (OpenStreetMap ฟรี): วงรัศมีสาขา + ตำแหน่งฉัน ──
+let CKMAP = null;
+function openMap() {
+  const g = ME?.branch_geo;
+  if (!g) return toast('ยังไม่มีพิกัดสาขา — ติดต่อ HR');
+  openSheet(`<h3>🗺 จุดเช็คอิน · ${esc(ME.branch)}</h3>
+    <div id="ckMap" style="height:320px;border-radius:16px;overflow:hidden;border:1px solid var(--line)"></div>
+    <p style="font-size:.82rem;color:var(--soft);margin:10px 2px 0" id="ckMapCap">วงสีทอง = รัศมีที่เช็คอินได้ (${g.radius} ม.)</p>`);
+  setTimeout(() => {
+    if (CKMAP) { CKMAP.remove(); CKMAP = null; }
+    CKMAP = L.map('ckMap').setView([g.lat, g.lng], 16);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(CKMAP);
+    L.circle([g.lat, g.lng], { radius: g.radius, color: '#a5843f', weight: 2, fillOpacity: .15 }).addTo(CKMAP);
+    L.marker([g.lat, g.lng]).addTo(CKMAP).bindPopup(`<b>${esc(ME.branch)}</b>`);
+    if (GEO) {
+      const me = L.circleMarker([GEO.lat, GEO.lng], { radius: 8, color: '#2f6a53', fillColor: '#2f6a53', fillOpacity: .9 }).addTo(CKMAP).bindPopup('📍 ตำแหน่งของฉัน');
+      const d = dist(GEO.lat, GEO.lng, g.lat, g.lng);
+      $('#ckMapCap').textContent = d <= g.radius ? `✅ อยู่ในรัศมีเช็คอิน (ห่างสาขา ${d} ม. / รัศมี ${g.radius} ม.)` : `⚠️ อยู่นอกรัศมี — ห่างสาขา ${d.toLocaleString()} ม. (รัศมี ${g.radius} ม.)`;
+      CKMAP.fitBounds([[g.lat, g.lng], [GEO.lat, GEO.lng]], { padding: [40, 40], maxZoom: 16 });
+    }
+    setTimeout(() => CKMAP.invalidateSize(), 150);
+  }, 250);
+}
 // ═══ REQUESTS PAGE ═══
 const ST = { pending: ['รออนุมัติ', 'var(--gold)'], approved: ['อนุมัติแล้ว', 'var(--green)'], rejected: ['ไม่อนุมัติ', 'var(--red)'], cancelled: ['ยกเลิก', 'var(--faint)'] };
 const stTag = s => `<span style="color:${(ST[s] || ST.pending)[1]};font-weight:700;font-size:.8rem">${(ST[s] || ST.pending)[0]}</span>`;

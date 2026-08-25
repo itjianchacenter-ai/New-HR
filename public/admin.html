@@ -192,15 +192,17 @@ main{margin-left:var(--side);min-height:100vh}
 
 /* slip แบบฟอร์แมตมาตรฐาน (เงินได้/รายการหัก/YTD) */
 .slip2{font-size:.82rem;color:#1a1712}
-.slip2 .s2head{display:grid;grid-template-columns:1.2fr auto 1.1fr;gap:14px;align-items:start;margin-bottom:14px}
+.slip2 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
 .slip2 .s2co b{font-size:.95rem}
-.slip2 .s2logo{align-self:center}
-.slip2 .s2logo img{height:34px}
-.slip2 .s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right}
-.slip2 .kv2{display:flex;gap:10px;justify-content:space-between;margin-top:7px;font-size:.78rem}
+.slip2 .s2logo{align-self:center;padding:0 6px}
+.slip2 .s2logo img{height:32px}
+.slip2 .s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right;font-weight:800}
+.slip2 .kv2{display:grid;grid-template-columns:118px 1fr;gap:0 12px;margin-top:7px;font-size:.78rem;align-items:start}
 .slip2 .kv2 span{color:#555;line-height:1.25}
-.slip2 .kv2 i{font-size:.66rem;color:#999;font-style:normal}
-.slip2 .kv2 b{text-align:right;white-space:nowrap}
+.slip2 .kv2 i{font-size:.66rem;color:#999;font-style:normal;font-weight:400}
+.slip2 .kv2 b{font-weight:600;font-size:.8rem;white-space:nowrap;text-align:left}
+.slip2 .s2meta .kv2{grid-template-columns:1fr auto}
+.slip2 .s2meta .kv2 b{text-align:right}
 .slip2 .s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
 .slip2 .s2cols table{border-collapse:collapse;width:100%}
 .slip2 .s2cols table:not(:last-child){border-right:1px solid #1a1712}

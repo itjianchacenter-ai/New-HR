@@ -352,11 +352,13 @@ app.get('/api/me/payslip-print', (req, res) => {
 <style>
 body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px}
 .sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.82rem}
-.s2head{display:grid;grid-template-columns:1.2fr auto 1.1fr;gap:14px;align-items:start;margin-bottom:14px}
-.s2co b{font-size:.95rem}.s2logo{align-self:center}.s2logo img{height:34px}
-.s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right}
-.kv2{display:flex;gap:10px;justify-content:space-between;margin-top:7px;font-size:.78rem}
-.kv2 span{color:#555;line-height:1.25}.kv2 i{font-size:.66rem;color:#999;font-style:normal}.kv2 b{text-align:right;white-space:nowrap}
+.s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
+.s2co b{font-size:.95rem}.s2logo{align-self:center;padding:0 6px}.s2logo img{height:32px}
+.s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right;font-weight:800}
+.kv2{display:grid;grid-template-columns:118px 1fr;gap:0 12px;margin-top:7px;font-size:.78rem;align-items:start}
+.kv2 span{color:#555;line-height:1.25}.kv2 i{font-size:.66rem;color:#999;font-style:normal;font-weight:400}
+.kv2 b{font-weight:600;font-size:.8rem;white-space:nowrap;text-align:left}
+.s2meta .kv2{grid-template-columns:1fr auto}.s2meta .kv2 b{text-align:right}
 .s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
 .s2cols table{border-collapse:collapse;width:100%}
 .s2cols table:not(:last-child){border-right:1px solid #1a1712}
