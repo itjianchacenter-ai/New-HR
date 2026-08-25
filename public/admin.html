@@ -6,6 +6,9 @@
 <title>JC People · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<!-- แผนที่ฟรี OpenStreetMap + Leaflet (ไม่ต้องมี API key) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --bg:#ece6da; --surface:#fbf9f4; --surface-2:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
@@ -489,8 +492,9 @@ main{margin-left:var(--side);min-height:100vh}
             <button class="btn dark" id="bfSave" onclick="brSave()">บันทึกสาขา</button>
             <button class="btn" onclick="$('#brForm').style.display='none'">ยกเลิก</button>
           </div>
-          <div style="font-size:.78rem;color:var(--faint);margin-top:8px">พิกัดหาได้จาก Google Maps → คลิกขวาที่ร้าน → คัดลอกตัวเลข lat, lng</div>
+          <div style="font-size:.78rem;color:var(--faint);margin-top:8px">💡 คลิกบนแผนที่ด้านล่างเพื่อปักพิกัด หรือคัดลอกจาก Google Maps (คลิกขวาที่ร้าน)</div>
         </div>
+        <div id="brMap" style="height:400px;border-bottom:1px solid var(--line)"></div>
         <div class="tblwrap"><table class="tbl" id="setBr"></table></div>
       </div>
     </section>
@@ -1224,6 +1228,34 @@ async function loadSettings() {
       <td style="white-space:nowrap"><button class="btn sm" onclick='brFormEdit(${JSON.stringify(b)})'>แก้ไข</button>
         <button class="btn sm danger" onclick="brDelete('${b.id}')">ลบ</button></td></tr>`;
     }).join('');
+  renderBrMap(s.branches);
+}
+// ── แผนที่สาขา (OpenStreetMap + Leaflet — ฟรี) ──
+let LMAP = null, LLAYER = null, LPICK = null;
+function renderBrMap(branches) {
+  if (!window.L || !$('#brMap')) return;
+  if (!LMAP) {
+    LMAP = L.map('brMap').setView([13.75, 100.52], 11);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(LMAP);
+    LLAYER = L.layerGroup().addTo(LMAP);
+    // คลิกแผนที่ = ปักพิกัดลงฟอร์มสาขา
+    LMAP.on('click', ev => {
+      if ($('#brForm').style.display === 'none') brFormNew();
+      $('#bfLat').value = ev.latlng.lat.toFixed(5);
+      $('#bfLng').value = ev.latlng.lng.toFixed(5);
+      if (LPICK) LPICK.remove();
+      LPICK = L.marker(ev.latlng).addTo(LMAP).bindPopup('📍 พิกัดสาขาใหม่ — กรอกชื่อแล้วกดบันทึก').openPopup();
+    });
+  }
+  LLAYER.clearLayers();
+  const pts = [];
+  branches.forEach(b => {
+    pts.push([b.lat, b.lng]);
+    L.marker([b.lat, b.lng]).addTo(LLAYER).bindPopup(`<b>${esc(b.name)}</b><br/>รัศมี ${b.radius} ม.`);
+    L.circle([b.lat, b.lng], { radius: b.radius, color: '#a5843f', weight: 1.5, fillOpacity: .12 }).addTo(LLAYER);
+  });
+  if (pts.length) LMAP.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
+  setTimeout(() => LMAP.invalidateSize(), 150); // เผื่อ div เพิ่งแสดงผล
 }
 // ── จัดการสาขา ──
 let BR_EDIT = null;
