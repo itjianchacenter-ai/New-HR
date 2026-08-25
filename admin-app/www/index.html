@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>JIANCHA HR Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1ede4;--card:#fff;--ink:#221f19;--soft:#6f6659;--faint:#9a9184;--line:#e0d8c9;--gold:#a5843f;--red:#a43e2e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif}
+.wrap{min-height:100%;display:grid;place-items:center;padding:24px calc(20px + env(safe-area-inset-right)) 24px calc(20px + env(safe-area-inset-left))}
+.box{width:100%;max-width:420px;text-align:center}
+img.logo{height:40px}
+.pp{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin:4px 0 30px}
+h1{font-size:1.35rem;margin:0 0 6px}
+p.d{color:var(--soft);font-size:.9rem;margin:0 0 24px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:left}
+label{font-size:.84rem;font-weight:700;color:var(--soft)}
+input{width:100%;margin-top:8px;padding:14px;border:1px solid var(--line);border-radius:13px;font:inherit;font-family:"IBM Plex Mono",monospace;font-size:.92rem}
+.row{display:flex;gap:10px;margin-top:12px}
+button{flex:1;padding:14px;border-radius:13px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--card)}
+button.p{background:var(--ink);color:#fff;border-color:var(--ink)}
+#msg{font-size:.84rem;margin-top:10px;min-height:20px;color:var(--soft)}
+.spin{margin:26px auto 12px;width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="box">
+  <img class="logo" src="logo-wide.png" alt="JIANCHA"/>
+  <div class="pp">Admin</div>
+
+  <div id="connecting" class="hide">
+    <div class="spin"></div>
+    <p class="d" id="connTxt">กำลังเชื่อมต่อหลังบ้าน…</p>
+    <button style="max-width:220px" onclick="showSetup()">⚙️ ตั้งค่าเซิร์ฟเวอร์</button>
+  </div>
+
+  <div id="setup" class="hide">
+    <h1>ระบบหลังบ้าน HR</h1>
+    <p class="d">ระบุที่อยู่เซิร์ฟเวอร์ระบบ JC People ก่อนใช้งาน</p>
+    <div class="panel">
+      <label>🖥 เซิร์ฟเวอร์ระบบ HR</label>
+      <input id="url" type="url" placeholder="เช่น https://hr.jianchatea.com"/>
+      <div class="row">
+        <button onclick="test()">ทดสอบ</button>
+        <button class="p" onclick="save()">บันทึก & เปิดหลังบ้าน</button>
+      </div>
+      <div id="msg"></div>
+    </div>
+  </div>
+</div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const norm = u => String(u || '').trim().replace(/\/+$/, '');
+function showSetup() {
+  $('#connecting').classList.add('hide');
+  $('#setup').classList.remove('hide');
+  $('#url').value = localStorage.getItem('jc_server') || 'http://192.168.0.221:3011';
+}
+async function ping(base) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const r = await fetch(base + '/api/ping', { signal: ctl.signal });
+    const j = await r.json();
+    return j.ok ? j : null;
+  } catch { return null; } finally { clearTimeout(t); }
+}
+async function test() {
+  const u = norm($('#url').value); if (!u) return;
+  $('#msg').textContent = 'กำลังทดสอบ…';
+  const j = await ping(u);
+  $('#msg').innerHTML = j ? '✅ เชื่อมต่อสำเร็จ: <b>' + (j.company || j.name) + '</b>' : '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย';
+}
+async function save() {
+  const u = norm($('#url').value); if (!u) return;
+  $('#msg').textContent = 'กำลังตรวจสอบ…';
+  const j = await ping(u);
+  if (!j) { $('#msg').textContent = '❌ เชื่อมต่อไม่ได้ — ยังไม่บันทึก'; return; }
+  localStorage.setItem('jc_server', u);
+  location.href = u + '/admin';
+}
+(async () => {
+  const saved = localStorage.getItem('jc_server');
+  if (!saved) return showSetup();
+  $('#connecting').classList.remove('hide');
+  const j = await ping(saved);
+  if (j) location.href = saved + '/admin';
+  else { $('#connTxt').textContent = 'เชื่อมต่อ ' + saved + ' ไม่ได้'; setTimeout(showSetup, 400); }
+})();
+</script>
+</body>
+</html>

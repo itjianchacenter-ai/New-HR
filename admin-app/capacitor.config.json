@@ -1,10 +1,7 @@
 {
-  "appId": "com.jiancha.demohr",
-  "appName": "JIANCHA HR",
+  "appId": "com.jiancha.hradmin",
+  "appName": "JIANCHA HR Admin",
   "webDir": "www",
-  "ios": {
-    "contentInset": "never"
-  },
   "android": {
     "allowMixedContent": true
   },

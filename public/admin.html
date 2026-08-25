@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>JC People · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -48,6 +48,22 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .side .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:.72rem;color:var(--faint)}
 main{margin-left:var(--side);min-height:100vh}
 .top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:20px 30px 14px;display:flex;align-items:flex-start;justify-content:space-between}
+/* ── มือถือ: sidebar เลื่อนซ่อน + ปุ่ม ☰ ── */
+#burger{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top));left:14px;z-index:30;width:44px;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:1.15rem;box-shadow:var(--shadow)}
+#sideOvl{display:none;position:fixed;inset:0;background:rgba(30,25,15,.4);z-index:19}
+@media(max-width:900px){
+  .side{transform:translateX(-105%);transition:transform .22s ease;width:280px;box-shadow:18px 0 40px rgba(30,25,15,.2)}
+  .side.open{transform:none}
+  #sideOvl.open{display:block}
+  #burger{display:block}
+  main{margin-left:0}
+  .top{padding:calc(12px + env(safe-area-inset-top)) 16px 12px 70px}
+  .top h1{font-size:1.3rem}
+  .wrap{padding:16px 12px 60px}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .grid2{grid-template-columns:1fr}
+  .bar{gap:8px}
+}
 .top h1{font-size:1.75rem;margin:0;font-weight:800;letter-spacing:-.01em}
 .top .sub{color:var(--soft);font-size:.88rem;margin-top:2px}
 .top .out{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.9rem;box-shadow:0 1px 3px rgba(45,38,26,.06)}
@@ -242,7 +258,9 @@ main{margin-left:var(--side);min-height:100vh}
     <p class="sub">People</p>
     <h1>เข้าสู่ระบบหลังบ้าน</h1>
     <p class="d">Human Resource Management System</p>
-    <input id="pw" type="password" placeholder="รหัสผ่านผู้ดูแลระบบ" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <input id="pw" type="password" placeholder="รหัสผ่านผู้ดูแลระบบ" autocomplete="current-password" autocapitalize="none" autocorrect="off" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label style="display:flex;gap:8px;align-items:center;font-size:.85rem;color:var(--soft);margin:-6px 2px 12px;cursor:pointer">
+      <input type="checkbox" onchange="document.getElementById('pw').type=this.checked?'text':'password'" style="width:auto;margin:0"/> แสดงรหัสผ่าน</label>
     <button onclick="doLogin()">เข้าสู่ระบบ</button>
     <div class="err" id="loginErr"></div>
     <div style="margin-top:16px;font-size:.8rem;color:var(--faint)">พนักงาน HR ที่มีสิทธิ์แอดมิน: ล็อกอินผ่าน<a href="/" style="color:var(--gold);font-weight:700">แอปพนักงาน</a> แล้วเลือก Role Admin</div>
@@ -251,6 +269,8 @@ main{margin-left:var(--side);min-height:100vh}
 
 <!-- ═══════════ SHELL ═══════════ -->
 <div id="shell">
+<button id="burger" onclick="document.querySelector('.side').classList.toggle('open');document.querySelector('#sideOvl').classList.toggle('open')">☰</button>
+<div id="sideOvl" onclick="this.classList.remove('open');document.querySelector('.side').classList.remove('open')"></div>
 <nav class="side">
   <div class="logo"><img src="/logo-wide.png" alt="JIANCHA"/></div>
   <div class="brand">JC <span>People</span></div>
@@ -577,6 +597,7 @@ const TITLES = {
 };
 const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
 function go(p) {
+  $('.side')?.classList?.remove('open'); $('#sideOvl')?.classList?.remove('open'); // ปิดเมนูบนมือถือ
   $$('.side a').forEach(a => a.classList.toggle('on', a.dataset.p === p));
   $$('.page').forEach(s => s.classList.toggle('on', s.id === 'p-' + p));
   $('#ttl').textContent = TITLES[p][0]; $('#sttl').textContent = TITLES[p][1]();
