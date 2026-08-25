@@ -6,6 +6,7 @@
 <title>JC People · Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="i18n.js"></script>
 <!-- แผนที่ฟรี OpenStreetMap + Leaflet (ไม่ต้องมี API key) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -154,6 +155,8 @@ main{margin-left:var(--side);min-height:100vh}
 .mcard .mb{padding:12px 18px 14px}
 .mcard .mb .cap{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
 .mcard .mb .pr{display:flex;gap:9px;align-items:baseline;padding:6px 0;font-size:.9rem}
+.click-person{cursor:pointer;border-radius:8px}
+.click-person:hover{background:var(--surface)}
 .mcard .mb .pr .no{color:var(--faint);font-size:.78rem;width:14px;text-align:right}
 .mcard .mb .pr b{font-weight:700}
 .mcard .mb .pr .nk{color:var(--faint)}
@@ -298,7 +301,10 @@ main{margin-left:var(--side);min-height:100vh}
 <main>
   <div class="top">
     <div><h1 id="ttl">Dashboard</h1><div class="sub" id="sttl"></div></div>
-    <button class="out" onclick="signOut()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h9"/></svg>Sign out</button>
+    <div style="display:flex;gap:8px">
+      <button class="out" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span id="langLbl"></span></button>
+      <button class="out" onclick="signOut()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h9"/></svg>Sign out</button>
+    </div>
   </div>
   <div class="wrap">
 
@@ -545,9 +551,18 @@ main{margin-left:var(--side);min-height:100vh}
 
 <script>
 const $ = s => document.querySelector(s);
+const TL = window.LOCALE || 'th-TH'; // locale ตามภาษาที่เลือก
 const $$ = s => [...document.querySelectorAll(s)];
 // token จากลิงก์ (กรณี HR ที่มีสิทธิ์เปิดหลังบ้านจากแอปมือถือ)
 const URLTOK = new URLSearchParams(location.search).get('t');
+// เปิดมาจากแอปพนักงาน → มีปุ่มลอยกลับแอป (กันติดค้างใน webview บน iOS)
+if (URLTOK && history.length > 1) {
+  const back = document.createElement('button');
+  back.textContent = '‹ กลับแอปพนักงาน';
+  back.style.cssText = 'position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:99;padding:10px 20px;border-radius:99px;border:1px solid var(--line);background:var(--ink);color:#fff;font:inherit;font-weight:700;font-size:.85rem;box-shadow:var(--shadow)';
+  back.onclick = () => history.back();
+  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(back));
+}
 const api = async (url, opt) => {
   const headers = { 'Content-Type': 'application/json' };
   if (URLTOK) headers.Authorization = 'Bearer ' + URLTOK;
@@ -557,7 +572,7 @@ const api = async (url, opt) => {
   return j;
 };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const THB = n => '฿' + (+n || 0).toLocaleString('th-TH');
+const THB = n => '฿' + (+n || 0).toLocaleString(TL);
 const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2400); };
 const AV = ['#221f19', '#a5843f', '#2f6a53', '#4a5fc4', '#7a5c46', '#3d7d8a'];
 const avColor = n => AV[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
@@ -566,8 +581,8 @@ const avatar = e => e.photo
   ? `<img class="av" src="${e.photo}" style="object-fit:cover" alt=""/>`
   : `<span class="av" style="background:${avColor(e.name)}">${esc(initials(e))}</span>`;
 const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }; // local-safe
-const thDate = s => new Date(s + 'T00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-const hm = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '–';
+const thDate = s => new Date(s + 'T00:00').toLocaleDateString(TL, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const hm = t => t ? new Date(t).toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' }) : '–';
 const dl = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: mime || 'text/csv;charset=utf-8' })); a.download = name; a.click(); };
 const csv = rows => rows.map(r => r.map(c => /[",\n]/.test(String(c ?? '')) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c ?? '')).join(',')).join('\n');
 const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#221f19}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
@@ -596,6 +611,7 @@ async function refreshBase() {
 function signOut() { api('/api/logout', { method: 'POST', body: {} }).then(() => location.reload()); }
 
 // ═══ ROUTER ═══
+document.addEventListener('DOMContentLoaded', () => { const l = document.getElementById('langLbl'); if (l) l.textContent = LANG === 'th' ? 'EN' : 'ไทย'; });
 const TITLES = {
   dash: ['Dashboard', () => thDate(iso(new Date()))], tna: ['Time & Attendance', () => 'บันทึกเวลาเรียลไทม์'],
   shifts: ['Shifts', () => 'Shift Scheduling'], approvals: ['Approvals', () => 'คิวคำขอรออนุมัติ'],
@@ -701,7 +717,7 @@ function tnaRows() {
 }
 function renderTna() {
   const d = $('#tnaDate').value;
-  $('#tnaTitle').textContent = 'Attendance Log · ' + new Date(d + 'T00:00').toLocaleDateString('th-TH');
+  $('#tnaTitle').textContent = 'Attendance Log · ' + new Date(d + 'T00:00').toLocaleDateString(TL);
   const rows = tnaRows();
   $('#tnaCount').textContent = `${rows.length} staff · ${$('#tnaBranch').value ? brName($('#tnaBranch').value) : 'all branches'}`;
   $('#tnaTbl').innerHTML = `<tr><th>Employee</th><th>Branch</th><th>Shift</th><th>In</th><th>Out</th><th>Hours</th><th>Photo</th><th>Location</th><th>Status</th></tr>` +
@@ -1038,7 +1054,7 @@ async function saveEmp(id) {
 
 // ═══ MANNING ═══
 function manCard(title, sub, people) {
-  const rows = people.map((p, i) => `<div class="pr"><span class="no">${i + 1}</span><b>${esc(p.name)}</b>${p.nickname ? `<span class="nk">(${esc(p.nickname)})</span>` : ''}<span class="rl">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? '<span class="pill warn">Part time</span>' : ''}</div>`).join('');
+  const rows = people.map((p, i) => `<div class="pr click-person" onclick="openProfile('${p.id}')" title="ดูโปรไฟล์"><span class="no">${i + 1}</span><b>${esc(p.name)}</b>${p.nickname ? `<span class="nk">(${esc(p.nickname)})</span>` : ''}<span class="rl">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? '<span class="pill warn">Part time</span>' : ''} <span style="color:var(--gold);font-size:.75rem">›</span></div>`).join('');
   return `<div class="mcard"><div class="mh"><div class="t">${esc(title)}<span class="st">ACTIVE</span></div><div class="d">${esc(sub)}</div><div class="track"><i style="width:100%"></i></div></div>
     <div class="mb"><div class="cap">Positions (${people.length})</div>${rows || '<div class="empty">ไม่มีพนักงาน</div>'}</div></div>`;
 }
@@ -1075,7 +1091,7 @@ function renderBrm() {
   const pick = $('#brmSel').value, onlyStaffed = $('#brmStaffed').checked;
   const list = stores.filter(b => !pick || b.id === pick).filter(b => !onlyStaffed || cnt(b.id).length);
   $('#brmCount').textContent = `แสดง ${list.length} / ${stores.length} สาขา`;
-  const person = p => `<b>${esc(p.name)}</b>${p.nickname ? ` <span style="color:var(--faint)">(${esc(p.nickname)})</span>` : ''} <span style="color:var(--soft);font-size:.82rem">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? ' <span class="pill warn">PT</span>' : ''}`;
+  const person = p => `<span class="click-person" onclick="event.stopPropagation();openProfile('${p.id}')" title="ดูโปรไฟล์" style="cursor:pointer"><b>${esc(p.name)}</b>${p.nickname ? ` <span style="color:var(--faint)">(${esc(p.nickname)})</span>` : ''} <span style="color:var(--soft);font-size:.82rem">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? ' <span class="pill warn">PT</span>' : ''} <span style="color:var(--gold);font-size:.75rem">›</span></span>`;
   $('#brTbl').innerHTML = `<tr><th>สาขา</th><th style="text-align:center">พนักงาน</th><th>Manager</th><th>รายชื่อพนักงาน</th><th>สถานะ</th></tr>` +
     (list.length ? list.map(b => {
       const ppl = cnt(b.id);
@@ -1168,7 +1184,7 @@ async function prClose() {
 }
 function prBank() { location.href = '/api/admin/bankfile.csv?month=' + PR.month; $('#prMenu').style.display = 'none'; }
 // ── สลิปเงินเดือนฟอร์แมตมาตรฐาน: เงินได้ / รายการหัก / สะสมทั้งปี + ลายเซ็น ──
-const money = n => (+n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = n => (+n || 0).toLocaleString(TL, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 function openSlip(empId) {
   const r = PR.rows.find(x => x.emp_id === empId); const e = EMPS.find(x => x.id === empId) || {};
@@ -1274,7 +1290,7 @@ function rpHeadcount() {
 // ═══ ANNOUNCEMENTS ═══
 async function loadAnn() {
   const list = await api('/api/admin/announcements');
-  $('#annList').innerHTML = list.map(a => `<div class="it"><span class="dot"></span><span><b>${esc(a.title)}</b><br/><span style="color:var(--soft)">${esc(a.body)}</span></span><span class="t">${new Date(a.at).toLocaleDateString('th-TH')}</span></div>`).join('') || '<div class="empty">ยังไม่มีประกาศ</div>';
+  $('#annList').innerHTML = list.map(a => `<div class="it"><span class="dot"></span><span><b>${esc(a.title)}</b><br/><span style="color:var(--soft)">${esc(a.body)}</span></span><span class="t">${new Date(a.at).toLocaleDateString(TL)}</span></div>`).join('') || '<div class="empty">ยังไม่มีประกาศ</div>';
 }
 async function annPost() {
   if (!$('#annT').value) return toast('ใส่หัวข้อก่อน');

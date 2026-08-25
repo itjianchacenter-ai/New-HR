@@ -55,7 +55,22 @@ button.p{background:var(--ink);color:#fff;border-color:var(--ink)}
 
 <script>
 const $ = s => document.querySelector(s);
-const norm = u => String(u || '').trim().replace(/\/+$/, '');
+// ── สองภาษา ──
+const LANGL = localStorage.getItem('jc_lang') || 'th';
+const TT = LANGL === 'en' ? {
+  'ระบบหลังบ้าน HR': 'HR Back Office',
+  'ระบุที่อยู่เซิร์ฟเวอร์ระบบ JC People ก่อนใช้งาน': 'Enter your JC People server address to begin',
+  '🖥 เซิร์ฟเวอร์ระบบ HR': '🖥 HR Server', 'ทดสอบ': 'Test', 'บันทึก & เปิดหลังบ้าน': 'Save & open back office',
+  'กำลังเชื่อมต่อหลังบ้าน…': 'Connecting to back office…', '⚙️ ตั้งค่าเซิร์ฟเวอร์': '⚙️ Server settings',
+} : {};
+document.addEventListener('DOMContentLoaded', () => {
+  if (LANGL !== 'en') return;
+  document.querySelectorAll('h1,p,label,button').forEach(el => { const t = el.textContent.trim(); if (TT[t]) el.textContent = TT[t]; });
+});
+const MSG = LANGL === 'en'
+  ? { testing: 'Testing…', okPrefix: '✅ Connected: ', fail: '❌ Cannot connect — check URL and network', checking: 'Checking…', failNoSave: '❌ Cannot connect — not saved', reach: u => 'Cannot reach ' + u }
+  : { testing: 'กำลังทดสอบ…', okPrefix: '✅ เชื่อมต่อสำเร็จ: ', fail: '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย', checking: 'กำลังตรวจสอบ…', failNoSave: '❌ เชื่อมต่อไม่ได้ — ยังไม่บันทึก', reach: u => 'เชื่อมต่อ ' + u + ' ไม่ได้' };
+const norm = u => { let x = String(u || '').trim().replace(/\/+$/, ''); if (x && !/^https?:\/\//i.test(x)) x = 'http://' + x; return x; };
 function showSetup() {
   $('#connecting').classList.add('hide');
   $('#setup').classList.remove('hide');
@@ -72,25 +87,25 @@ async function ping(base) {
 }
 async function test() {
   const u = norm($('#url').value); if (!u) return;
-  $('#msg').textContent = 'กำลังทดสอบ…';
+  $('#msg').textContent = MSG.testing;
   const j = await ping(u);
-  $('#msg').textContent = j ? '✅ เชื่อมต่อสำเร็จ: ' + (j.company || j.name) : '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย';
+  $('#msg').textContent = j ? MSG.okPrefix + (j.company || j.name) : MSG.fail;
 }
 async function save() {
   const u = norm($('#url').value); if (!u) return;
-  $('#msg').textContent = 'กำลังตรวจสอบ…';
+  $('#msg').textContent = MSG.checking;
   const j = await ping(u);
-  if (!j) { $('#msg').textContent = '❌ เชื่อมต่อไม่ได้ — ยังไม่บันทึก'; return; }
+  if (!j) { $('#msg').textContent = MSG.failNoSave; return; }
   localStorage.setItem('jc_server', u);
-  location.href = u + '/admin';
+  location.replace(u + '/admin'); // replace: กด Back จากหลังบ้าน = ออกจากแอป ไม่วนกลับ launcher
 }
 (async () => {
   const saved = localStorage.getItem('jc_server');
   if (!saved) return showSetup();
   $('#connecting').classList.remove('hide');
   const j = await ping(saved);
-  if (j) location.href = saved + '/admin';
-  else { $('#connTxt').textContent = 'เชื่อมต่อ ' + saved + ' ไม่ได้'; setTimeout(showSetup, 400); }
+  if (j) location.replace(saved + '/admin');
+  else { $('#connTxt').textContent = MSG.reach(saved); setTimeout(showSetup, 400); }
 })();
 </script>
 </body>

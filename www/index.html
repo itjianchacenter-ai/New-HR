@@ -6,6 +6,7 @@
 <title>JIANCHA People · พนักงาน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="i18n.js"></script>
 <!-- แผนที่ฟรี OpenStreetMap + Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -221,13 +222,15 @@ input,select,textarea{font:inherit;color:var(--ink)}
       <div id="srvMsg" style="font-size:.82rem;margin-top:8px;min-height:18px;color:var(--soft)"></div>
     </div>
     <a id="srvLink" style="display:none;margin-top:14px;color:var(--faint);font-size:.8rem;cursor:pointer" onclick="$('#srvPanel').style.display=$('#srvPanel').style.display==='none'?'block':'none'">⚙️ ตั้งค่าเซิร์ฟเวอร์</a>
+    <div style="margin-top:18px"><a style="color:var(--gold);font-weight:700;font-size:.85rem;cursor:pointer" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></a></div>
   </div>
 </div>
 
 <!-- ═══ HOME ═══ -->
 <div class="page" id="pg-home">
   <div class="hd"><img src="logo-wide.png"/><span class="pp">PEOPLE</span>
-    <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg><span class="n" id="notiN" style="display:none">0</span></button>
+    <button class="bell" style="margin-left:auto;width:auto;padding:0 12px;font-weight:800;font-size:.78rem" onclick="setLang(LANG==='th'?'en':'th')"><span class="langLbl"></span></button>
+    <button class="bell" style="margin-left:8px" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg><span class="n" id="notiN" style="display:none">0</span></button>
   </div>
   <div class="hero">
     <div class="clk"><b id="ckTime">--:--</b><span id="ckSec"></span></div>
@@ -321,6 +324,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <div class="info" id="meEmployment"></div>
     <div class="sec-t">วันลาคงเหลือ · Leave balance</div>
     <div class="info" id="meLeave"></div>
+    <button class="lo" style="color:var(--gold);margin-bottom:0" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></button>
     <button class="lo" onclick="logout()">ออกจากระบบ</button>
   </div>
 </div>
@@ -364,6 +368,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <script>
 const $ = s => document.querySelector(s);
+const TL = window.LOCALE || 'th-TH'; // locale ตามภาษาที่เลือก
 const $$ = s => [...document.querySelectorAll(s)];
 // ── Dual-mode: เว็บ (เสิร์ฟจากเซิร์ฟเวอร์ · BASE ว่าง) หรือแอป native (bundle ในเครื่อง · BASE ตั้งค่าได้) ──
 const NATIVE = !!window.Capacitor;
@@ -384,21 +389,25 @@ const api = async (url, opt) => {
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2600); };
 const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
-const hm = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-const THB = n => '฿' + (+n || 0).toLocaleString('th-TH');
-const thLong = d => d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const hm = t => t ? new Date(t).toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' }) : '--:--';
+const THB = n => '฿' + (+n || 0).toLocaleString(TL);
+const thLong = d => d.toLocaleDateString(TL, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 let ME = null, GEO = null, CAL = { shifts: [], cks: [], cur: new Date(), sel: iso(new Date()) };
 
+// ป้ายปุ่มสลับภาษา
+document.querySelectorAll('.langLbl').forEach(el => el.textContent = LANG === 'th' ? 'English' : 'ภาษาไทย');
 // ═══ ตั้งค่าเซิร์ฟเวอร์ (เฉพาะแอป native) ═══
 if (NATIVE) {
   $('#srvLink').style.display = 'inline-block';
   $('#srvUrl').value = localStorage.getItem('jc_server') || 'http://192.168.0.221:3011';
   if (!localStorage.getItem('jc_server')) $('#srvPanel').style.display = 'block';
 }
+const normUrl = v => { let u = String(v || '').trim().replace(/\/+$/, ''); if (u && !/^https?:\/\//i.test(u)) u = 'http://' + u; return u; };
 async function srvTest() {
-  const u = $('#srvUrl').value.trim().replace(/\/+$/, '');
+  const u = normUrl($('#srvUrl').value);
   if (!u) return;
+  $('#srvUrl').value = u;
   $('#srvMsg').textContent = 'กำลังทดสอบ…';
   try {
     const r = await fetch(u + '/api/ping');
@@ -407,7 +416,7 @@ async function srvTest() {
   } catch (e) { $('#srvMsg').textContent = '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย'; }
 }
 function srvSave() {
-  const u = $('#srvUrl').value.trim().replace(/\/+$/, '');
+  const u = normUrl($('#srvUrl').value);
   if (!u) return;
   localStorage.setItem('jc_server', u);
   localStorage.removeItem('jc_token');
@@ -489,7 +498,7 @@ let clkIv = null;
 function startClock() {
   const tick = () => {
     const n = new Date();
-    $('#ckTime').textContent = n.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    $('#ckTime').textContent = n.toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' });
     $('#ckSec').textContent = 'วินาที ' + String(n.getSeconds()).padStart(2, '0');
     $('#ckDate').textContent = thLong(n);
   };
@@ -694,7 +703,7 @@ async function loadCal() {
 function calNav(n) { CAL.cur = new Date(CAL.cur.getFullYear(), CAL.cur.getMonth() + n, 1); renderCal(); }
 function renderCal() {
   const y = CAL.cur.getFullYear(), m = CAL.cur.getMonth();
-  $('#calTitle').textContent = CAL.cur.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  $('#calTitle').textContent = CAL.cur.toLocaleDateString(TL, { month: 'long', year: 'numeric' });
   const first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
   const lead = (first.getDay() + 6) % 7;
   let html = '<div class="wk">';
