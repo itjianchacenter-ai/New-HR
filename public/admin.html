@@ -976,7 +976,7 @@ async function openEmpForm(id) {
         ${sel('level', 'Level', e.level || 'staff', [['staff', 'Staff'], ['supervisor', 'Supervisor'], ['manager', 'Manager'], ['director', 'Director']])}
         ${sel('payment_type', 'Payment type', e.payment_type || 'Monthly', [['Monthly', 'Monthly'], ['Daily', 'Daily']])}
         ${sel('contract', 'Contract type', e.contract || 'Full Time', [['Full Time', 'Full Time'], ['Part Time', 'Part Time']])}
-        ${isNew ? inp('pin', 'PIN (6 หลัก · ใช้ล็อกอิน)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
+        ${isNew ? inp('pin', 'PIN 6 หลัก (เว้นว่าง = สุ่มให้อัตโนมัติ)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
         ${sel('is_admin', 'สิทธิ์แอดมิน (เข้าหลังบ้านได้)', String(!!e.is_admin), [['false', 'ไม่มี — พนักงานทั่วไป'], ['true', 'มี — เลือก Role ตอนล็อกอิน']])}
       </div>
       <div class="sec-t">Payroll</div>
@@ -989,7 +989,8 @@ async function openEmpForm(id) {
         ${inp('sso_no', 'SSO No.', e.sso_no, '')}
       </div>
     </form></div>
-    <div class="df"><button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn dark" onclick="saveEmp(${isNew ? 'null' : JSON.stringify(id)})">Save Employee</button></div>`);
+    <div class="df"><span id="empErr" style="flex:1;align-self:center;color:var(--red);font-size:.85rem;font-weight:600"></span>
+      <button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn dark" onclick="saveEmp(${isNew ? 'null' : `'${id}'`})">Save Employee</button></div>`);
 }
 // ── อัปโหลดรูปพนักงาน: ย่อเป็น 280px JPEG ก่อนเก็บ ──
 function pickPhoto(inp) {
@@ -1011,11 +1012,28 @@ function pickPhoto(inp) {
 function clearPhoto() { $('#photoData').value = ''; $('#phPrev').innerHTML = '<span class="av" style="width:58px;height:58px;background:#b3a789">📷</span>'; }
 async function saveEmp(id) {
   const data = Object.fromEntries(new FormData($('#empForm')));
+  const err = m => { const el = $('#empErr'); if (el) el.textContent = m; toast(m); };
+  if (!String(data.name || '').trim()) return err('กรอกชื่อพนักงาน (Name TH) ก่อนบันทึก');
   try {
-    if (id) await api('/api/admin/employees/' + id, { method: 'PUT', body: data });
-    else await api('/api/admin/employees', { method: 'POST', body: data });
-    toast('บันทึกข้อมูลพนักงานแล้ว'); closeDrawer(); loadEmp();
-  } catch (e) { toast('บันทึกไม่สำเร็จ: ' + e.message); }
+    if (id) {
+      await api('/api/admin/employees/' + id, { method: 'PUT', body: data });
+      toast('บันทึกข้อมูลพนักงานแล้ว'); closeDrawer(); loadEmp();
+    } else {
+      const r = await api('/api/admin/employees', { method: 'POST', body: data });
+      closeDrawer(); loadEmp();
+      // แสดงข้อมูลล็อกอินของพนักงานใหม่ให้ HR แจ้งต่อ
+      openModal(`<div style="text-align:center">
+        <div style="width:64px;height:64px;border-radius:50%;background:color-mix(in srgb,var(--green) 14%,#fff);color:var(--green);display:grid;place-items:center;margin:0 auto 12px;font-size:1.8rem">✓</div>
+        <h3 style="margin:0 0 6px">เพิ่มพนักงานเรียบร้อย</h3>
+        <p style="color:var(--soft);font-size:.9rem;margin:0 0 16px">แจ้งข้อมูลล็อกอินแอปให้พนักงาน:</p>
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;font-size:1rem">
+          เลขท้ายบัตรประชาชน: <b class="mono">${r.id4 || '(ตามบัตรจริง)'}</b><br/>
+          PIN: <b class="mono" style="font-size:1.3rem;letter-spacing:.15em">${r.pin}</b>
+        </div>
+        <button class="btn dark" style="width:100%;justify-content:center;margin-top:16px;padding:13px" onclick="closeModal()">รับทราบ</button>
+      </div>`);
+    }
+  } catch (e) { err('บันทึกไม่สำเร็จ: ' + e.message); }
 }
 
 // ═══ MANNING ═══

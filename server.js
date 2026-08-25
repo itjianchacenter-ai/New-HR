@@ -498,9 +498,12 @@ app.get('/api/admin/ot', (req, res) => { if (!admin(req, res)) return; const db 
 app.get('/api/admin/employees', (req, res) => { if (!admin(req, res)) return; const db = load();
   res.json(db.employees.map(e => ({ ...e, branch: db.branches.find(b => b.id === e.branch_id)?.name }))); });
 app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
-  const { name, employee_no, role, dept, branch_id, pin, pay, phone, email, hire_date } = req.body || {};
-  if (!name || !pin) return res.status(400).json({ error: 'กรอกชื่อและ PIN' });
+  const { name, employee_no, role, dept, branch_id, pay, phone, email, hire_date } = req.body || {};
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'กรอกชื่อพนักงาน' });
   const db = load();
+  // ไม่กรอก PIN → สุ่มให้อัตโนมัติ (6 หลัก ไม่ซ้ำใคร) แล้วส่งกลับให้ HR แจ้งพนักงาน
+  let pin = String(req.body.pin || '').trim();
+  if (!pin) { do { pin = String(Math.floor(100000 + Math.random() * 900000)); } while (db.employees.some(e => e.pin === pin)); }
   const quota = {}; db.leave_types.forEach(t => quota[t.key] = { total: t.days, used: 0 });
   const obj = { id: 'e' + Date.now(), name, employee_no: employee_no || '', role: role || '', dept: dept || '',
     branch_id: branch_id || db.branches[0].id, pin: String(pin), pay: +pay || 15000, phone: phone || '',
@@ -512,7 +515,7 @@ app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
   if (!obj.level) obj.level = 'staff';
   obj.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
   db.employees.push(obj);
-  save(db); res.json({ ok: true, id: obj.id }); });
+  save(db); res.json({ ok: true, id: obj.id, pin, id4: (obj.national_id || obj.tax_no || '').replace(/\D/g, '').slice(-4) }); });
 // แก้ไขข้อมูลพนักงาน (ปุ่มบันทึกในหน้า Employee Detail)
 app.put('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return;
   const db = load();
