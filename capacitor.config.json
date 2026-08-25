@@ -1,0 +1,15 @@
+{
+  "appId": "com.jiancha.demohr",
+  "appName": "JIANCHA HR",
+  "webDir": "www",
+  "server": {
+    "url": "http://localhost:3011",
+    "cleartext": true
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

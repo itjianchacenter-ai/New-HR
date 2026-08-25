@@ -3,507 +3,655 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>JIANCHA DEMO HR · พนักงาน</title>
+<title>JIANCHA People · พนักงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#F4F7F6; --card:#fff; --ink:#1D2B2A; --dim:#7B8A88; --line:#E3EAE8;
-    --mint:#3FBFA8; --mint-dark:#2A9C88; --mint-soft:#E4F5F1; --navy:#12343B; --warn:#C9614C; }
-  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { margin:0; background:var(--bg); color:var(--ink);
-    font-family:-apple-system,'SF Pro Text','Thonburi','Sarabun',sans-serif;
-    -webkit-text-size-adjust:100%; text-size-adjust:100%; touch-action:manipulation; }
-  .page { display:none; max-width:430px; margin:0 auto; padding-bottom:calc(84px + env(safe-area-inset-bottom)); min-height:100vh; }
-  .page.on { display:block; }
-  /* ── หัวเขียวเข้มแบบ ByteHR ── */
-  .hero { background:linear-gradient(180deg,var(--navy),#1C4A50); color:#fff; text-align:center;
-    padding:calc(24px + env(safe-area-inset-top)) 20px 60px; border-radius:0 0 30px 30px; }
-  .hero .d { font-size:13px; opacity:.8; }
-  .hero .t { font-size:44px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
-  .hero .nm { font-size:16px; font-weight:700; opacity:1; margin-top:10px; }
-  .hero .sh { font-size:12.5px; opacity:.72; margin-top:3px; }
-  .hd { background:var(--navy); color:#fff; padding:calc(20px + env(safe-area-inset-top)) 20px 18px; border-radius:0 0 24px 24px;
-    display:flex; justify-content:space-between; align-items:center; }
-  .hd h1 { font-size:20px; margin:0; font-weight:800; }
-  .body { padding:16px; margin-top:-40px; }
-  .body.flat { margin-top:0; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; }
-  h2 { font-size:13px; margin:16px 2px 8px; color:var(--dim); font-weight:700; }
-  .dim { color:var(--dim); font-size:12.5px; }
-  button { font:inherit; cursor:pointer; border-radius:12px; border:1px solid var(--line); background:#fff; padding:12px; color:var(--ink); }
-  .primary { background:var(--mint); color:#fff; border-color:var(--mint); font-weight:800; font-size:15px; }
-  .btnrow { display:flex; gap:10px; }
-  .btnrow .primary { flex:1; }
-  .btnrow .qrbtn { flex:1; font-weight:600; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
-  .stat b { display:block; font-size:20px; color:var(--mint-dark); }
-  .stat span { font-size:11.5px; color:var(--dim); }
-  .lv { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
-  .lv:last-child { border-bottom:0; }
-  .lv .left b { font-size:13.5px; }
-  .lv .bar { height:5px; background:#EDF2F0; border-radius:99px; margin-top:5px; width:150px; overflow:hidden; }
-  .lv .bar i { display:block; height:100%; background:var(--mint); }
-  .lv .n { font-weight:800; font-size:15px; }
-  .lv .n small { font-weight:400; color:var(--dim); }
-  .pill { font-size:10.5px; padding:2px 10px; border-radius:99px; background:#EEF2F1; color:var(--dim); font-weight:700; }
-  .pill.ok { background:var(--mint-soft); color:var(--mint-dark); }
-  .pill.warn { background:#F8E7E2; color:var(--warn); }
-  .pill.info { background:#E7EFF8; color:#3A6EA5; }
-  /* ── แท็บล่าง 4 ปุ่ม ── */
-  .tabbar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line);
-    display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom)); z-index:30; }
-  .tabbar button { flex:1; border:0; background:none; border-radius:10px; padding:7px 2px; font-size:10.5px; color:var(--dim); }
-  .tabbar button svg { display:block; width:21px; height:21px; margin:0 auto 3px; fill:none; stroke:currentColor;
-    stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-  .tabbar button.on { color:var(--mint-dark); font-weight:700; }
-  /* ── modal ลงเวลาสำเร็จ (แบบภาพ ByteHR) ── */
-  .modal { position:fixed; inset:0; background:rgba(10,30,32,.45); display:none; place-items:center; z-index:40; padding:20px; }
-  .modal.on { display:grid; }
-  .modal .box { background:#fff; border-radius:22px; padding:26px 22px; width:min(320px,90vw); text-align:center; }
-  .modal .tick { width:74px; height:74px; border-radius:99px; background:var(--mint-soft); color:var(--mint-dark);
-    font-size:38px; display:grid; place-items:center; margin:12px auto 16px; }
-  .modal .row { font-size:12px; color:var(--dim); margin-top:10px; }
-  .modal .row b { display:block; font-size:14.5px; color:var(--ink); }
-  .modal .primary { width:100%; margin-top:18px; }
-  /* คำขอ ── การ์ดสไตล์ ByteHR ── */
-  .seg { display:flex; gap:8px; margin:0 0 12px; overflow-x:auto; }
-  .seg button { border-radius:99px; padding:8px 16px; font-size:12.5px; white-space:nowrap; }
-  .seg button.on { background:var(--navy); color:#fff; border-color:var(--navy); font-weight:700; }
-  .req { position:relative; }
-  .req b { font-size:13.5px; }
-  .req .st { position:absolute; top:14px; right:14px; }
-  .req .meta { display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--dim); }
-  .fab { position:fixed; right:18px; bottom:calc(92px + env(safe-area-inset-bottom)); width:54px; height:54px; border-radius:99px;
-    background:var(--mint); color:#fff; font-size:26px; border:0; box-shadow:0 6px 18px rgba(42,156,136,.4); z-index:30; }
-  .sheet { position:fixed; inset:auto 0 0 0; background:#fff; border-radius:22px 22px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom));
-    transform:translateY(105%); transition:transform .25s; z-index:45; max-width:430px; margin:0 auto; box-shadow:0 -8px 30px rgba(0,0,0,.15); }
-  .sheet.on { transform:translateY(0); }
-  .sheet h3 { margin:0 0 12px; font-size:15px; }
-  .sheet .fg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .sheet input, .sheet select { font:inherit; padding:11px; border:1px solid var(--line); border-radius:11px; width:100%; }
-  .sheet .full { grid-column:1/-1; }
-  /* ปฏิทิน */
-  .cal { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
-  .cal .h { font-size:10.5px; color:var(--dim); font-weight:700; padding:4px 0; }
-  .cal .d { border:1px solid var(--line); border-radius:10px; padding:6px 2px; font-size:12px; min-height:44px; background:#fff; }
-  .cal .d.off { background:transparent; border-color:transparent; color:var(--dim); }
-  .cal .d.today { border-color:var(--mint); border-width:2px; }
-  .cal .d i { display:block; font-style:normal; font-size:8.5px; margin-top:3px; font-weight:700; }
-  .cal .d i.m { color:var(--mint-dark); } .cal .d i.l { color:#B07A2A; }
-  /* สลิปแบบฟอร์มจริงบนหน้าจอ */
-  .slipdoc { font-size:11.5px; min-width:440px; }
-  .slipdoc table { border-collapse:collapse; width:100%; margin-top:8px; }
-  .slipdoc th, .slipdoc td { border:1px solid #8A9793; padding:6px 7px; text-align:left; }
-  .slipdoc th { background:#EFF4F2; font-size:10.5px; }
-  .slipdoc .num { text-align:right; font-variant-numeric:tabular-nums; }
-  .slipdoc .lbl { font-size:9.5px; color:var(--dim); display:block; }
-  /* สลิป */
-  .slip-row { display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); cursor:pointer; }
-  .slip-row:last-child { border-bottom:0; }
-  .slip-row b { font-size:14px; }
-  .slip-row .amt { font-weight:800; color:var(--mint-dark); }
-  .kv div { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
-  .kv div:last-child { border-bottom:0; }
-  .kv div span { color:var(--dim); }
-  .toast { position:fixed; left:16px; right:16px; bottom:calc(96px + env(safe-area-inset-bottom));
-    background:var(--navy); color:#fff; padding:13px 16px; border-radius:14px; font-size:13.5px;
-    opacity:0; transition:opacity .25s; pointer-events:none; text-align:center; z-index:60; }
-  .toast.on { opacity:1; }
-  #login { position:fixed; inset:0; background:var(--navy); display:grid; place-items:center; z-index:50; padding:20px;
-    font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; }
-  #login input, #login button { font-family:inherit; }
-  #login .card { width:min(340px,90vw); text-align:center; border:0; border-radius:20px; padding:28px 22px; }
-  #login input { width:100%; font:inherit; font-size:22px; text-align:center; letter-spacing:.4em;
-    padding:12px; border:1.5px solid var(--line); border-radius:12px; margin:14px 0; }
-  /* พิมพ์เป็น PDF: เอาเฉพาะหน้าที่เปิดอยู่ ไม่ติดเมนู/ปุ่ม */
-  @media print {
-    body { background:#fff; }
-    .tabbar, .fab, .toast, .sheet, .modal, .hd button, .page .body > button { display:none !important; }
-    .page { display:none; }
-    .page.on { display:block; padding-bottom:0; }
-    .hd { border-radius:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .card { border-color:#ccc; break-inside:avoid; }
-  }
-  .ann b { display:block; font-size:13.5px; }
-  .ann p { margin:3px 0 0; font-size:12.5px; color:var(--dim); }
-  .bd { display:flex; gap:8px; flex-wrap:wrap; }
-  .bd span { background:var(--mint-soft); color:var(--mint-dark); border-radius:99px; padding:5px 12px; font-size:12px; font-weight:600; }
+:root{
+  --bg:#f1ede4; --surface:#fbf9f4; --card:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
+  --line:#e0d8c9; --gold:#a5843f; --gold-soft:#c8a25a; --green:#2f6a53; --red:#a43e2e;
+  --shadow:0 1px 2px rgba(45,38,26,.05),0 10px 30px -12px rgba(45,38,26,.2);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-text-size-adjust:100%;touch-action:manipulation}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+.mono{font-family:"IBM Plex Mono",monospace}
+.page{display:none;max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+.page.on{display:block}
+
+/* ── login ── */
+#pg-login{display:none;place-items:center;padding:24px;min-height:100vh;max-width:430px;margin:0 auto}
+#pg-login.on{display:grid}
+.lg{width:100%;text-align:center}
+.lg img{height:44px}
+.lg .pp{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin:4px 0 34px}
+.lg h1{font-size:1.5rem;margin:0 0 8px}
+.lg p.d{color:var(--soft);font-size:.94rem;margin:0 0 26px}
+.lg .steps{display:flex;justify-content:center;gap:8px;margin-bottom:22px}
+.lg .steps i{width:34px;height:5px;border-radius:99px;background:var(--line)}
+.lg .steps i.on{background:var(--gold)}
+.lg label{display:block;text-align:left;font-size:.86rem;color:var(--soft);margin:0 0 7px;font-weight:600}
+.lg input{width:100%;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:var(--card);font-size:1.3rem;text-align:center;letter-spacing:.35em;font-family:"IBM Plex Mono",monospace}
+.lg input::placeholder{color:#c9c1b2;letter-spacing:.2em}
+.lg .go{width:100%;margin-top:16px;padding:16px;border:0;border-radius:16px;background:var(--ink);color:#fff;font-weight:800;font-size:1.05rem}
+.lg .back{width:100%;margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:16px;background:var(--card);font-weight:700}
+.lg .hint{margin-top:30px;font-size:.84rem;color:var(--soft)}
+.lg .hint b{color:var(--gold)}
+.lg .err{color:var(--red);font-size:.87rem;min-height:22px;margin-top:12px}
+
+/* ── header ── */
+.hd{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+.hd img{height:26px}
+.hd .pp{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.22em;color:var(--gold);font-weight:600}
+.hd .bell{margin-left:auto;width:42px;height:42px;border:1px solid var(--line);background:var(--card);border-radius:14px;display:grid;place-items:center;position:relative}
+.hd .bell svg{width:19px;height:19px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hd .bell .n{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#fff;font-size:.62rem;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
+
+/* ── home ── */
+.hero{padding:18px 16px 4px}
+.hero .hi{font-size:1.25rem;font-weight:800}
+.hero .sub{color:var(--soft);font-size:.9rem}
+.hero .clk{float:right;text-align:right;font-variant-numeric:tabular-nums}
+.hero .clk b{font-size:1.5rem}
+.hero .clk span{display:block;font-size:.74rem;color:var(--faint)}
+.empcard{background:linear-gradient(150deg,#2e281f,#181510);color:#fff;border-radius:20px;box-shadow:var(--shadow);margin:14px 16px 0;padding:18px;position:relative;overflow:hidden}
+.empcard::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(200,162,90,.25),transparent 70%)}
+.empcard .row1{display:flex;gap:13px;align-items:center}
+.empcard .av{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#c8a25a,#8d7440);display:grid;place-items:center;font-weight:800;font-size:1.1rem;flex:none}
+.empcard h2{margin:0;font-size:1.12rem}
+.empcard .r{color:#b6ac99;font-size:.82rem}
+.empcard .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:15px;position:relative;z-index:1}
+.empcard .kv .k{font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#9a9184}
+.empcard .kv b{font-size:.9rem;font-weight:700}
+.shift-strip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin:12px 16px 0;padding:11px 14px;font-size:.9rem}
+.shift-strip .ic{width:36px;height:36px;border-radius:11px;background:linear-gradient(180deg,#f6e7cf,#efd9b4);display:grid;place-items:center;flex:none}
+.shift-strip .ic svg{width:18px;height:18px;fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round}
+.shift-strip b{font-size:1rem}
+.shift-strip .r{margin-left:auto;text-align:right;color:var(--soft);font-size:.8rem}
+.fpwrap{text-align:center;margin-top:20px}
+.fpbtn{width:172px;height:172px;border-radius:50%;border:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;box-shadow:0 16px 36px -12px rgba(34,31,25,.45);transition:transform .1s}
+.fpbtn:active{transform:scale(.96)}
+.fpbtn.in{background:radial-gradient(120% 120% at 30% 20%,#3a342a,#221f19)}
+.fpbtn.out{background:radial-gradient(120% 120% at 30% 20%,#c8a25a,#a5843f)}
+.fpbtn svg{width:52px;height:52px;fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
+.fpbtn .th{font-size:1.1rem;font-weight:800}
+.fpbtn .en{font-size:.76rem;opacity:.7;margin-top:-3px}
+.fpbtn:disabled{opacity:.55}
+.fpcap{margin-top:10px;font-size:.8rem;color:var(--faint)}
+.geoline{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:.86rem;color:var(--soft);padding:0 20px}
+.geoline .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:none}
+.geoline .dot.err{background:var(--red)}
+.io{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 16px 0}
+.io .c{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:13px;text-align:center}
+.io .k{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);font-weight:600}
+.io b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums;margin:2px 0}
+.io .s{font-size:.76rem;color:var(--faint)}
+.io .s.ok{color:var(--green);font-weight:700}
+.io .s.bad{color:var(--red);font-weight:700}
+.qrlink{display:block;text-align:center;margin-top:16px;color:var(--gold);font-weight:700;font-size:.88rem;text-decoration:none}
+
+/* ── requests page ── */
+.rq{margin:16px}
+.rq h2.big{margin:4px 2px 2px;font-size:1.35rem}
+.rq .subh{color:var(--soft);font-size:.88rem;margin:0 2px 14px}
+.newrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:16px}
+.newrow button{padding:13px 6px;border:0;border-radius:14px;color:#fff;font-weight:800;font-size:.92rem;box-shadow:var(--shadow)}
+.newrow .b1{background:var(--ink)} .newrow .b2{background:var(--gold)} .newrow .b3{background:var(--green)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:6px 16px;margin-bottom:16px}
+.sec-t{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-weight:600;margin:18px 4px 8px}
+.lst .it{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+.lst .it:last-child{border-bottom:0}
+.lst .it b{display:block}
+.lst .it .s{color:var(--faint);font-size:.8rem}
+.lst .it .cancel{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 10px;font-size:.78rem;color:var(--red);font-weight:700}
+.lst .empty{text-align:center;color:var(--faint);padding:20px;font-size:.9rem}
+
+/* ── calendar ── */
+.calnav{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 4px}
+.calnav h2{margin:0;font-size:1.25rem}
+.calnav button{width:40px;height:40px;border:1px solid var(--line);background:var(--card);border-radius:13px;font-size:1rem}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);margin:12px 16px 0;padding:14px 10px}
+.cal .dow,.cal .wk{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+.cal .dow span{font-size:.72rem;color:var(--faint);font-weight:700;padding:4px 0}
+.cal .day{position:relative;aspect-ratio:1;display:grid;place-items:center;font-weight:700;font-size:.98rem;border-radius:14px;cursor:pointer}
+.cal .day.off{color:#cfc7b6}
+.cal .day.sel{background:var(--ink);color:#fff}
+.cal .day .dots{position:absolute;bottom:5px;display:flex;gap:3px}
+.cal .day .dots i{width:5px;height:5px;border-radius:50%}
+.legend{display:flex;gap:14px;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin:12px 16px 0;padding:9px;font-size:.78rem;color:var(--soft)}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.daycard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);margin:14px 16px 0;padding:16px 18px}
+.daycard h3{margin:0 0 8px;font-size:1.05rem}
+.daycard .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+.daycard .row:last-child{border-bottom:0}
+.daycard .row .k{color:var(--soft)}
+.daycard .row b{font-variant-numeric:tabular-nums}
+.tagp{font-size:.74rem;font-weight:700;padding:2px 10px;border-radius:99px}
+.tagp.ok{background:color-mix(in srgb,var(--green) 12%,#fff);color:var(--green)}
+.tagp.bad{background:color-mix(in srgb,var(--red) 10%,#fff);color:var(--red)}
+
+/* ── profile ── */
+.prof{margin:16px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 18px;text-align:center}
+.pcard .av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(160deg,#c8a25a,#8d7440);color:#fff;font-size:1.7rem;font-weight:800}
+.pcard h2{margin:0;font-size:1.3rem}
+.pcard .r{color:var(--soft);font-size:.92rem}
+.pcard .br{display:inline-block;margin-top:10px;background:color-mix(in srgb,var(--gold) 10%,#fff);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));color:var(--gold);font-weight:700;font-size:.82rem;padding:5px 14px;border-radius:99px}
+.info{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:6px 18px}
+.info .row{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+.info .row:last-child{border-bottom:0}
+.info .k{color:var(--soft);flex:none}
+.info b{text-align:right;overflow-wrap:anywhere}
+.lo{width:100%;margin-top:14px;padding:14px;border:1px solid var(--line);background:var(--card);border-radius:16px;font-weight:700;font-size:.95rem;box-shadow:var(--shadow);color:var(--red)}
+
+/* ── tabbar ── */
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;max-width:430px;margin:0 auto;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:30}
+.tabbar button{flex:1;border:0;background:none;padding:6px 2px;font-size:.7rem;color:var(--faint);font-weight:600;border-radius:12px;position:relative}
+.tabbar button svg{display:block;width:22px;height:22px;margin:0 auto 3px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button.on{color:var(--ink);font-weight:800}
+.tabbar .bdg{position:absolute;top:0;right:calc(50% - 22px);background:var(--gold);color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
+
+/* ── sheet / camera / popup ── */
+#sheetOvl{position:fixed;inset:0;background:rgba(30,25,15,.45);z-index:40;display:none}
+#sheetOvl.on{display:block}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;background:var(--surface);border-radius:22px 22px 0 0;z-index:41;transform:translateY(105%);transition:transform .25s ease;max-height:86vh;display:flex;flex-direction:column}
+#sheet.on{transform:none}
+#sheet .grab{width:44px;height:5px;background:var(--line);border-radius:99px;margin:10px auto 4px;flex:none}
+#sheet .sb{overflow-y:auto;padding:10px 18px calc(24px + env(safe-area-inset-bottom))}
+#sheet h3{margin:6px 0 14px;font-size:1.15rem}
+#sheet .fld{margin-bottom:12px}
+#sheet .fld label{display:block;font-size:.8rem;color:var(--soft);font-weight:600;margin-bottom:5px}
+#sheet input,#sheet select,#sheet textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:var(--card);font-size:.95rem}
+#sheet .go{width:100%;padding:14px;border:0;border-radius:14px;background:var(--ink);color:#fff;font-weight:800;font-size:1rem;margin-top:6px}
+#cam{position:fixed;inset:0;background:#0e0c09;z-index:55;display:none;flex-direction:column}
+#cam.on{display:flex}
+#cam video{flex:1;object-fit:cover;width:100%;transform:scaleX(-1)}
+#cam .capbar{padding:18px 18px calc(24px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;background:#0e0c09}
+#cam .capbar .skip{color:#b6ac99;background:none;border:0;font-weight:700}
+#cam .shutter{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.35)}
+#cam .caption{text-align:center;color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 10px;font-weight:700;background:#0e0c09}
+#cam .caption small{display:block;color:#9a9184;font-weight:400}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:.88rem;font-weight:600;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1}
+.okpop{position:fixed;inset:0;background:rgba(20,17,12,.55);z-index:50;display:none;place-items:center;padding:24px}
+.okpop.on{display:grid}
+.okpop .box{background:var(--surface);border-radius:22px;padding:26px;text-align:center;width:100%;max-width:330px}
+.okpop .cir{width:72px;height:72px;border-radius:50%;background:color-mix(in srgb,var(--green) 14%,#fff);color:var(--green);display:grid;place-items:center;margin:0 auto 12px;font-size:2rem}
+.okpop img{width:86px;height:86px;object-fit:cover;border-radius:16px;margin-bottom:10px;transform:scaleX(-1)}
+.okpop h3{margin:0 0 4px}
+.okpop p{margin:0 0 18px;color:var(--soft);font-size:.9rem}
+.okpop button{width:100%;padding:13px;border:0;border-radius:14px;background:var(--ink);color:#fff;font-weight:700}
 </style>
 </head>
 <body>
-<div id="login">
-  <div class="card">
-    <img src="/logo-wide.png" alt="JIAN CHA" style="width:160px; max-width:70%;"/>
-    <div class="dim" style="margin-top:10px;">DEMO HR · แอปพนักงาน · แยกจากระบบจริง</div>
-    <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN 6 หลัก"/>
-    <button class="primary" style="width:100%" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <p class="dim" style="margin-bottom:0">PIN ตัวอย่าง: 111111 · 333333 · 666666</p>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="pg-login" class="on">
+  <div class="lg">
+    <img src="/logo-wide.png" alt="JIANCHA"/>
+    <div class="pp">People</div>
+    <h1>เข้าสู่ระบบพนักงาน</h1>
+    <p class="d">ล็อกอินครั้งแรกใช้ 2 ขั้นตอน<br/>ระบบจะจำการเข้าสู่ระบบไว้ให้</p>
+    <div class="steps"><i id="stp1" class="on"></i><i id="stp2"></i></div>
+    <div id="step1">
+      <label>ขั้นที่ 1 · เลข 4 ตัวท้ายบัตรประชาชน</label>
+      <input id="id4" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')loginStep1()"/>
+      <button class="go" onclick="loginStep1()">ถัดไป</button>
+    </div>
+    <div id="step2" style="display:none">
+      <label>ขั้นที่ 2 · PIN รหัสพนักงาน 6 หลัก</label>
+      <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')loginStep2()"/>
+      <button class="go" onclick="loginStep2()">เข้าสู่ระบบ</button>
+      <button class="back" onclick="backStep()">ย้อนกลับ</button>
+      <p class="d" style="margin-top:16px" id="verifyName"></p>
+    </div>
+    <div class="err" id="loginErr"></div>
+    <div class="hint">เดโม่: เลขท้ายบัตร <b>0001</b> · PIN <b>111111</b></div>
   </div>
 </div>
 
-<!-- ═ TAB 1 : หน้าหลัก ═ -->
-<div class="page on" id="p-home">
+<!-- ═══ HOME ═══ -->
+<div class="page" id="pg-home">
+  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+    <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg><span class="n" id="notiN" style="display:none">0</span></button>
+  </div>
   <div class="hero">
-    <div class="d" id="date">—</div>
-    <div class="t" id="clock">--:--</div>
-    <div class="nm" id="who">—</div>
-    <div class="sh" id="shift-line"></div>
+    <div class="clk"><b id="ckTime">--:--</b><span id="ckSec"></span></div>
+    <div class="hi" id="hiName">สวัสดี 👋</div>
+    <div class="sub" id="ckDate"></div>
   </div>
-  <div class="body">
-    <div class="card">
-      <div id="today-state" class="dim" style="text-align:center; margin-bottom:12px;"></div>
-      <div class="btnrow">
-        <button class="primary" id="ck-btn" onclick="gpsCheckin()">ลงเวลาเข้างาน</button>
-        <button class="qrbtn" onclick="toast('เปิดกล้องมือถือแล้วสแกน QR ที่หน้าร้านได้เลย')">สแกน QR</button>
-      </div>
+  <div class="empcard">
+    <div class="row1"><div class="av" id="homeAv">–</div>
+      <div><h2 id="homeName">–</h2><div class="r" id="homeRole">–</div></div></div>
+    <div class="kv">
+      <div><div class="k">Employee ID</div><b id="homeNo" class="mono">–</b></div>
+      <div><div class="k">สาขา · Branch</div><b id="homeBranch">–</b></div>
+      <div><div class="k">แผนก · Department</div><b id="homeDept">–</b></div>
+      <div><div class="k">สัญญา · Contract</div><b id="homeContract">–</b></div>
     </div>
-    <div class="grid2">
-      <div class="stat"><b id="st-ot">0 ชม.</b><span>OT เดือนนี้ (อนุมัติแล้ว)</span></div>
-      <div class="stat"><b id="st-pending">0</b><span>คำขอรออนุมัติ</span></div>
+  </div>
+  <div class="shift-strip">
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <div><div style="font-size:.72rem;color:var(--gold);font-weight:700;letter-spacing:.1em">กะวันนี้ · TODAY'S SHIFT</div><b id="shToday">–</b></div>
+    <div class="r" id="shBranch"></div>
+  </div>
+  <div class="fpwrap">
+    <button class="fpbtn in" id="fpBtn" onclick="startCheckin()">
+      <svg viewBox="0 0 24 24"><path d="M7 4.6A8 8 0 0120 11c0 3-.5 5.5-1.3 7.6M4.7 7.5A8 8 0 004 11c0 2.6-.5 4.5-1 5.6M12 7a4 4 0 00-4 4c0 2.8-.4 5-1.2 6.9M12 7a4 4 0 014 4c0 1.2-.06 2.3-.2 3.4M15.2 17.4c-.2.9-.5 1.8-.8 2.6M12 11c0 3.3-.6 6.2-1.6 8.6M8.4 3.7A8 8 0 0114.6 3"/></svg>
+      <span class="th" id="fpTh">สแกนนิ้ว ลงเวลาเข้า</span><span class="en" id="fpEn">Clock In</span>
+    </button>
+    <div class="fpcap" id="fpCap">แตะปุ่ม → ถ่ายรูปยืนยันตัวตน → บันทึกเวลา</div>
+  </div>
+  <div class="geoline"><span class="dot" id="geoDot"></span><span id="geoTxt">กำลังตรวจตำแหน่ง…</span></div>
+  <div class="io">
+    <div class="c"><div class="k">เข้างาน · IN</div><b id="ioIn">--:--</b><div class="s" id="ioInS">ยังไม่ลงเวลา</div></div>
+    <div class="c"><div class="k">ออกงาน · OUT</div><b id="ioOut">--:--</b><div class="s" id="ioOutS">ยังไม่ลงเวลา</div></div>
+  </div>
+  <a class="qrlink" onclick="toast('เปิดกล้องมือถือแล้วสแกน QR ที่หน้าร้านได้เลย')">สแกน QR ที่ร้านแทน →</a>
+</div>
+
+<!-- ═══ REQUESTS ═══ -->
+<div class="page" id="pg-req">
+  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+    <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
+  </div>
+  <div class="rq">
+    <h2 class="big">คำร้องขอของฉัน</h2>
+    <p class="subh">ยื่นลา · ขอ OT · เบิกค่าใช้จ่าย และติดตามสถานะ</p>
+    <div class="newrow">
+      <button class="b1" onclick="formLeave()">+ ลางาน</button>
+      <button class="b2" onclick="formOt()">+ OT</button>
+      <button class="b3" onclick="formClaim()">+ เบิก</button>
     </div>
-    <h2>วันลาคงเหลือ</h2>
-    <div class="card" id="leave-cards"></div>
-    <h2>ประกาศบริษัท</h2>
-    <div class="card" id="ann"></div>
-    <h2>วันเกิดเดือนนี้</h2>
-    <div class="card bd" id="bd"></div>
-    <button style="width:100%; color:var(--warn); margin-top:6px;" onclick="logout()">ออกจากระบบ</button>
-  </div>
-</div>
-
-<!-- ═ TAB 2 : คำขอ ═ -->
-<div class="page" id="p-req">
-  <div class="hd"><h1>คำขอของฉัน</h1><span class="pill" style="background:rgba(255,255,255,.15); color:#fff;">DEMO</span></div>
-  <div class="body flat">
-    <div class="seg" id="req-seg">
-      <button class="on" data-k="leave">ลางาน</button>
-      <button data-k="ot">ล่วงเวลา</button>
-      <button data-k="claim">เบิกจ่าย</button>
-      <button data-k="approve" id="seg-ap" style="display:none; border-color:var(--mint); color:var(--mint-dark); font-weight:700;">รออนุมัติ (หัวหน้า)</button>
+    <div class="sec-t">รายการคำร้อง · My requests</div>
+    <div class="card"><div class="lst" id="reqList"></div></div>
+    <div id="apprSec" style="display:none">
+      <div class="sec-t">คิวรออนุมัติ (หัวหน้า) · Approvals</div>
+      <div class="card"><div class="lst" id="apprList"></div></div>
     </div>
-    <div id="req-list"></div>
   </div>
-  <button class="fab" onclick="openSheet()">＋</button>
 </div>
 
-<!-- ═ TAB 3 : ปฏิทิน ═ -->
-<div class="page" id="p-cal">
-  <div class="hd"><h1>ปฏิทินกะ</h1><span class="dim" id="cal-month" style="color:#fff; opacity:.85;"></span></div>
-  <div class="body flat">
-    <div class="card"><div class="cal" id="cal"></div></div>
-    <div class="card" style="display:flex; gap:16px; font-size:11.5px;">
-      <span><i style="color:var(--mint-dark); font-style:normal;">●</i> กะเช้า 09:00–18:00</span>
-      <span><i style="color:#B07A2A; font-style:normal;">●</i> กะบ่าย 12:00–21:00</span>
-      <span class="dim">ว่าง = วันหยุด</span>
+<!-- ═══ CALENDAR ═══ -->
+<div class="page" id="pg-cal">
+  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+    <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
+  </div>
+  <div class="calnav"><button onclick="calNav(-1)">‹</button><h2 id="calTitle"></h2><button onclick="calNav(1)">›</button></div>
+  <div class="cal">
+    <div class="dow"><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span><span>อา</span></div>
+    <div id="calGrid"></div>
+  </div>
+  <div class="legend"><span><i style="background:var(--green)"></i>ตรงเวลา</span><span><i style="background:var(--red)"></i>สาย / ออกก่อน</span><span>จุดซ้าย = เข้า · จุดขวา = ออก</span></div>
+  <div class="daycard" id="dayCard"></div>
+</div>
+
+<!-- ═══ PROFILE ═══ -->
+<div class="page" id="pg-me">
+  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+    <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
+  </div>
+  <div class="prof">
+    <div class="pcard">
+      <div class="av" id="meAv">–</div>
+      <h2 id="meName">–</h2>
+      <div class="r" id="meRole">–</div>
+      <div class="br" id="meBranch">–</div>
     </div>
-    <h2>ประวัติลงเวลาล่าสุด</h2>
-    <div class="card" id="my-time"></div>
+    <div class="sec-t">ข้อมูลส่วนตัว · Personal</div>
+    <div class="info" id="mePersonal"></div>
+    <div class="sec-t">ข้อมูลการจ้าง · Employment</div>
+    <div class="info" id="meEmployment"></div>
+    <div class="sec-t">วันลาคงเหลือ · Leave balance</div>
+    <div class="info" id="meLeave"></div>
+    <button class="lo" onclick="logout()">ออกจากระบบ</button>
   </div>
 </div>
 
-<!-- ═ TAB 4 : สลิปเงินเดือน ═ -->
-<div class="page" id="p-slip">
-  <div class="hd"><h1>สลิปเงินเดือน</h1></div>
-  <div class="body flat">
-    <div class="card" id="slip-list"></div>
+<!-- tabbar -->
+<nav class="tabbar" id="tabbar" style="display:none">
+  <button data-t="home" class="on" onclick="tab('home')"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 9.5V20h12V9.5"/></svg>หน้าหลัก</button>
+  <button data-t="req" onclick="tab('req')"><svg viewBox="0 0 24 24"><path d="M8 3h8l3 3v15H5V3z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg>คำร้องขอ<span class="bdg" id="reqBdg" style="display:none">0</span></button>
+  <button data-t="cal" onclick="tab('cal')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>ปฏิทิน</button>
+  <button data-t="me" onclick="tab('me')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.3-3.5 3.8-5 7-5s5.7 1.5 7 5"/></svg>ข้อมูลส่วนตัว</button>
+</nav>
+
+<!-- camera -->
+<div id="cam">
+  <div class="caption">ถ่ายรูปยืนยันตัวตน<small id="camMode">ลงเวลาเข้า · Clock In</small></div>
+  <video id="camV" autoplay playsinline muted></video>
+  <div class="capbar">
+    <button class="skip" onclick="camSkip()">ข้ามการถ่ายรูป</button>
+    <button class="shutter" onclick="camShot()"></button>
+    <button class="skip" onclick="camCancel()">ยกเลิก</button>
   </div>
 </div>
+<canvas id="camC" style="display:none"></canvas>
 
-<!-- ═ Payslip Detail (แบบภาพ ByteHR) ═ -->
-<div class="page" id="p-slipdetail">
-  <div class="hd"><h1 id="sd-title">Payslip Detail</h1><button style="background:rgba(255,255,255,.15); color:#fff; border:0; font-size:12px;" onclick="show('slip')">← กลับ</button></div>
-  <div class="body flat">
-    <button style="width:100%; background:var(--mint-soft); color:var(--mint-dark); border-color:var(--mint-soft); font-weight:700;"
-      onclick="printSlipFormal()">ดาวน์โหลดสลิป (บันทึกเป็น PDF)</button>
-    <div class="card" style="overflow-x:auto; padding:13px;" id="sd-formal"></div>
-  </div>
-</div>
+<!-- sheet -->
+<div id="sheetOvl" onclick="closeSheet()"></div>
+<div id="sheet"><div class="grab"></div><div class="sb" id="sheetBody"></div></div>
 
-<!-- modal ลงเวลาสำเร็จ -->
-<div class="modal" id="ck-modal">
-  <div class="box">
-    <b style="font-size:16px;">ลงเวลาสำเร็จ</b>
-    <div class="tick">✓</div>
-    <div class="row">วันที่ <b id="ckm-date">—</b></div>
-    <div class="row">เวลา <b id="ckm-time">—</b></div>
-    <div class="row">สถานที่ <b id="ckm-loc">—</b></div>
-    <button class="primary" onclick="closeCkModal()">ตกลง</button>
-  </div>
-</div>
-
-<!-- sheet ยื่นคำขอ -->
-<div class="sheet" id="sheet">
-  <h3 id="sheet-title">ยื่นคำขอ</h3>
-  <div class="fg" id="sheet-body"></div>
-  <div class="btnrow" style="margin-top:14px;">
-    <button style="flex:1;" onclick="closeSheet()">ยกเลิก</button>
-    <button class="primary" style="flex:2;" onclick="submitReq()">ส่งคำขอ</button>
-  </div>
-</div>
-
-<div class="tabbar">
-  <button class="on" data-p="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V21h14V9.5"/></svg>หน้าหลัก</button>
-  <button data-p="req"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>คำขอ</button>
-  <button data-p="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v4M16 3v4"/></svg>ปฏิทิน</button>
-  <button data-p="slip"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>สลิป</button>
-</div>
-
+<!-- success popup -->
+<div class="okpop" id="okpop"><div class="box"><div id="okImgWrap"><div class="cir">✓</div></div><h3 id="okT">ลงเวลาสำเร็จ</h3><p id="okD"></p><button onclick="$('#okpop').classList.remove('on')">ตกลง</button></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 const $ = s => document.querySelector(s);
-let outMode = false, reqKind = 'leave', reqData = null, leaveTypes = [], slips = [], meInfo = {};
-const LV_TH = { sick: 'ลาป่วย', personal: 'ลากิจ', vacation: 'ลาพักร้อน', maternity: 'ลาคลอด', ordination: 'ลาอุปสมบท' };
-const money = n => (+n).toLocaleString('th-TH');
-function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2600); }
+const $$ = s => [...document.querySelectorAll(s)];
+const api = async (url, opt) => {
+  const r = await fetch(url, opt ? { headers: { 'Content-Type': 'application/json' }, ...opt, body: opt.body ? JSON.stringify(opt.body) : undefined } : undefined);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.status);
+  return j;
+};
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2600); };
+const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const hm = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+const THB = n => '฿' + (+n || 0).toLocaleString('th-TH');
+const thLong = d => d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-setInterval(() => {
-  const n = new Date();
-  $('#clock').textContent = n.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  $('#date').textContent = n.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}, 500);
+let ME = null, GEO = null, CAL = { shifts: [], cks: [], cur: new Date(), sel: iso(new Date()) };
 
-// ── แท็บล่าง ──
-document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => show(b.dataset.p)));
-function show(p) {
-  document.querySelectorAll('.tabbar button').forEach(x => x.classList.toggle('on', x.dataset.p === p));
-  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
-  $('#p-' + p).classList.add('on');
-  if (p === 'home') loadDash();
-  if (p === 'req') loadReqs();
-  if (p === 'cal') loadCal();
-  if (p === 'slip') loadSlips();
+// ═══ LOGIN: เลขท้ายบัตร 4 ตัว → PIN 6 หลัก ═══
+async function loginStep1() {
+  $('#loginErr').textContent = '';
+  try {
+    const r = await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value } });
+    if (r.step === 'pin') {
+      $('#step1').style.display = 'none'; $('#step2').style.display = 'block';
+      $('#stp2').classList.add('on');
+      $('#verifyName').textContent = 'ยืนยันตัวตน: ' + r.nickname;
+      $('#pin').focus();
+    }
+  } catch (e) { $('#loginErr').textContent = e.message; }
 }
-
-async function doLogin() {
-  const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin: $('#pin').value }) });
-  if (!r.ok) return toast('PIN ไม่ถูกต้อง');
-  $('#login').style.display = 'none'; loadDash();
+async function loginStep2() {
+  $('#loginErr').textContent = '';
+  try {
+    await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value, pin: $('#pin').value } });
+    enter();
+  } catch (e) { $('#loginErr').textContent = e.message; }
 }
-async function logout() { await fetch('/api/logout', { method: 'POST' }); location.reload(); }
+function backStep() { $('#step2').style.display = 'none'; $('#step1').style.display = 'block'; $('#stp2').classList.remove('on'); $('#loginErr').textContent = ''; }
+function logout() { api('/api/logout', { method: 'POST', body: {} }).then(() => location.reload()); }
 
-async function loadDash() {
-  const r = await fetch('/api/me/dashboard');
-  if (!r.ok) { $('#login').style.display = ''; return; }
-  const d = await r.json(); meInfo = d;
-  $('#who').textContent = `${d.name} · ${d.role}`;
-  $('#shift-line').textContent = d.shift_today ? `กะวันนี้ ${d.shift_today.name} ${d.shift_today.start}–${d.shift_today.end} · ${d.branch}` : `วันนี้วันหยุด · ${d.branch}`;
-  $('#st-ot').textContent = d.ot_hours_month + ' ชม.';
-  $('#st-pending').textContent = d.pending_requests;
-  $('#seg-ap').style.display = d.approver ? '' : 'none';
-  outMode = !!d.today.in && !d.today.out;
-  $('#ck-btn').textContent = outMode ? 'ลงเวลาออกงาน' : 'ลงเวลาเข้างาน';
-  $('#today-state').innerHTML = d.today.in
-    ? `เข้างาน ${new Date(d.today.in).toLocaleTimeString('th-TH')} ` + (d.today.out ? `· ออก ${new Date(d.today.out).toLocaleTimeString('th-TH')}` : '<span class="pill ok">กำลังทำงาน</span>')
-    : '<span class="pill">วันนี้ยังไม่ลงเวลา</span>';
-  $('#leave-cards').innerHTML = Object.keys(d.leave).map(k => {
-    const total = d.leave[k].total, used = d.leave[k].used, left = total - used;
-    return `<div class="lv"><div class="left"><b>${LV_TH[k]}</b>
-      <div class="bar"><i style="width:${Math.min(100, used / total * 100)}%"></i></div></div>
-      <div class="n">${left}<small> / ${total} วัน</small></div></div>`;
-  }).join('');
-  $('#ann').innerHTML = d.announcements.map(a => `<div class="ann" style="margin-bottom:8px;"><b>${a.title}</b><p>${a.body}</p></div>`).join('') || '<span class="dim">ไม่มีประกาศ</span>';
-  $('#bd').innerHTML = d.birthdays.map(b => `<span>${b.name.split(' ')[0]} · วันที่ ${b.day}</span>`).join('') || '<span class="dim">เดือนนี้ไม่มีวันเกิด</span>';
+// ═══ SHELL ═══
+async function enter() {
+  try { ME = await api('/api/me/dashboard'); } catch { return; } // ยังไม่ล็อกอิน
+  $('#pg-login').classList.remove('on'); $('#tabbar').style.display = 'flex';
+  tab('home');
+  startClock(); watchGeo(); refreshBadges();
 }
-
-// ── ลงเวลา + modal สำเร็จแบบ ByteHR ──
-function showCkModal(rec) {
-  const at = new Date(rec.at);
-  $('#ckm-date').textContent = at.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  $('#ckm-time').textContent = at.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  $('#ckm-loc').textContent = rec.note || meInfo.branch || '—';
-  $('#ck-modal').classList.add('on');
+function tab(t) {
+  $$('.page').forEach(p => p.classList.toggle('on', p.id === 'pg-' + t));
+  $$('.tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  if (t === 'home') renderHome();
+  if (t === 'req') renderReq();
+  if (t === 'cal') loadCal();
+  if (t === 'me') renderMe();
 }
-function closeCkModal() { $('#ck-modal').classList.remove('on'); show('home'); }
-function gpsCheckin() {
-  toast('กำลังหาตำแหน่ง…');
-  navigator.geolocation.getCurrentPosition(async p => {
-    const r = await fetch('/api/checkin', { method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ lat: p.coords.latitude, lng: p.coords.longitude, type: outMode ? 'out' : 'in' }) });
-    const d = await r.json();
-    if (!r.ok) return toast(d.error);
-    showCkModal(d.rec);
-  }, () => toast('หาตำแหน่งไม่ได้ — สแกน QR ที่ร้านแทนได้'), { enableHighAccuracy: true, timeout: 8000 });
+async function refreshBadges() {
+  try {
+    ME = await api('/api/me/dashboard');
+    const noti = (ME.announcements || []).length + 1; // ประกาศ + สลิปล่าสุด
+    $('#notiN').textContent = noti; $('#notiN').style.display = noti ? 'grid' : 'none';
+    if (ME.pending_requests) { $('#reqBdg').textContent = ME.pending_requests; $('#reqBdg').style.display = 'grid'; }
+    else $('#reqBdg').style.display = 'none';
+  } catch {}
 }
 
-// ── คำขอ 3 ชนิด ──
-document.querySelectorAll('#req-seg button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('#req-seg button').forEach(x => x.classList.remove('on'));
-  b.classList.add('on'); reqKind = b.dataset.k; renderReqs();
-}));
-const stPill = s => s === 'approved' ? '<span class="pill ok">อนุมัติแล้ว</span>' : s === 'rejected' ? '<span class="pill warn">ไม่อนุมัติ</span>' : s === 'cancelled' ? '<span class="pill">ยกเลิกแล้ว</span>' : '<span class="pill info">รออนุมัติ</span>';
-const decideLine = x => x.status === 'pending'
-  ? `<button style="width:100%; margin-top:8px; color:var(--warn); padding:9px;" onclick="cancelReq('${x._kind}','${x.id}')">ยกเลิกคำขอนี้</button>`
-  : (x.approved_by ? `<div class="dim" style="margin-top:6px;">โดย ${x.approved_by}${x.comment ? ' · “' + x.comment + '”' : ''}</div>` : '');
-async function cancelReq(kind, id) {
-  const r = await fetch('/api/me/requests/cancel', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, id }) });
-  toast(r.ok ? '✓ ยกเลิกคำขอแล้ว' : (await r.json()).error);
-  if (r.ok) loadReqs();
+// ═══ HOME ═══
+let clkIv = null;
+function startClock() {
+  const tick = () => {
+    const n = new Date();
+    $('#ckTime').textContent = n.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    $('#ckSec').textContent = 'วินาที ' + String(n.getSeconds()).padStart(2, '0');
+    $('#ckDate').textContent = thLong(n);
+  };
+  tick(); clearInterval(clkIv); clkIv = setInterval(tick, 1000);
 }
-async function loadReqs() {
-  const r = await fetch('/api/me/requests'); if (!r.ok) return;
-  reqData = await r.json(); leaveTypes = reqData.types;
-  const ap = await fetch('/api/me/approvals');
-  reqData.approvals = ap.ok ? await ap.json() : { approver: false, leaves: [], ot: [], claims: [] };
-  renderReqs();
+async function renderHome() {
+  ME = await api('/api/me/dashboard');
+  const ini = (ME.name_en || ME.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  $('#hiName').textContent = `สวัสดี, ${ME.nickname || ME.name.split(' ')[0]} 👋`;
+  $('#homeAv').textContent = ini;
+  $('#homeName').textContent = ME.name;
+  $('#homeRole').textContent = `${ME.role} · ${ME.name_en || ''}`;
+  $('#homeNo').textContent = ME.employee_no;
+  $('#homeBranch').textContent = ME.branch;
+  $('#homeDept').textContent = ME.dept;
+  $('#homeContract').textContent = ME.contract || 'Full Time';
+  const s = ME.shift_today;
+  $('#shToday').textContent = s ? (s.off ? 'วันหยุด' : `${s.start} - ${s.end}`) : 'ไม่มีกะวันนี้';
+  $('#shBranch').textContent = ME.branch || '';
+  const tin = ME.today.in, tout = ME.today.out;
+  $('#ioIn').textContent = hm(tin); $('#ioOut').textContent = hm(tout);
+  const inLate = tin && s && s.start && (new Date(tin) - new Date(`${iso(new Date())}T${s.start}:00`)) / 60000 > 15;
+  $('#ioInS').textContent = tin ? (inLate ? 'สาย' : 'ตรงเวลา') : 'ยังไม่ลงเวลา';
+  $('#ioInS').className = 's ' + (tin ? (inLate ? 'bad' : 'ok') : '');
+  $('#ioOutS').textContent = tout ? 'บันทึกแล้ว' : 'ยังไม่ลงเวลา';
+  $('#ioOutS').className = 's ' + (tout ? 'ok' : '');
+  const mode = tin && !tout ? 'out' : 'in';
+  const b = $('#fpBtn');
+  b.className = 'fpbtn ' + mode;
+  $('#fpTh').textContent = mode === 'out' ? 'สแกนนิ้ว ลงเวลาออก' : 'สแกนนิ้ว ลงเวลาเข้า';
+  $('#fpEn').textContent = mode === 'out' ? 'Clock Out' : 'Clock In';
+  b.disabled = !!(tin && tout);
+  if (tin && tout) { $('#fpTh').textContent = 'ลงเวลาครบแล้ววันนี้'; $('#fpEn').textContent = 'Done'; }
+  b.dataset.mode = mode;
+  refreshBadges();
 }
-async function appApprove(kind, id, status) {
-  const comment = prompt(status === 'approved' ? 'ความคิดเห็นถึงพนักงาน (ไม่บังคับ)' : 'เหตุผลที่ไม่อนุมัติ', '') ?? '';
-  const r = await fetch('/api/me/approve', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ kind, id, status, comment }) });
-  toast(r.ok ? (status === 'approved' ? '✓ อนุมัติแล้ว' : '✓ บันทึกไม่อนุมัติแล้ว') : (await r.json()).error);
-  if (r.ok) loadReqs();
+const dist = (a, b, c, d) => { const R = 6371e3, r = x => x * Math.PI / 180;
+  const p = r(c - a), q = r(d - b), s = Math.sin(p / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(q / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))); };
+function watchGeo() {
+  if (!navigator.geolocation) { $('#geoTxt').textContent = 'อุปกรณ์นี้ไม่รองรับ GPS — ใช้สแกน QR แทน'; $('#geoDot').classList.add('err'); return; }
+  navigator.geolocation.watchPosition(p => {
+    GEO = { lat: p.coords.latitude, lng: p.coords.longitude };
+    const g = ME?.branch_geo;
+    if (!g) return;
+    const d = dist(GEO.lat, GEO.lng, g.lat, g.lng);
+    if (d <= g.radius) { $('#geoDot').classList.remove('err'); $('#geoTxt').textContent = `On-site · ${ME.branch} · ห่าง ${d} ม.`; }
+    else { $('#geoDot').classList.add('err'); $('#geoTxt').textContent = `ต้องอยู่ในระยะ ${g.radius} ม. จาก ${ME.branch} (ตอนนี้ ${d.toLocaleString()} ม.)`; }
+  }, () => { $('#geoDot').classList.add('err'); $('#geoTxt').textContent = `ไม่ได้รับอนุญาตใช้ตำแหน่ง — ต้องอยู่ในระยะ ${ME?.branch_geo?.radius ?? '–'} ม. จาก ${ME?.branch ?? 'สาขา'}`; },
+  { enableHighAccuracy: true, maximumAge: 10000 });
 }
-function renderReqs() {
-  if (!reqData) return;
-  document.querySelector('.fab').style.display = reqKind === 'approve' ? 'none' : '';
-  if (reqKind === 'approve') {
-    const a = reqData.approvals || {};
-    const rows = [
-      ...(a.leaves || []).map(l => ({ kind: 'leave', id: l.id, name: l.name, head: l.type_name, detail: `${l.from} → ${l.to} · ${l.days} วัน · ${l.reason || ''}` })),
-      ...(a.ot || []).map(o => ({ kind: 'ot', id: o.id, name: o.name, head: `OT ${o.hours} ชม.`, detail: `วันที่ ${o.date} · ${o.reason || ''}` })),
-      ...(a.claims || []).map(c => ({ kind: 'claim', id: c.id, name: c.name, head: c.title, detail: `จำนวนเงิน ${money(c.amount)} บาท` })),
-    ];
-    $('#req-list').innerHTML = rows.map(r => `<div class="card req"><b>${r.name}</b>
-      <div class="dim" style="margin-top:2px;"><b style="color:var(--ink);">${r.head}</b> · ${r.detail}</div>
-      <div class="btnrow" style="margin-top:10px;">
-        <button class="primary" style="font-size:13px; padding:10px;" onclick="appApprove('${r.kind}','${r.id}','approved')">อนุมัติ</button>
-        <button style="flex:1; color:var(--warn); font-size:13px;" onclick="appApprove('${r.kind}','${r.id}','rejected')">ไม่อนุมัติ</button>
-      </div></div>`).join('')
-      || '<div class="card dim" style="text-align:center;">ไม่มีรายการรออนุมัติในทีมของคุณ</div>';
-    return;
+
+// ── check-in พร้อมถ่ายรูปยืนยัน ──
+let camStream = null, camMode = 'in';
+async function startCheckin() {
+  camMode = $('#fpBtn').dataset.mode || 'in';
+  if (!GEO) { toast('ยังไม่ได้ตำแหน่ง GPS — เปิดอนุญาตตำแหน่ง หรือสแกน QR ที่ร้าน'); return; }
+  $('#camMode').textContent = camMode === 'out' ? 'ลงเวลาออก · Clock Out' : 'ลงเวลาเข้า · Clock In';
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } }, audio: false });
+    $('#camV').srcObject = camStream;
+    $('#cam').classList.add('on');
+  } catch (e) {
+    // ไม่มีกล้อง / ไม่อนุญาต → ลงเวลาโดยไม่มีรูป
+    submitCheckin(null);
   }
-  let html = '';
-  if (reqKind === 'leave') html = reqData.leaves.map(l => `<div class="card req"><b>${LV_TH[l.type] || l.type}</b><span class="st">${stPill(l.status)}</span>
-    <div class="dim">${l.from} → ${l.to} · ${l.days} วัน</div><div class="dim">${l.reason || ''}</div>
-    <div class="meta"><span>ID: ${l.id}</span><span>ยื่นเมื่อ ${new Date(l.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...l, _kind: 'leave' })}</div>`).join('');
-  if (reqKind === 'ot') html = reqData.ot.map(o => `<div class="card req"><b>OT ${o.hours} ชั่วโมง</b><span class="st">${stPill(o.status)}</span>
-    <div class="dim">วันที่ ${o.date} · ${o.reason || ''}</div>
-    <div class="meta"><span>ID: ${o.id}</span><span>ยื่นเมื่อ ${new Date(o.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...o, _kind: 'ot' })}</div>`).join('');
-  if (reqKind === 'claim') html = reqData.claims.map(c => `<div class="card req"><b>${c.title}</b><span class="st">${stPill(c.status)}</span>
-    <div class="dim">จำนวนเงิน ${money(c.amount)} บาท</div>
-    <div class="meta"><span>ID: ${c.id}</span><span>ยื่นเมื่อ ${new Date(c.at).toLocaleDateString('th-TH')}</span></div>${decideLine({ ...c, _kind: 'claim' })}</div>`).join('');
-  $('#req-list').innerHTML = html || '<div class="card dim" style="text-align:center;">ยังไม่มีรายการในหมวดนี้ — กดปุ่ม ＋ เพื่อยื่นคำขอ</div>';
 }
-function openSheet() {
-  const titles = { leave: 'ยื่นใบลา', ot: 'ขอทำ OT', claim: 'ขอเบิกค่าใช้จ่าย' };
-  $('#sheet-title').textContent = titles[reqKind];
-  if (reqKind === 'leave') $('#sheet-body').innerHTML = `
-    <select id="q-type" class="full">${leaveTypes.map(t => `<option value="${t.key}">${t.name}</option>`).join('')}</select>
-    <input id="q-from" type="date"/><input id="q-to" type="date"/>
-    <input id="q-days" type="number" min="1" value="1" placeholder="จำนวนวัน"/>
-    <input id="q-reason" placeholder="เหตุผล"/>`;
-  if (reqKind === 'ot') $('#sheet-body').innerHTML = `
-    <input id="q-date" type="date"/><input id="q-hours" type="number" min="1" value="2" placeholder="ชั่วโมง"/>
-    <input id="q-reason" class="full" placeholder="เหตุผล"/>`;
-  if (reqKind === 'claim') $('#sheet-body').innerHTML = `
-    <input id="q-title" class="full" placeholder="รายการ เช่น ค่าเดินทาง"/>
-    <input id="q-amount" type="number" min="1" placeholder="จำนวนเงิน (บาท)" class="full"/>`;
-  $('#sheet').classList.add('on');
+function stopCam() { camStream?.getTracks().forEach(t => t.stop()); camStream = null; $('#cam').classList.remove('on'); }
+function camShot() {
+  const v = $('#camV'), c = $('#camC');
+  const w = 320, h = Math.round(v.videoHeight / v.videoWidth * 320) || 240;
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(v, 0, 0, w, h);
+  const photo = c.toDataURL('image/jpeg', 0.7);
+  stopCam(); submitCheckin(photo);
 }
-function closeSheet() { $('#sheet').classList.remove('on'); }
-async function submitReq() {
-  let body = { kind: reqKind };
-  if (reqKind === 'leave') body = { ...body, type: $('#q-type').value, from: $('#q-from').value, to: $('#q-to').value, days: $('#q-days').value, reason: $('#q-reason').value };
-  if (reqKind === 'ot') body = { ...body, date: $('#q-date').value, hours: $('#q-hours').value, reason: $('#q-reason').value };
-  if (reqKind === 'claim') body = { ...body, title: $('#q-title').value, amount: $('#q-amount').value };
-  const r = await fetch('/api/me/requests', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) return toast((await r.json()).error || 'กรอกให้ครบ');
-  closeSheet(); toast('✓ ส่งคำขอแล้ว รออนุมัติ'); loadReqs();
+function camSkip() { stopCam(); submitCheckin(null); }
+function camCancel() { stopCam(); }
+async function submitCheckin(photo) {
+  try {
+    const r = await api('/api/checkin', { method: 'POST', body: { lat: GEO.lat, lng: GEO.lng, type: camMode, photo } });
+    $('#okT').textContent = camMode === 'in' ? 'ลงเวลาเข้าสำเร็จ' : 'ลงเวลาออกสำเร็จ';
+    $('#okD').textContent = `${hm(r.rec.at)} · ${r.rec.note}${r.rec.late_min > 15 ? ` · สาย ${r.rec.late_min} นาที` : ''}`;
+    $('#okImgWrap').innerHTML = photo ? `<img src="${photo}"/>` : '<div class="cir">✓</div>';
+    $('#okpop').classList.add('on');
+    renderHome();
+  } catch (e) { toast(e.message); }
 }
 
-// ── ปฏิทินกะ ──
+// ═══ REQUESTS PAGE ═══
+const ST = { pending: ['รออนุมัติ', 'var(--gold)'], approved: ['อนุมัติแล้ว', 'var(--green)'], rejected: ['ไม่อนุมัติ', 'var(--red)'], cancelled: ['ยกเลิก', 'var(--faint)'] };
+const stTag = s => `<span style="color:${(ST[s] || ST.pending)[1]};font-weight:700;font-size:.8rem">${(ST[s] || ST.pending)[0]}</span>`;
+async function renderReq() {
+  const r = await api('/api/me/requests');
+  const cancelBtn = (kind, it) => it.status === 'pending' ? `<button class="cancel" onclick="cancelReq('${kind}','${it.id}')">ยกเลิก</button>` : '';
+  const items =
+    r.leaves.map(l => `<div class="it"><span><b>${esc(r.types.find(t => t.key === l.type)?.name || l.type)} ${l.days} วัน</b><span class="s">${l.from}${l.to !== l.from ? ' → ' + l.to : ''} · ${esc(l.reason || '')}</span></span><span style="text-align:right">${stTag(l.status)}<br/>${cancelBtn('leave', l)}</span></div>`).join('') +
+    r.ot.map(o => `<div class="it"><span><b>OT ${o.hours} ชม.</b><span class="s">${o.date} · ${esc(o.reason || '')}</span></span><span style="text-align:right">${stTag(o.status)}<br/>${cancelBtn('ot', o)}</span></div>`).join('') +
+    r.claims.map(c => `<div class="it"><span><b>เบิก ${THB(c.amount)}</b><span class="s">${esc(c.title)}</span></span><span style="text-align:right">${stTag(c.status)}<br/>${cancelBtn('claim', c)}</span></div>`).join('');
+  $('#reqList').innerHTML = items || '<div class="empty">ยังไม่มีคำร้อง — กดปุ่มด้านบนเพื่อยื่นใหม่</div>';
+  if (ME?.approver) {
+    $('#apprSec').style.display = 'block';
+    const a = await api('/api/me/approvals');
+    const btns = (kind, id) => `<span style="white-space:nowrap"><button class="cancel" onclick="decide('${kind}','${id}','rejected')">✕</button> <button class="cancel" style="color:var(--green)" onclick="decide('${kind}','${id}','approved')">✓</button></span>`;
+    const ai =
+      a.leaves.map(l => `<div class="it"><span><b>${esc(l.name)} · ${esc(l.type_name)} ${l.days} วัน</b><span class="s">${l.from} · ${esc(l.reason || '')}</span></span>${btns('leave', l.id)}</div>`).join('') +
+      a.ot.map(o => `<div class="it"><span><b>${esc(o.name)} · OT ${o.hours} ชม.</b><span class="s">${o.date} · ${esc(o.reason || '')}</span></span>${btns('ot', o.id)}</div>`).join('') +
+      a.claims.map(c => `<div class="it"><span><b>${esc(c.name)} · เบิก ${THB(c.amount)}</b><span class="s">${esc(c.title)}</span></span>${btns('claim', c.id)}</div>`).join('');
+    $('#apprList').innerHTML = ai || '<div class="empty">ไม่มีรายการรออนุมัติ 🎉</div>';
+  }
+}
+async function cancelReq(kind, id) { await api('/api/me/requests/cancel', { method: 'POST', body: { kind, id } }); toast('ยกเลิกคำร้องแล้ว'); renderReq(); refreshBadges(); }
+async function decide(kind, id, status) {
+  try { await api('/api/me/approve', { method: 'POST', body: { kind, id, status } }); toast(status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธแล้ว'); renderReq(); }
+  catch (e) { toast(e.message); }
+}
+async function formLeave() {
+  const r = await api('/api/me/requests');
+  const today = iso(new Date());
+  openSheet(`<h3>ยื่นใบลา</h3>
+    <div class="fld"><label>ประเภทการลา</label><select id="fT">${r.types.map(t => `<option value="${t.key}">${esc(t.name)}</option>`).join('')}</select></div>
+    <div class="fld"><label>ตั้งแต่</label><input id="fF" type="date" value="${today}"/></div>
+    <div class="fld"><label>ถึง</label><input id="fTo" type="date" value="${today}"/></div>
+    <div class="fld"><label>จำนวนวัน</label><input id="fD" type="number" value="1" min="0.5" step="0.5"/></div>
+    <div class="fld"><label>เหตุผล</label><textarea id="fR" rows="2"></textarea></div>
+    <button class="go" onclick="submitReq({kind:'leave',type:$('#fT').value,from:$('#fF').value,to:$('#fTo').value,days:$('#fD').value,reason:$('#fR').value})">ส่งคำร้อง</button>`);
+}
+function formOt() {
+  openSheet(`<h3>ขอ OT</h3>
+    <div class="fld"><label>วันที่</label><input id="fD" type="date" value="${iso(new Date())}"/></div>
+    <div class="fld"><label>จำนวนชั่วโมง</label><input id="fH" type="number" value="1" min="0.5" step="0.5"/></div>
+    <div class="fld"><label>เหตุผล</label><textarea id="fR" rows="2"></textarea></div>
+    <button class="go" onclick="submitReq({kind:'ot',date:$('#fD').value,hours:$('#fH').value,reason:$('#fR').value})">ส่งคำร้อง</button>`);
+}
+function formClaim() {
+  openSheet(`<h3>เบิกค่าใช้จ่าย</h3>
+    <div class="fld"><label>รายการ</label><input id="fT" placeholder="เช่น ค่าเดินทาง"/></div>
+    <div class="fld"><label>จำนวนเงิน (฿)</label><input id="fA" type="number" min="1"/></div>
+    <button class="go" onclick="submitReq({kind:'claim',title:$('#fT').value,amount:$('#fA').value})">ส่งคำร้อง</button>`);
+}
+async function submitReq(body) {
+  try { await api('/api/me/requests', { method: 'POST', body }); toast('ส่งคำร้องแล้ว — รอหัวหน้าอนุมัติ'); closeSheet(); renderReq(); refreshBadges(); }
+  catch (e) { toast(e.message); }
+}
+
+// ═══ CALENDAR ═══
 async function loadCal() {
-  const shifts = await fetch('/api/me/calendar').then(r => r.json());
-  const n = new Date(), y = n.getFullYear(), m = n.getMonth();
-  $('#cal-month').textContent = n.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  const [shifts, cks] = await Promise.all([api('/api/me/calendar'), api('/api/me/timesheet')]);
+  CAL.shifts = shifts; CAL.cks = cks;
+  renderCal();
+}
+function calNav(n) { CAL.cur = new Date(CAL.cur.getFullYear(), CAL.cur.getMonth() + n, 1); renderCal(); }
+function renderCal() {
+  const y = CAL.cur.getFullYear(), m = CAL.cur.getMonth();
+  $('#calTitle').textContent = CAL.cur.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
   const first = new Date(y, m, 1), days = new Date(y, m + 1, 0).getDate();
-  let html = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(d => `<div class="h">${d}</div>`).join('');
-  for (let i = 0; i < first.getDay(); i++) html += '<div class="d off"></div>';
+  const lead = (first.getDay() + 6) % 7;
+  let html = '<div class="wk">';
+  for (let i = 0; i < lead; i++) html += '<span></span>';
   for (let d = 1; d <= days; d++) {
-    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const s = shifts.find(x => x.date === ds);
-    html += `<div class="d${d === n.getDate() ? ' today' : ''}">${d}${s ? `<i class="${s.name === 'กะเช้า' ? 'm' : 'l'}">${s.start}</i>` : ''}</div>`;
+    const date = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const sh = CAL.shifts.find(s => s.date === date);
+    const dayCks = CAL.cks.filter(c => c.at.slice(0, 10) === date);
+    const cin = dayCks.find(c => c.type === 'in'), cout = dayCks.filter(c => c.type === 'out').pop();
+    let dots = '';
+    if (cin) dots += `<i style="background:${cin.late_min > 15 ? 'var(--red)' : 'var(--green)'}"></i>`;
+    if (cout) dots += `<i style="background:var(--green)"></i>`;
+    const cls = ['day']; if (!sh) cls.push('off'); if (CAL.sel === date) cls.push('sel');
+    html += `<span class="${cls.join(' ')}" onclick="selDay('${date}')">${d}${dots ? `<span class="dots">${dots}</span>` : ''}</span>`;
+    if ((lead + d) % 7 === 0 && d !== days) html += '</div><div class="wk">';
   }
-  $('#cal').innerHTML = html;
-  const ts = await fetch('/api/me/timesheet').then(r => r.json());
-  $('#my-time').innerHTML = ts.slice(0, 8).map(c => `<div class="lv"><div class="left"><b>${c.type === 'in' ? 'เข้างาน' : 'ออกงาน'} · ${c.method === 'qr' ? 'QR' : 'GPS'}</b>
-    <div class="dim">${new Date(c.at).toLocaleString('th-TH')}</div></div>
-    ${c.late_min > 15 ? `<span class="pill warn">สาย ${c.late_min} น.</span>` : '<span class="pill ok">ปกติ</span>'}</div>`).join('')
-    || '<span class="dim">ยังไม่มีข้อมูล</span>';
+  html += '</div>';
+  $('#calGrid').innerHTML = html;
+  renderDay();
+}
+function selDay(d) { CAL.sel = d; renderCal(); }
+function renderDay() {
+  const date = CAL.sel;
+  const sh = CAL.shifts.find(s => s.date === date);
+  const dayCks = CAL.cks.filter(c => c.at.slice(0, 10) === date);
+  const cin = dayCks.find(c => c.type === 'in'), cout = dayCks.filter(c => c.type === 'out').pop();
+  const late = cin && cin.late_min > 15;
+  let hours = '—';
+  if (cin && cout) hours = ((new Date(cout.at) - new Date(cin.at)) / 36e5).toFixed(1) + ' ชม.';
+  const row = (k, v) => `<div class="row"><span class="k">${k}</span>${v}</div>`;
+  $('#dayCard').innerHTML = `<h3>${thLong(new Date(date + 'T00:00'))}</h3>` +
+    row('กะ', `<b>${sh ? `${sh.start} - ${sh.end}` : 'วันหยุด'}</b>`) +
+    row('เข้างาน', cin ? `<span><b>${hm(cin.at)}</b> <span class="tagp ${late ? 'bad' : 'ok'}">${late ? 'สาย ' + cin.late_min + ' น.' : 'ตรงเวลา'}</span></span>` : '<span class="tagp bad">ยังไม่ลงเวลา</span>') +
+    row('ออกงาน', cout ? `<b>${hm(cout.at)}</b>` : '<span class="tagp bad">ยังไม่ลงเวลา</span>') +
+    row('รวมชั่วโมง', `<b>${hours}</b>`) +
+    (cin ? row('สถานที่', `<span class="tagp ok">${esc(cin.note || cin.method.toUpperCase())}</span>`) : '');
 }
 
-// ── สลิป + หน้า detail แบบ ByteHR ──
-async function loadSlips() {
-  slips = await fetch('/api/me/payslips').then(r => r.json());
-  $('#slip-list').innerHTML = slips.map((p, i) => `<div class="slip-row" onclick="openSlip(${i})">
-    <div><b>${thMonth(p.month)}</b><div class="dim">แตะเพื่อดูรายละเอียด</div></div>
-    <span class="amt">${money(p.net)} ฿</span></div>`).join('')
-    || '<span class="dim">ยังไม่มีสลิป — รอหลังบ้านปิดงวดเงินเดือน</span>';
-}
-function thMonth(m) { const [y, mm] = m.split('-'); return new Date(+y, +mm - 1, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' }); }
-function slipDocHTML(p) {
-  const upto = slips.filter(x => x.month <= p.month);
-  const cumInc = upto.reduce((n, x) => n + x.base + x.ot, 0);
-  const cumTax = upto.reduce((n, x) => n + x.tax, 0);
-  const cumSso = upto.reduce((n, x) => n + x.sso, 0);
-  const payDate = (meInfo.payday || 28) + ' ' + thMonth(p.month);
-  return `
-  <table><tr>
-    <td><span class="lbl">รหัส</span><b>${meInfo.employee_no || ''}</b></td>
-    <td><span class="lbl">ชื่อ-สกุล</span><b>${meInfo.name || ''}</b></td>
-    <td><span class="lbl">แผนก</span><b>${meInfo.dept || '-'}</b></td>
-    <td><span class="lbl">ตำแหน่ง</span><b>${meInfo.role || '-'}</b></td>
-  </tr></table>
-  <table>
-    <tr><th style="width:22%;">รายได้ Earnings</th><th style="width:15%;" class="num">จำนวนเงิน Amount</th>
-        <th style="width:22%;">รายการหัก Deductions</th><th style="width:15%;" class="num">จำนวนเงิน Amount</th>
-        <th style="width:18%; text-align:center;">วันจ่าย Payroll Date</th></tr>
-    <tr><td>เงินเดือน</td><td class="num">${money(p.base)}</td><td>เงินประกันสังคม</td><td class="num">${money(p.sso)}</td>
-        <td rowspan="2" style="text-align:center; vertical-align:middle;">${payDate}</td></tr>
-    <tr><td>ค่าล่วงเวลา (OT)</td><td class="num">${money(p.ot)}</td><td>ภาษีเงินได้</td><td class="num">${money(p.tax)}</td></tr>
-    <tr><td>&nbsp;</td><td></td><td></td><td></td>
-        <td rowspan="2" style="text-align:center; vertical-align:middle;"><span class="lbl">เงินได้สุทธิ Net To Pay</span><b style="font-size:15px;">${money(p.net)}</b></td></tr>
-    <tr><th>รวมเงินได้ Total Earnings</th><th class="num">${money(p.base + p.ot)}</th>
-        <th>รวมรายการหัก Total Deduction</th><th class="num">${money(p.sso + p.tax)}</th></tr>
-  </table>
-  <table><tr><th class="num">เงินได้สะสมต่อปี</th><th class="num">ภาษีสะสมต่อปี</th><th class="num">เงินประกันสังคมสะสม</th></tr>
-  <tr><td class="num">${money(cumInc)}</td><td class="num">${money(cumTax)}</td><td class="num">${money(cumSso)}</td></tr></table>`;
-}
-function printSlipFormal() {
-  const p = slips[window._curSlip]; if (!p) return window.print();
-  const w = window.open('', '_blank');
-  if (!w) return window.print(); // popup ถูกบล็อก → พิมพ์หน้าปัจจุบัน (แสดงฟอร์มเดียวกันอยู่แล้ว)
-  w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบจ่ายเงินเดือน (PAY SLIP)</title><style>
-    body { font-family:'Sukhumvit Set','SF Pro Text','Thonburi','Sarabun',sans-serif; color:#1D2B2A; padding:28px; }
-    table { border-collapse:collapse; width:100%; margin-top:8px; font-size:12.5px; }
-    th, td { border:1px solid #555; padding:7px 9px; text-align:left; }
-    th { background:#F0F0EC; font-size:11.5px; }
-    .num { text-align:right; font-variant-numeric:tabular-nums; }
-    .lbl { font-size:10.5px; color:#666; display:block; }
-  </style></head><body>
-  <div style="display:flex; justify-content:space-between; align-items:center; font-weight:800;">
-    <span><img src="/logo-wide.png" style="height:22px; vertical-align:middle;"/> DEMO HR</span>
-    <span>ใบจ่ายเงินเดือน (PAY SLIP)</span></div>
-  ${slipDocHTML(p)}
-  <p style="font-size:11px; color:#888; margin-top:10px;">เอกสารลับ — สลิปนี้ออกโดยระบบอัตโนมัติ · พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}</p>
-  <script>window.onload = () => setTimeout(() => window.print(), 250);<\/script></body></html>`);
-  w.document.close();
-}
-function openSlip(i) {
-  window._curSlip = i;
-  const p = slips[i];
-  $('#sd-title').textContent = 'สลิป ' + thMonth(p.month);
-  $('#sd-formal').innerHTML = `<div class="slipdoc">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <img src="/logo-wide.png" alt="JIAN CHA" style="height:15px;"/>
-      <b style="font-size:12px;">ใบจ่ายเงินเดือน (PAY SLIP)</b></div>
-    ${slipDocHTML(p)}</div>`;
-  document.querySelectorAll('.page').forEach(x => x.classList.remove('on'));
-  $('#p-slipdetail').classList.add('on');
+// ═══ PROFILE ═══
+async function renderMe() {
+  ME = await api('/api/me/dashboard');
+  const ini = (ME.name_en || ME.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  $('#meAv').textContent = ini;
+  $('#meName').textContent = ME.name_en || ME.name;
+  $('#meRole').textContent = `${ME.role} · ${ME.dept}`;
+  $('#meBranch').textContent = ME.branch;
+  const row = (k, v) => `<div class="row"><span class="k">${k}</span><b>${v || '–'}</b></div>`;
+  $('#mePersonal').innerHTML =
+    row('ชื่อ (ไทย)', esc(ME.name)) + row('ชื่อเล่น', esc(ME.nickname)) + row('เบอร์โทร', esc(ME.phone)) +
+    row('อีเมล', esc(ME.email)) + row('เลขบัตร ปชช.', esc(ME.national_id));
+  $('#meEmployment').innerHTML =
+    row('รหัสพนักงาน', esc(ME.employee_no)) + row('แผนก', esc(ME.dept)) + row('สาขา', esc(ME.branch)) +
+    row('เริ่มงาน', ME.hire_date) + row('ประเภทสัญญา', esc(ME.contract)) +
+    row('กะประจำ', ME.shift_today && !ME.shift_today.off ? `${ME.shift_today.start} - ${ME.shift_today.end}` : '–');
+  const LV = { sick: 'ลาป่วย', personal: 'ลากิจ', vacation: 'ลาพักร้อน', maternity: 'ลาคลอด', ordination: 'ลาอุปสมบท' };
+  $('#meLeave').innerHTML = Object.entries(ME.leave || {}).map(([k, v]) =>
+    row(LV[k] || k, `${v.total - v.used} <span style="color:var(--faint);font-weight:400">/ ${v.total} วัน</span>`)).join('');
 }
 
-// เข้าหน้าด้วย session เดิม
-fetch('/api/me/dashboard').then(r => { if (r.ok) { $('#login').style.display = 'none'; loadDash(); } });
+// ═══ NOTIFICATIONS (สลิป + ประกาศ) ═══
+function openSheet(html) { $('#sheetBody').innerHTML = html; $('#sheetOvl').classList.add('on'); requestAnimationFrame(() => $('#sheet').classList.add('on')); }
+function closeSheet() { $('#sheet').classList.remove('on'); $('#sheetOvl').classList.remove('on'); }
+async function openNoti() {
+  const [d, slips] = await Promise.all([api('/api/me/dashboard'), api('/api/me/payslips')]);
+  openSheet(`<h3>แจ้งเตือน</h3>
+    <div class="sec-t" style="margin-top:4px">สลิปเงินเดือน · Pay slips</div>
+    <div class="lst">
+      ${slips.map(p => `<div class="it" onclick='viewSlip(${JSON.stringify(p)})' style="cursor:pointer"><span><b>💸 สลิปงวด ${p.month} ออกแล้ว</b><span class="s">แตะเพื่อดูรายละเอียด</span></span><b>${THB(p.net)}</b></div>`).join('') || '<div class="empty">ยังไม่มีสลิป — รอ HR ปิดงวด</div>'}
+    </div>
+    <div class="sec-t">ประกาศจากบริษัท · Announcements</div>
+    <div class="lst">
+      ${(d.announcements || []).map(a => `<div class="it"><span><b>📣 ${esc(a.title)}</b><span class="s">${esc(a.body)}</span></span></div>`).join('') || '<div class="empty">ไม่มีประกาศ</div>'}
+    </div>`);
+}
+function viewSlip(p) {
+  openSheet(`<h3>PAY SLIP · งวด ${p.month}</h3>
+    <div class="info" style="margin-bottom:14px">
+      <div class="row"><span class="k">พนักงาน</span><b>${esc(ME.name)}</b></div>
+      <div class="row"><span class="k">เงินเดือน</span><b>${THB(p.base)}</b></div>
+      <div class="row"><span class="k">ค่าล่วงเวลา (OT)</span><b>${THB(p.ot)}</b></div>
+      <div class="row"><span class="k">หัก ประกันสังคม</span><b style="color:var(--red)">-${THB(p.sso)}</b></div>
+      <div class="row"><span class="k">หัก ภาษี</span><b style="color:var(--red)">-${THB(p.tax)}</b></div>
+      <div class="row"><span class="k" style="font-weight:800;color:var(--ink)">เงินได้สุทธิ</span><b style="font-size:1.2rem">${THB(p.net)}</b></div>
+    </div>
+    <button class="go" onclick="openNoti()">← กลับไปแจ้งเตือน</button>`);
+}
+
+enter();
 </script>
 </body>
 </html>
