@@ -50,6 +50,21 @@ cd android && JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Content
 npx @capacitor/assets generate --iconBackgroundColor '#12343B' --splashBackgroundColor '#12343B'
 ```
 
+## ไฟล์พร้อมส่งขึ้น Store (build แล้ว 25 ส.ค. 2026 — อยู่ใน ~/Downloads)
+- `JIANCHA-HR-playstore.aab` — อัปโหลด Google Play Console ได้เลย (เซ็นด้วย `android/keystore/jiancha-release.jks`)
+- `JIANCHA-HR-release.apk` — ตัว release สำหรับแจกติดตั้งตรง
+- `JIANCHA-HR-ios.ipa` — เซ็นด้วยทีม JIANCHA COMPANY LIMITED (WRH3VXYCG9) อัปโหลดผ่านแอป **Transporter** หรือ Xcode → Organizer
+
+⚠️ **keystore Android อยู่ที่ `android/keystore/` (ไม่ commit ขึ้น git) — สำรองไฟล์ .jks + รหัสไว้ให้ดี
+ถ้าหายจะอัปเดตแอปบน Play Store ไม่ได้ตลอดไป** (รหัสอยู่ใน keystore.properties)
+
+⚠️ **ก่อนกดส่งรีวิวจริง** ต้องทำก่อน ไม่งั้นโดนปฏิเสธ:
+1. มีเซิร์ฟเวอร์ HTTPS สาธารณะ แล้วแก้ `server.url` ใน capacitor.config.json
+2. ลบ ATS exception (iOS) และ usesCleartextTraffic (Android) ตามหัวข้อด้านบน
+3. build ใหม่ทั้งสองไฟล์
+4. ฝั่ง iOS เลือก bundle id: ใช้ `com.jiancha.demohr` (สร้างแอปใหม่ใน App Store Connect)
+   หรือเปลี่ยนเป็น `com.jcgroupglobal.hr` (อัปเดตแทนแอป HR ตัวเดิมของบริษัท)
+
 ## ส่งขึ้น Store
 สิ่งที่ต้องมี:
 

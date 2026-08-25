@@ -7,3 +7,8 @@ node_modules/
 
 # ไฟล์ APK ที่ build แล้ว
 *.apk
+
+# ลายเซ็นแอป Android — ห้าม commit เด็ดขาด
+android/keystore/
+*.jks
+*.aab
