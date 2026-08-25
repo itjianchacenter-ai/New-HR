@@ -377,9 +377,9 @@ app.get('/api/me/payslip-print', (req, res) => {
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px}
-.sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.74rem}
+.sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.74rem;position:relative}
 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
-.s2co b{font-size:.85rem;color:#000}.s2logo{align-self:center;padding:0 6px}.s2logo img{height:32px}
+.s2co b{font-size:.85rem;color:#000}.s2logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none}.s2logo img{height:80px;opacity:.4}
 .s2meta h3{margin:0 0 8px;font-size:1rem;text-align:right;font-weight:800;color:#000}
 .kv2{display:grid;grid-template-columns:104px 1fr;gap:0 10px;margin-top:6px;font-size:.7rem;align-items:start}
 .kv2 span{color:#000;line-height:1.25}.kv2 i{font-size:.6rem;color:#555;font-style:normal;font-weight:400}

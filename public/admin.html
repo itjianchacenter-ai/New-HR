@@ -207,11 +207,11 @@ main{margin-left:var(--side);min-height:100vh}
 .toast.on{opacity:1}
 
 /* slip แบบฟอร์แมตมาตรฐาน (เงินได้/รายการหัก/YTD) */
-.slip2{font-size:.74rem;color:#000}
+.slip2{font-size:.74rem;color:#000;position:relative}
 .slip2 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
 .slip2 .s2co b{font-size:.85rem;color:#000}
-.slip2 .s2logo{align-self:center;padding:0 6px}
-.slip2 .s2logo img{height:32px}
+.slip2 .s2logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none}
+.slip2 .s2logo img{height:80px;opacity:.4}
 .slip2 .s2meta h3{margin:0 0 8px;font-size:1rem;text-align:right;font-weight:800;color:#000}
 .slip2 .kv2{display:grid;grid-template-columns:104px 1fr;gap:0 10px;margin-top:6px;font-size:.7rem;align-items:start}
 .slip2 .kv2 span{color:#000;line-height:1.25}
@@ -412,8 +412,17 @@ main{margin-left:var(--side);min-height:100vh}
     <!-- BRANCHES MANNING -->
     <section class="page" id="p-brman">
       <div class="stats" id="brStats"></div>
-      <div class="bar"><span class="sp"></span><div style="font-size:.86rem;color:var(--soft)">สาขาสร้างอัตโนมัติจากข้อมูลพนักงาน</div></div>
-      <div class="mgrid" id="brGrid"></div>
+      <div class="bar">
+        <select class="in" id="brmSel" onchange="renderBrm()" style="min-width:260px"></select>
+        <label style="font-size:.88rem;font-weight:600;display:flex;gap:7px;align-items:center">
+          <input type="checkbox" id="brmStaffed" onchange="renderBrm()"/> เฉพาะสาขาที่มีพนักงาน</label>
+        <span class="sp"></span>
+        <div style="font-size:.86rem;color:var(--soft)">ข้อมูลสร้างอัตโนมัติจากฐานพนักงาน</div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h3>กำลังพลรายสาขา</h3><div class="r" id="brmCount"></div></div>
+        <div class="tblwrap"><table class="tbl" id="brTbl"></table></div>
+      </div>
     </section>
 
     <!-- OT REVIEW -->
@@ -1032,18 +1041,35 @@ async function loadBr() {
   const stores = BRANCHES.filter(b => b.id !== HQ_ID);
   const cnt = id => active().filter(e => e.branch_id === id);
   const tot = stores.reduce((n, b) => n + cnt(b.id).length, 0);
+  const staffed = stores.filter(b => cnt(b.id).length).length;
   $('#brStats').innerHTML = statRow([
     ['Branches', stores.length, 'all branches', 'var(--gold)'],
-    ['Headcount', `${tot} <small>/ ${tot}</small>`, 'ตามข้อมูลพนักงานปัจจุบัน', 'var(--green)'],
-    ['Hold', 0, 'pending start', 'var(--gold-soft)'], ['Vacant', 0, 'to recruit', 'var(--red)']]);
-  $('#brGrid').innerHTML = stores.map(b => {
-    const ppl = cnt(b.id);
-    const mgr = ppl.filter(e => (e.level === 'manager' || e.level === 'director'));
-    const staff = ppl.filter(e => !mgr.includes(e));
-    const rows = (cap, list, off) => list.length ? `<div class="cap">${cap} (${list.length})</div>` + list.map((p, i) => `<div class="pr"><span class="no">${i + 1}</span><b>${esc(p.name)}</b>${p.nickname ? `<span class="nk">(${esc(p.nickname)})</span>` : ''}<span class="rl">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? '<span class="pill warn">Part time</span>' : ''}</div>`).join('') : '';
-    return `<div class="mcard"><div class="mh"><div class="t">${esc(b.name)}<span class="st">ACTIVE</span></div><div class="d">Manning ${ppl.length}/${ppl.length} pax</div><div class="track"><i style="width:100%"></i></div></div>
-      <div class="mb">${rows('Manager', mgr)}${rows('Staff', staff)}${!ppl.length ? '<div class="empty">ไม่มีพนักงาน</div>' : ''}</div></div>`;
-  }).join('');
+    ['มีพนักงานประจำ', staffed, `อีก ${stores.length - staffed} สาขายังไม่ผูกพนักงาน`, 'var(--green)'],
+    ['Headcount', tot, 'ตามข้อมูลพนักงานปัจจุบัน', 'var(--gold-soft)'],
+    ['Vacant', 0, 'to recruit', 'var(--red)']]);
+  const sel = $('#brmSel');
+  if (sel.options.length < 2) sel.innerHTML = '<option value="">— ทุกสาขา —</option>' + stores.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  renderBrm();
+}
+function renderBrm() {
+  const stores = BRANCHES.filter(b => b.id !== HQ_ID);
+  const cnt = id => active().filter(e => e.branch_id === id);
+  const pick = $('#brmSel').value, onlyStaffed = $('#brmStaffed').checked;
+  const list = stores.filter(b => !pick || b.id === pick).filter(b => !onlyStaffed || cnt(b.id).length);
+  $('#brmCount').textContent = `แสดง ${list.length} / ${stores.length} สาขา`;
+  const person = p => `<b>${esc(p.name)}</b>${p.nickname ? ` <span style="color:var(--faint)">(${esc(p.nickname)})</span>` : ''} <span style="color:var(--soft);font-size:.82rem">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? ' <span class="pill warn">PT</span>' : ''}`;
+  $('#brTbl').innerHTML = `<tr><th>สาขา</th><th style="text-align:center">พนักงาน</th><th>Manager</th><th>รายชื่อพนักงาน</th><th>สถานะ</th></tr>` +
+    (list.length ? list.map(b => {
+      const ppl = cnt(b.id);
+      const mgr = ppl.filter(e => e.level === 'manager' || e.level === 'director');
+      const staff = ppl.filter(e => !mgr.includes(e));
+      return `<tr class="click" onclick="$('#brmSel').value='${b.id}';renderBrm()">
+        <td style="font-weight:700;white-space:nowrap">${esc(b.name)}</td>
+        <td style="text-align:center;font-weight:800">${ppl.length || '<span style="color:var(--faint);font-weight:400">–</span>'}</td>
+        <td>${mgr.map(person).join('<br/>') || '<span style="color:var(--faint)">–</span>'}</td>
+        <td>${staff.map(person).join('<br/>') || '<span style="color:var(--faint)">–</span>'}</td>
+        <td>${ppl.length ? '<span class="pill ok"><span class="dot"></span>Active</span>' : '<span class="pill">ยังไม่ผูกพนักงาน</span>'}</td></tr>`;
+    }).join('') : '<tr><td colspan="5"><div class="empty">ไม่พบสาขาตามเงื่อนไข</div></td></tr>');
 }
 
 // ═══ OT REVIEW ═══
