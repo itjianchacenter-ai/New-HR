@@ -565,7 +565,7 @@ const initials = e => { const en = e.name_en || ''; if (en.trim()) return en.tri
 const avatar = e => e.photo
   ? `<img class="av" src="${e.photo}" style="object-fit:cover" alt=""/>`
   : `<span class="av" style="background:${avColor(e.name)}">${esc(initials(e))}</span>`;
-const iso = d => d.toISOString().slice(0, 10);
+const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }; // local-safe
 const thDate = s => new Date(s + 'T00:00').toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const hm = t => t ? new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '–';
 const dl = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: mime || 'text/csv;charset=utf-8' })); a.download = name; a.click(); };
@@ -678,7 +678,7 @@ async function tnaRangeCsv() {
   const br = $('#tnaBranch').value;
   const rows = list.filter(c => !br || EMPS.find(e => e.id === c.emp_id)?.branch_id === br);
   dl(`attendance-${from}_${to}.csv`, csv([['วันที่', 'พนักงาน', 'สาขา', 'ประเภท', 'เวลา', 'วิธี', 'สาย(นาที)', 'สถานที่'],
-    ...rows.map(c => [c.at.slice(0, 10), c.name, brName(EMPS.find(e => e.id === c.emp_id)?.branch_id), c.type === 'in' ? 'เข้า' : 'ออก', hm(c.at), c.method.toUpperCase(), c.late_min || 0, c.note || ''])]));
+    ...rows.map(c => [iso(c.at), c.name, brName(EMPS.find(e => e.id === c.emp_id)?.branch_id), c.type === 'in' ? 'เข้า' : 'ออก', hm(c.at), c.method.toUpperCase(), c.late_min || 0, c.note || ''])]));
 }
 function tnaShift(n) { const d = new Date($('#tnaDate').value + 'T00:00'); d.setDate(d.getDate() + n); $('#tnaDate').value = iso(d); loadTna(); }
 function tnaToday() { $('#tnaDate').value = iso(new Date()); loadTna(); }
@@ -707,7 +707,7 @@ function renderTna() {
   $('#tnaTbl').innerHTML = `<tr><th>Employee</th><th>Branch</th><th>Shift</th><th>In</th><th>Out</th><th>Hours</th><th>Photo</th><th>Location</th><th>Status</th></tr>` +
     rows.map(r => {
       const ph = r.cin?.photo || r.cout?.photo;
-      const phCell = ph ? `<img src="${ph}" style="width:38px;height:38px;object-fit:cover;border-radius:9px;cursor:pointer;transform:scaleX(-1)" onclick='showPhoto(${JSON.stringify(r.e.name)},"${r.cin?.photo ? 'in' : 'out'}")' data-emp="${r.e.id}"/>` : '<span style="color:var(--faint)">–</span>';
+      const phCell = ph ? `<img src="${ph}" style="width:38px;height:38px;object-fit:cover;border-radius:9px;cursor:pointer;transform:scaleX(-1)" onclick="showPhoto('${r.e.id}','${r.cin?.photo ? 'in' : 'out'}')"/>` : '<span style="color:var(--faint)">–</span>';
       return `<tr>
       <td><span class="name-cell">${avatar(r.e)}${esc(r.e.name)}</span></td>
       <td>${esc(brName(r.e.branch_id))}</td>
@@ -716,11 +716,11 @@ function renderTna() {
       <td>${phCell}</td>
       <td style="font-size:.8rem;color:var(--soft)">${esc(r.cin?.note || '–')}</td><td>${r.st}</td></tr>`; }).join('');
 }
-function showPhoto(name, which) {
-  const e = tnaRows().find(r => r.e.name === name);
+function showPhoto(empId, which) {
+  const e = tnaRows().find(r => r.e.id === empId);
   const rec = which === 'in' ? e?.cin : e?.cout;
   if (!rec?.photo) return;
-  openModal(`<h3>รูปยืนยันลงเวลา${which === 'in' ? 'เข้า' : 'ออก'} · ${esc(name)}</h3>
+  openModal(`<h3>รูปยืนยันลงเวลา${which === 'in' ? 'เข้า' : 'ออก'} · ${esc(e.e.name)}</h3>
     <img src="${rec.photo}" style="width:100%;border-radius:14px;transform:scaleX(-1)"/>
     <div style="margin-top:10px;color:var(--soft);font-size:.9rem">${hm(rec.at)} · ${esc(rec.note || '')}</div>
     <div style="margin-top:14px;text-align:right"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
@@ -936,7 +936,7 @@ async function openProfile(id) {
         ลงเวลา ${e.checkins.length} รายการล่าสุด · สลิป ${e.payslips.length} งวด
       </div>
     </div>
-    <div class="df"><span class="grow"></span><button class="btn dark" onclick='openEmpForm(${JSON.stringify(e.id)})'>Edit Information</button></div>`);
+    <div class="df"><span class="grow"></span><button class="btn dark" onclick="openEmpForm('${e.id}')">Edit Information</button></div>`);
 }
 async function openEmpForm(id) {
   const e = id ? await api('/api/admin/employees/' + id) : {};
@@ -1159,7 +1159,7 @@ function renderPayroll() {
         <td class="mono">${THB(r.base)}</td><td class="mono">${THB(r.ot)}</td>
         <td class="mono" style="color:var(--red)">${THB(r.sso)}</td><td class="mono" style="color:var(--red)">${THB(r.tax)}</td>
         <td class="mono" style="font-weight:800">${THB(r.net)}</td>
-        <td><button class="btn sm" onclick='openSlip(${JSON.stringify(r.emp_id)})'>Slip</button></td></tr>`; }).join('');
+        <td><button class="btn sm" onclick="openSlip('${r.emp_id}')">Slip</button></td></tr>`; }).join('');
   $('#prMenu').style.display = 'none';
 }
 async function prClose() {
@@ -1297,7 +1297,7 @@ async function loadSettings() {
       return `<tr><td style="font-weight:700">${esc(b.name)}</td><td class="mono" style="font-size:.8rem">${b.lat}, ${b.lng}</td><td>${b.radius} ม.</td>
       <td>${cnt} คน</td>
       <td><a href="/scan" target="_blank" style="color:var(--gold);font-weight:700">เปิดหน้า QR ↗</a></td>
-      <td style="white-space:nowrap"><button class="btn sm" onclick='brFormEdit(${JSON.stringify(b)})'>แก้ไข</button>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="brFormEdit('${b.id}')">แก้ไข</button>
         <button class="btn sm danger" onclick="brDelete('${b.id}')">ลบ</button></td></tr>`;
     }).join('');
   renderBrMap(s.branches);
@@ -1332,7 +1332,7 @@ function renderBrMap(branches) {
 // ── จัดการสาขา ──
 let BR_EDIT = null;
 function brFormNew() { BR_EDIT = null; $('#brForm').style.display = 'block'; $('#bfName').value = ''; $('#bfLat').value = '13.7563'; $('#bfLng').value = '100.5018'; $('#bfRad').value = '100'; $('#bfSave').textContent = 'บันทึกสาขาใหม่'; $('#bfName').focus(); }
-function brFormEdit(b) { BR_EDIT = b.id; $('#brForm').style.display = 'block'; $('#bfName').value = b.name; $('#bfLat').value = b.lat; $('#bfLng').value = b.lng; $('#bfRad').value = b.radius; $('#bfSave').textContent = 'บันทึกการแก้ไข'; }
+function brFormEdit(bid) { const b = BRANCHES.find(x => x.id === bid); if (!b) return; BR_EDIT = b.id; $('#brForm').style.display = 'block'; $('#bfName').value = b.name; $('#bfLat').value = b.lat; $('#bfLng').value = b.lng; $('#bfRad').value = b.radius; $('#bfSave').textContent = 'บันทึกการแก้ไข'; }
 async function brSave() {
   const body = { name: $('#bfName').value, lat: $('#bfLat').value, lng: $('#bfLng').value, radius: $('#bfRad').value };
   if (!body.name.trim()) return toast('ใส่ชื่อสาขาก่อน');

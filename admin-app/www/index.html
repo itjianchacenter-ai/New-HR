@@ -74,7 +74,7 @@ async function test() {
   const u = norm($('#url').value); if (!u) return;
   $('#msg').textContent = 'กำลังทดสอบ…';
   const j = await ping(u);
-  $('#msg').innerHTML = j ? '✅ เชื่อมต่อสำเร็จ: <b>' + (j.company || j.name) + '</b>' : '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย';
+  $('#msg').textContent = j ? '✅ เชื่อมต่อสำเร็จ: ' + (j.company || j.name) : '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย';
 }
 async function save() {
   const u = norm($('#url').value); if (!u) return;

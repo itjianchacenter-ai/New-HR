@@ -29,7 +29,8 @@ app.use((req, res, next) => {
   next();
 });
 
-const iso = d => new Date(d).toISOString().slice(0, 10);
+const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }; // วันที่ตามเวลาท้องถิ่น (กัน UTC เพี้ยนช่วงเช้ามืด)
+const dOf = ts => iso(new Date(ts)); // วันที่ (ท้องถิ่น) ของ timestamp
 const now = () => new Date().toISOString();
 
 // ── SEED: ข้อมูลตัวอย่างครบทุกเมนู ──
@@ -242,7 +243,7 @@ app.get('/api/me/dashboard', (req, res) => {
   const today = iso(new Date());
   const myOt = db.ot.filter(o => o.emp_id === emp.id && o.date.startsWith(month) && o.status === 'approved').reduce((t, o) => t + o.hours, 0);
   const pending = ['leaves', 'ot', 'claims'].reduce((n, k) => n + db[k].filter(x => x.emp_id === emp.id && x.status === 'pending').length, 0);
-  const todayCk = db.checkins.filter(x => x.emp_id === emp.id && x.at.slice(0, 10) === today);
+  const todayCk = db.checkins.filter(x => x.emp_id === emp.id && dOf(x.at) === today);
   const m = new Date().getMonth();
   const myBranch = db.branches.find(b => b.id === emp.branch_id);
   res.json({
@@ -466,7 +467,7 @@ app.get('/api/admin/overview', (req, res) => {
   if (!admin(req, res)) return;
   const db = load();
   const today = iso(new Date());
-  const ins = db.checkins.filter(x => x.at.slice(0, 10) === today && x.type === 'in');
+  const ins = db.checkins.filter(x => dOf(x.at) === today && x.type === 'in');
   const active = db.employees.filter(e => e.status !== 'resigned');
   // ลาวันนี้ (อนุมัติแล้วและช่วงวันที่คร่อมวันนี้)
   const onLeave = db.leaves.filter(l => l.status === 'approved' && l.from <= today && l.to >= today).length;
@@ -475,7 +476,7 @@ app.get('/api/admin/overview', (req, res) => {
   for (let n = 6; n >= 0; n--) {
     const d = iso(new Date(Date.now() - n * 86400000));
     const sched = db.shifts.filter(s => s.date === d && !s.off).length;
-    const came = new Set(db.checkins.filter(x => x.at.slice(0, 10) === d && x.type === 'in').map(x => x.emp_id)).size;
+    const came = new Set(db.checkins.filter(x => dOf(x.at) === d && x.type === 'in').map(x => x.emp_id)).size;
     last7.push({ date: d, pct: sched ? Math.round(came / sched * 100) : 0 });
   }
   const byBranch = db.branches.map(b => ({ name: b.name, count: active.filter(e => e.branch_id === b.id).length }));
@@ -486,7 +487,7 @@ app.get('/api/admin/overview', (req, res) => {
     pending: db.leaves.filter(l => l.status === 'pending').length + db.ot.filter(o => o.status === 'pending').length + db.claims.filter(x => x.status === 'pending').length,
     payroll_month: iso(new Date()).slice(0, 7),
     last7, by_branch: byBranch,
-    activity: db.checkins.filter(x => x.at.slice(0, 10) === today).slice(-8).reverse().map(x => ({ name: nm(db, x.emp_id), type: x.type, at: x.at, method: x.method, late_min: x.late_min })),
+    activity: db.checkins.filter(x => dOf(x.at) === today).slice(-8).reverse().map(x => ({ name: nm(db, x.emp_id), type: x.type, at: x.at, method: x.method, late_min: x.late_min })),
   });
 });
 // รายการ OT ทั้งหมดในช่วงวัน สำหรับหน้า OT Review
@@ -594,11 +595,11 @@ app.get('/api/admin/shifts', (req, res) => { if (!admin(req, res)) return; const
     .map(s => ({ ...s, name_emp: nm(db, s.emp_id) }))); });
 app.get('/api/admin/timesheet', (req, res) => { if (!admin(req, res)) return; const db = load();
   const date = req.query.date || iso(new Date());
-  res.json(db.checkins.filter(x => x.at.slice(0, 10) === date).map(x => ({ ...x, name: nm(db, x.emp_id) }))); });
+  res.json(db.checkins.filter(x => dOf(x.at) === date).map(x => ({ ...x, name: nm(db, x.emp_id) }))); });
 // บันทึกเวลาแบบช่วงวัน (สำหรับ export)
 app.get('/api/admin/timesheet-range', (req, res) => { if (!admin(req, res)) return; const db = load();
   const from = String(req.query.from || iso(new Date())), to = String(req.query.to || from);
-  res.json(db.checkins.filter(x => { const d = x.at.slice(0, 10); return d >= from && d <= to; })
+  res.json(db.checkins.filter(x => { const d = dOf(x.at); return d >= from && d <= to; })
     .map(({ photo, ...x }) => ({ ...x, name: nm(db, x.emp_id) }))); });
 app.get('/api/admin/approvals', (req, res) => { if (!admin(req, res)) return; const db = load();
   res.json({
@@ -696,7 +697,12 @@ app.post('/api/admin/payroll/close', (req, res) => { if (!admin(req, res)) retur
 app.get('/api/admin/bankfile.csv', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
   const rows = ['ลำดับ,ชื่อบัญชี,เลขบัญชี,ธนาคาร,จำนวนเงิน'];
-  calcMonth(db, month).forEach((r, i) => rows.push(`${i + 1},${r.name},${r.bank_account},${r.bank},${r.net.toFixed(2)}`));
+  // งวดที่ปิดแล้วใช้ยอดจากสลิปจริง (กันตัวเลขไม่ตรงกับที่จ่าย) — งวดเปิดคำนวณสด
+  const closed = db.payslips.filter(p => p.month === month);
+  const list = closed.length
+    ? closed.map(p => { const e = db.employees.find(x => x.id === p.emp_id) || {}; return { name: e.name || p.emp_id, bank: e.bank || '', bank_account: e.bank_account || '', net: p.net }; })
+    : calcMonth(db, month);
+  list.forEach((r, i) => rows.push(`${i + 1},${r.name},${r.bank_account},${r.bank},${r.net.toFixed(2)}`));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="bankfile-${month}.csv"`);
   res.send('﻿' + rows.join('\n')); });
@@ -732,7 +738,7 @@ app.delete('/api/admin/branches/:id', (req, res) => { if (!admin(req, res)) retu
 app.get('/api/admin/report', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
   const rows = db.employees.map(e => {
-    const cks = db.checkins.filter(x => x.emp_id === e.id && x.at.slice(0, 10).startsWith(month) && x.type === 'in');
+    const cks = db.checkins.filter(x => x.emp_id === e.id && dOf(x.at).startsWith(month) && x.type === 'in');
     const sched = db.shifts.filter(s => s.emp_id === e.id && s.date.startsWith(month) && s.date <= iso(new Date())).length;
     const late = cks.filter(x => x.late_min > 15).length;
     const leave = db.leaves.filter(l => l.emp_id === e.id && l.status === 'approved' && l.from.startsWith(month)).reduce((t, l) => t + l.days, 0);

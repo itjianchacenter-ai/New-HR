@@ -403,7 +403,7 @@ async function srvTest() {
   try {
     const r = await fetch(u + '/api/ping');
     const j = await r.json();
-    $('#srvMsg').innerHTML = j.ok ? '✅ เชื่อมต่อสำเร็จ: <b>' + (j.company || j.name) + '</b>' : '❌ เซิร์ฟเวอร์ตอบผิดปกติ';
+    $('#srvMsg').textContent = j.ok ? '✅ เชื่อมต่อสำเร็จ: ' + (j.company || j.name) : '❌ เซิร์ฟเวอร์ตอบผิดปกติ';
   } catch (e) { $('#srvMsg').textContent = '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย'; }
 }
 function srvSave() {
@@ -702,7 +702,7 @@ function renderCal() {
   for (let d = 1; d <= days; d++) {
     const date = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const sh = CAL.shifts.find(s => s.date === date);
-    const dayCks = CAL.cks.filter(c => c.at.slice(0, 10) === date);
+    const dayCks = CAL.cks.filter(c => iso(c.at) === date);
     const cin = dayCks.find(c => c.type === 'in'), cout = dayCks.filter(c => c.type === 'out').pop();
     let dots = '';
     if (cin) dots += `<i style="background:${cin.late_min > 15 ? 'var(--red)' : 'var(--green)'}"></i>`;
@@ -719,7 +719,7 @@ function selDay(d) { CAL.sel = d; renderCal(); }
 function renderDay() {
   const date = CAL.sel;
   const sh = CAL.shifts.find(s => s.date === date);
-  const dayCks = CAL.cks.filter(c => c.at.slice(0, 10) === date);
+  const dayCks = CAL.cks.filter(c => iso(c.at) === date);
   const cin = dayCks.find(c => c.type === 'in'), cout = dayCks.filter(c => c.type === 'out').pop();
   const late = cin && cin.late_min > 15;
   let hours = '—';
@@ -757,12 +757,14 @@ async function renderMe() {
 // ═══ NOTIFICATIONS (สลิป + ประกาศ) ═══
 function openSheet(html) { $('#sheetBody').innerHTML = html; $('#sheetOvl').classList.add('on'); requestAnimationFrame(() => $('#sheet').classList.add('on')); }
 function closeSheet() { $('#sheet').classList.remove('on'); $('#sheetOvl').classList.remove('on'); }
+let SLIPS = [];
 async function openNoti() {
   const [d, slips] = await Promise.all([api('/api/me/dashboard'), api('/api/me/payslips')]);
+  SLIPS = slips;
   openSheet(`<h3>แจ้งเตือน</h3>
     <div class="sec-t" style="margin-top:4px">สลิปเงินเดือน · Pay slips</div>
     <div class="lst">
-      ${slips.map(p => `<div class="it" onclick='viewSlip(${JSON.stringify(p)})' style="cursor:pointer"><span><b>💸 สลิปงวด ${p.month} ออกแล้ว</b><span class="s">แตะเพื่อดูรายละเอียด</span></span><b>${THB(p.net)}</b></div>`).join('') || '<div class="empty">ยังไม่มีสลิป — รอ HR ปิดงวด</div>'}
+      ${slips.map((p, i) => `<div class="it" onclick="viewSlip(SLIPS[${i}])" style="cursor:pointer"><span><b>💸 สลิปงวด ${p.month} ออกแล้ว</b><span class="s">แตะเพื่อดูรายละเอียด</span></span><b>${THB(p.net)}</b></div>`).join('') || '<div class="empty">ยังไม่มีสลิป — รอ HR ปิดงวด</div>'}
     </div>
     <div class="sec-t">ประกาศจากบริษัท · Announcements</div>
     <div class="lst">
