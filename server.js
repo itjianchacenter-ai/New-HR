@@ -46,6 +46,8 @@ function seed() {
   // ระดับตำแหน่ง: staff < supervisor < manager < director
   const levels = { e1: 'staff', e2: 'manager', e3: 'manager', e4: 'staff', e5: 'director', e6: 'staff' };
   const nick = { e1: 'ชาย', e2: 'แพรว', e3: 'กัญ', e4: 'ต่อ', e5: 'ทรรศ', e6: 'มิน' };
+  // พนักงานที่มีสิทธิ์เข้าหลังบ้าน (เลือก Role Admin/Employee ตอนล็อกอิน)
+  const admins = ['e5', 'e3'];
   const nameEn = { e1: 'Somchai Jaidee', e2: 'Praew Wandee', e3: 'Kanphakphatsorn Phaksuwan', e4: 'Torpong Siriluck', e5: 'Thatsanawan Naknu', e6: 'Mintra Saengthong' };
   employees.forEach((e, i) => {
     const [g, m] = persona[e.id] || ['-', '-'];
@@ -53,6 +55,7 @@ function seed() {
     e.gender = g; e.marital = m; e.nationality = 'ไทย';
     e.nickname = nick[e.id] || '';
     e.name_en = nameEn[e.id] || '';
+    e.is_admin = admins.includes(e.id);
     // เลขบัตรประชาชนเดโม่ — 4 ตัวท้าย (000X) ใช้ล็อกอินแอปพนักงานคู่กับเบอร์โทร
     e.national_id = '0-' + e.employee_no.slice(0, 4) + '-00000-00-' + (i + 1);
     e.email = 'emp' + e.employee_no + '@jcbyte-demo.co.th';
@@ -136,7 +139,7 @@ function seed() {
 function load() { if (!fs.existsSync(DATA)) fs.writeFileSync(DATA, JSON.stringify(seed(), null, 2)); return JSON.parse(fs.readFileSync(DATA, 'utf8')); }
 function save(db) { fs.writeFileSync(DATA + '.tmp', JSON.stringify(db, null, 2)); fs.renameSync(DATA + '.tmp', DATA); }
 
-function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax' }); }
+function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 3600 * 1000 }); } // จำล็อกอิน 30 วัน
 function sess(req) { try { return JSON.parse(req.signedCookies.s || 'null'); } catch { return null; } }
 const dist = (a, b, c, d) => { const R = 6371e3, r = x => x * Math.PI / 180;
   const p = r(c - a), q = r(d - b), s = Math.sin(p / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(q / 2) ** 2;
@@ -166,16 +169,23 @@ function applyDecision(db, kind, it, status, byName, comment) {
 const digits = v => String(v || '').replace(/\D/g, '');
 const id4 = e => digits(e.national_id || e.tax_no).slice(-4);
 app.post('/api/login', (req, res) => {
-  const { pin, password, phone, id_last4 } = req.body || {};
+  const { pin, password, phone, id_last4, as } = req.body || {};
   const db = load();
   if (password === db.admin_pw) { setSess(res, { role: 'admin' }); return res.json({ role: 'admin' }); }
   // ── ล็อกอินพนักงาน 2 ขั้น (flow หลัก): เลข 4 ตัวท้ายบัตรประชาชน → PIN พนักงาน 6 หลัก ──
+  // พนักงานที่มี is_admin จะได้เลือก Role (Admin/Employee) เป็นขั้นที่ 3
   if (id_last4 && !phone) {
     const matches = db.employees.filter(e => e.status !== 'resigned' && id4(e) === digits(id_last4));
     if (!matches.length) return res.status(401).json({ error: 'ไม่พบเลขท้ายบัตรนี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' });
     if (!pin) return res.json({ step: 'pin', nickname: matches[0].nickname || matches[0].name.split(' ')[0] });
     const e = matches.find(x => x.pin === String(pin));
     if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+    if (as === 'admin') {
+      if (!e.is_admin) return res.status(403).json({ error: 'บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบ — ติดต่อ HR' });
+      setSess(res, { role: 'admin', id: e.id });
+      return res.json({ role: 'admin', name: e.name });
+    }
+    if (e.is_admin && !as) return res.json({ step: 'role', nickname: e.nickname || e.name.split(' ')[0], name: e.name });
     setSess(res, { role: 'employee', id: e.id });
     return res.json({ role: 'employee', name: e.name });
   }
@@ -366,6 +376,7 @@ app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
   ['tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address', 'salutation', 'name_en', 'bank', 'bank_account', 'birth_date', 'photo', 'level', 'nickname', 'national_id', 'contract']
     .forEach(k => { if (req.body[k]) obj[k] = String(req.body[k]); });
   if (!obj.level) obj.level = 'staff';
+  obj.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
   db.employees.push(obj);
   save(db); res.json({ ok: true, id: obj.id }); });
 // แก้ไขข้อมูลพนักงาน (ปุ่มบันทึกในหน้า Employee Detail)
@@ -378,6 +389,7 @@ app.put('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return
     'salutation', 'name_en', 'photo', 'level', 'nickname', 'national_id', 'contract', 'status'];
   for (const k of allow) if (k in (req.body || {}) && req.body[k] !== null) e[k] = String(req.body[k]);
   if ('pay' in (req.body || {})) e.pay = +req.body.pay || e.pay;
+  if ('is_admin' in (req.body || {})) e.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
   save(db); res.json({ ok: true }); });
 // ── Setup กะการทำงาน: รูปแบบกะ (เพิ่ม/ลบ) + บันทึกตารางกะรายวัน ──
 function patterns(db) {

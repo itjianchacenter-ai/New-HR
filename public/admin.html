@@ -208,6 +208,14 @@ main{margin-left:var(--side);min-height:100vh}
     <p class="d">Human Resource Management System</p>
     <input id="pw" type="password" placeholder="รหัสผ่านผู้ดูแลระบบ" onkeydown="if(event.key==='Enter')doLogin()"/>
     <button onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div style="display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:var(--faint);font-size:.78rem">
+      <span style="flex:1;height:1px;background:var(--line)"></span>หรือ พนักงาน HR ที่มีสิทธิ์แอดมิน<span style="flex:1;height:1px;background:var(--line)"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <input id="empId4" inputmode="numeric" maxlength="4" placeholder="เลขท้ายบัตร 4 ตัว" style="margin:0"/>
+      <input id="empPin" type="password" inputmode="numeric" maxlength="6" placeholder="PIN 6 หลัก" style="margin:0" onkeydown="if(event.key==='Enter')doEmpLogin()"/>
+    </div>
+    <button style="margin-top:14px;background:var(--gold)" onclick="doEmpLogin()">เข้าสู่ระบบด้วยรหัสพนักงาน</button>
     <div class="err" id="loginErr"></div>
   </div>
 </div>
@@ -493,6 +501,30 @@ async function doLogin() {
   try { await api('/api/login', { method: 'POST', body: { password: $('#pw').value } }); boot(); }
   catch (e) { $('#loginErr').textContent = 'รหัสผ่านไม่ถูกต้อง'; }
 }
+async function doEmpLogin() {
+  $('#loginErr').textContent = '';
+  try {
+    const r = await api('/api/login', { method: 'POST', body: { id_last4: $('#empId4').value, pin: $('#empPin').value } });
+    if (r.step === 'role') return openRolePopup(r.name || r.nickname); // popup เลือก Role ตาม flow ปกติ
+    if (r.role === 'employee') location.href = '/'; // พนักงานทั่วไป → ไปแอปพนักงาน
+  } catch (e) { $('#loginErr').textContent = e.message; }
+}
+function openRolePopup(name) {
+  openModal(`<div style="text-align:center">
+    <div style="width:64px;height:64px;border-radius:50%;background:color-mix(in srgb,var(--gold) 14%,#fff);color:var(--gold);display:grid;place-items:center;margin:0 auto 12px;font-size:1.6rem">🔑</div>
+    <h3 style="margin:0 0 4px">เลือกโหมดการใช้งาน</h3>
+    <p style="margin:0 0 18px;color:var(--soft);font-size:.9rem">ยินดีต้อนรับ ${esc(name)} — บัญชีนี้มีสิทธิ์ผู้ดูแลระบบ</p>
+    <button class="btn dark" style="width:100%;justify-content:center;padding:13px" onclick="pickRole('admin')">🖥️ Role Admin · หลังบ้าน HR</button>
+    <button class="btn" style="width:100%;justify-content:center;padding:13px;margin-top:10px;background:var(--gold);border-color:var(--gold);color:#fff" onclick="pickRole('employee')">👤 Role Employee · แอปพนักงาน</button>
+  </div>`);
+}
+async function pickRole(as) {
+  try {
+    await api('/api/login', { method: 'POST', body: { id_last4: $('#empId4').value, pin: $('#empPin').value, as } });
+    closeModal();
+    if (as === 'admin') boot(); else location.href = '/';
+  } catch (e) { closeModal(); $('#loginErr').textContent = e.message; }
+}
 async function boot() {
   try { await api('/api/admin/overview'); } catch { return; } // ยังไม่ล็อกอิน
   $('#login').style.display = 'none'; $('#shell').style.display = 'block';
@@ -769,7 +801,7 @@ async function openProfile(id) {
   openDrawer(`
     <div class="dh"><button class="x" onclick="closeDrawer()">✕</button>
       <div class="idrow">${avatar(e).replace('class="av"', 'class="av" ')}<div><h2>${esc(e.name_en || e.name)}</h2><div class="r">${esc(e.name)}${e.nickname ? ' · (' + esc(e.nickname) + ')' : ''}<br/>${esc(e.role)} · ${esc(e.dept)}</div></div></div>
-      <div class="chips"><span class="pill">● ${e.contract === 'Part Time' ? 'Part time' : 'Full time'}</span><span class="pill">${esc(e.branch)}</span><span class="pill">ID ${esc(e.employee_no)}</span>${e.status === 'resigned' ? '<span class="pill">Resigned</span>' : ''}</div>
+      <div class="chips"><span class="pill">● ${e.contract === 'Part Time' ? 'Part time' : 'Full time'}</span><span class="pill">${esc(e.branch)}</span><span class="pill">ID ${esc(e.employee_no)}</span>${e.is_admin ? '<span class="pill">🖥️ Admin</span>' : ''}${e.status === 'resigned' ? '<span class="pill">Resigned</span>' : ''}</div>
     </div>
     <div class="db">
       <div class="sec-t">Personal Information</div>
@@ -817,7 +849,8 @@ async function openEmpForm(id) {
         ${inp('hire_date', 'Start date', e.hire_date, '', 'date')}
         ${sel('level', 'Level', e.level || 'staff', [['staff', 'Staff'], ['supervisor', 'Supervisor'], ['manager', 'Manager'], ['director', 'Director']])}
         ${sel('contract', 'Contract type', e.contract || 'Full Time', [['Full Time', 'Full Time'], ['Part Time', 'Part Time']])}
-        ${isNew ? inp('pin', 'PIN (6 หลัก · ใช้ล็อกอินสำรอง)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
+        ${isNew ? inp('pin', 'PIN (6 หลัก · ใช้ล็อกอิน)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
+        ${sel('is_admin', 'สิทธิ์แอดมิน (เข้าหลังบ้านได้)', String(!!e.is_admin), [['false', 'ไม่มี — พนักงานทั่วไป'], ['true', 'มี — เลือก Role ตอนล็อกอิน']])}
       </div>
       <div class="sec-t">Payroll</div>
       <div class="kv">

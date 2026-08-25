@@ -335,6 +335,15 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <!-- success popup -->
 <div class="okpop" id="okpop"><div class="box"><div id="okImgWrap"><div class="cir">✓</div></div><h3 id="okT">ลงเวลาสำเร็จ</h3><p id="okD"></p><button onclick="$('#okpop').classList.remove('on')">ตกลง</button></div></div>
+
+<!-- role chooser popup (พนักงานที่มีสิทธิ์แอดมิน) -->
+<div class="okpop" id="rolePop"><div class="box">
+  <div class="cir" style="background:color-mix(in srgb,var(--gold) 14%,#fff);color:var(--gold)">🔑</div>
+  <h3>เลือกโหมดการใช้งาน</h3>
+  <p id="roleName">บัญชีนี้มีสิทธิ์ผู้ดูแลระบบ</p>
+  <button onclick="chooseRole('admin')" style="display:flex;align-items:center;justify-content:center;gap:8px">🖥️ Role Admin · หลังบ้าน HR</button>
+  <button onclick="chooseRole('employee')" style="background:var(--gold);margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px">👤 Role Employee · แอปพนักงาน</button>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -371,9 +380,23 @@ async function loginStep1() {
 async function loginStep2() {
   $('#loginErr').textContent = '';
   try {
-    await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value, pin: $('#pin').value } });
+    const r = await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value, pin: $('#pin').value } });
+    if (r.step === 'role') {
+      // พนักงานที่มีสิทธิ์แอดมิน — popup เลือก Role ตาม flow ปกติ
+      $('#roleName').textContent = `ยินดีต้อนรับ ${r.name || r.nickname} — บัญชีนี้มีสิทธิ์ผู้ดูแลระบบ`;
+      $('#rolePop').classList.add('on');
+      return;
+    }
     enter();
   } catch (e) { $('#loginErr').textContent = e.message; }
+}
+async function chooseRole(as) {
+  try {
+    await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value, pin: $('#pin').value, as } });
+    $('#rolePop').classList.remove('on');
+    if (as === 'admin') location.href = '/admin';
+    else enter();
+  } catch (e) { $('#rolePop').classList.remove('on'); $('#loginErr').textContent = e.message; }
 }
 function backStep() { $('#step2').style.display = 'none'; $('#step1').style.display = 'block'; $('#stp2').classList.remove('on'); $('#loginErr').textContent = ''; }
 function logout() { api('/api/logout', { method: 'POST', body: {} }).then(() => location.reload()); }
