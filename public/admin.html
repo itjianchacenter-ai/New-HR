@@ -191,36 +191,36 @@ main{margin-left:var(--side);min-height:100vh}
 .toast.on{opacity:1}
 
 /* slip แบบฟอร์แมตมาตรฐาน (เงินได้/รายการหัก/YTD) */
-.slip2{font-size:.82rem;color:#1a1712}
+.slip2{font-size:.74rem;color:#000}
 .slip2 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
-.slip2 .s2co b{font-size:.95rem}
+.slip2 .s2co b{font-size:.85rem;color:#000}
 .slip2 .s2logo{align-self:center;padding:0 6px}
 .slip2 .s2logo img{height:32px}
-.slip2 .s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right;font-weight:800}
-.slip2 .kv2{display:grid;grid-template-columns:118px 1fr;gap:0 12px;margin-top:7px;font-size:.78rem;align-items:start}
-.slip2 .kv2 span{color:#555;line-height:1.25}
-.slip2 .kv2 i{font-size:.66rem;color:#999;font-style:normal;font-weight:400}
-.slip2 .kv2 b{font-weight:600;font-size:.8rem;white-space:nowrap;text-align:left}
-.slip2 .s2meta .kv2{grid-template-columns:1fr auto}
-.slip2 .s2meta .kv2 b{text-align:right}
+.slip2 .s2meta h3{margin:0 0 8px;font-size:1rem;text-align:right;font-weight:800;color:#000}
+.slip2 .kv2{display:grid;grid-template-columns:104px 1fr;gap:0 10px;margin-top:6px;font-size:.7rem;align-items:start}
+.slip2 .kv2 span{color:#000;line-height:1.25}
+.slip2 .kv2 i{font-size:.6rem;color:#555;font-style:normal;font-weight:400}
+.slip2 .kv2 b{font-weight:700;font-size:.72rem;white-space:nowrap;text-align:left;color:#000}
+.slip2 .s2meta .kv2{grid-template-columns:104px 1fr}
+.slip2 .s2meta .kv2 b{text-align:left}
 .slip2 .s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
 .slip2 .s2cols table{border-collapse:collapse;width:100%}
 .slip2 .s2cols table:not(:last-child){border-right:1px solid #1a1712}
-.slip2 th{border-bottom:1px solid #1a1712;padding:6px;font-size:.78rem;text-align:center}
-.slip2 th i{font-size:.64rem;color:#777;font-style:normal;font-weight:400}
+.slip2 th{border-bottom:1px solid #1a1712;padding:5px;font-size:.7rem;text-align:center;color:#000}
+.slip2 th i{font-size:.58rem;color:#555;font-style:normal;font-weight:400}
 .slip2 td{padding:5px 8px;vertical-align:top}
-.slip2 td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.8rem;white-space:nowrap}
-.slip2 .l1{font-size:.76rem}
-.slip2 .l2{font-size:.62rem;color:#999}
+.slip2 td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.72rem;white-space:nowrap;color:#000}
+.slip2 .l1{font-size:.7rem;color:#000}
+.slip2 .l2{font-size:.56rem;color:#555}
 .slip2 tr.sep td{border-top:1px solid #1a1712}
 .slip2 tr.net2 td{font-weight:800}
 .slip2 tr.net2 .l1{font-size:.8rem}
-.slip2 .s2foot{display:flex;justify-content:space-between;margin-top:14px;font-size:.76rem;color:#555}
-.slip2 .s2foot i{font-size:.64rem;color:#999;font-style:normal}
+.slip2 .s2foot{display:flex;justify-content:space-between;margin-top:12px;font-size:.7rem;color:#000}
+.slip2 .s2foot i{font-size:.58rem;color:#555;font-style:normal}
 .slip2 .sig{text-align:right}
 .slip2 .sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
-.slip2 .s2legal{border-top:1px solid #ccc;margin-top:16px;padding-top:8px;text-align:center;font-size:.62rem;color:#777}
-.slip2 .s2legal i{font-style:normal;color:#999}
+.slip2 .s2legal{border-top:1px solid #ccc;margin-top:12px;padding-top:6px;text-align:center;font-size:.56rem;color:#444}
+.slip2 .s2legal i{font-style:normal;color:#666}
 /* slip print */
 .slip{font-size:.92rem}
 .slip .shead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:14px}
@@ -229,7 +229,8 @@ main{margin-left:var(--side);min-height:100vh}
 .slip td{padding:6px 4px;border-bottom:1px dashed var(--line)}
 .slip td:last-child{text-align:right;font-family:"IBM Plex Mono",monospace}
 .slip .net td{border-top:2px solid var(--ink);border-bottom:0;font-weight:800;font-size:1.05rem}
-@media print{ body>*{display:none !important} #modal{display:grid !important;position:static;background:#fff} #modal .mbox{box-shadow:none;max-width:100%} .noprint{display:none !important} }
+@media print{ @page{size:A4 landscape;margin:8mm} body>*{display:none !important} #modal{display:grid !important;position:static;background:#fff} #modal .mbox{box-shadow:none;max-width:100%;padding:6px} .noprint{display:none !important}
+.slip2{font-size:.74rem} .slip2 td{padding:3px 6px} .slip2 th{padding:4px} .slip2 .s2foot{margin-top:8px} .slip2 .sig .line{margin-top:16px} .slip2 .s2legal{margin-top:8px;padding-top:5px} }
 </style>
 </head>
 <body>
@@ -516,8 +517,12 @@ main{margin-left:var(--side);min-height:100vh}
 <script>
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+// token จากลิงก์ (กรณี HR ที่มีสิทธิ์เปิดหลังบ้านจากแอปมือถือ)
+const URLTOK = new URLSearchParams(location.search).get('t');
 const api = async (url, opt) => {
-  const r = await fetch(url, opt ? { headers: { 'Content-Type': 'application/json' }, ...opt, body: opt.body ? JSON.stringify(opt.body) : undefined } : undefined);
+  const headers = { 'Content-Type': 'application/json' };
+  if (URLTOK) headers.Authorization = 'Bearer ' + URLTOK;
+  const r = await fetch(url, { method: opt?.method || 'GET', headers, body: opt?.body ? JSON.stringify(opt.body) : undefined });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || r.status);
   return j;

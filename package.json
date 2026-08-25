@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mobile:sync": "cp public/app.html www/index.html && cp public/logo-wide.png public/logo-icon.png www/ && npx cap sync"
   },
   "keywords": [],
   "author": "",

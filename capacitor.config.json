@@ -2,10 +2,6 @@
   "appId": "com.jiancha.demohr",
   "appName": "JIANCHA HR",
   "webDir": "www",
-  "server": {
-    "url": "http://192.168.0.221:3011",
-    "cleartext": true
-  },
   "ios": {
     "contentInset": "never"
   },

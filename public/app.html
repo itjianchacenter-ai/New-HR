@@ -192,7 +192,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 <!-- ═══ LOGIN ═══ -->
 <div id="pg-login" class="on">
   <div class="lg">
-    <img src="/logo-wide.png" alt="JIANCHA"/>
+    <img src="logo-wide.png" alt="JIANCHA"/>
     <div class="pp">People</div>
     <h1>เข้าสู่ระบบพนักงาน</h1>
     <p class="d">ล็อกอินครั้งแรกใช้ 2 ขั้นตอน<br/>ระบบจะจำการเข้าสู่ระบบไว้ให้</p>
@@ -211,12 +211,22 @@ input,select,textarea{font:inherit;color:var(--ink)}
     </div>
     <div class="err" id="loginErr"></div>
     <div class="hint">เดโม่: เลขท้ายบัตร <b>0001</b> · PIN <b>111111</b></div>
+    <div id="srvPanel" style="display:none;margin-top:22px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px">
+      <label style="font-size:.84rem;font-weight:700;color:var(--soft)">🖥 เซิร์ฟเวอร์ระบบ HR</label>
+      <input id="srvUrl" type="url" style="margin-top:8px;font-size:.9rem;letter-spacing:0;text-align:left;font-family:'IBM Plex Mono',monospace" placeholder="เช่น https://hr.jianchatea.com"/>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="back" style="margin:0;flex:1" onclick="srvTest()">ทดสอบ</button>
+        <button class="go" style="margin:0;flex:1" onclick="srvSave()">บันทึก</button>
+      </div>
+      <div id="srvMsg" style="font-size:.82rem;margin-top:8px;min-height:18px;color:var(--soft)"></div>
+    </div>
+    <a id="srvLink" style="display:none;margin-top:14px;color:var(--faint);font-size:.8rem;cursor:pointer" onclick="$('#srvPanel').style.display=$('#srvPanel').style.display==='none'?'block':'none'">⚙️ ตั้งค่าเซิร์ฟเวอร์</a>
   </div>
 </div>
 
 <!-- ═══ HOME ═══ -->
 <div class="page" id="pg-home">
-  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+  <div class="hd"><img src="logo-wide.png"/><span class="pp">PEOPLE</span>
     <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg><span class="n" id="notiN" style="display:none">0</span></button>
   </div>
   <div class="hero">
@@ -259,7 +269,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <!-- ═══ REQUESTS ═══ -->
 <div class="page" id="pg-req">
-  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+  <div class="hd"><img src="logo-wide.png"/><span class="pp">PEOPLE</span>
     <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
   </div>
   <div class="rq">
@@ -281,7 +291,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <!-- ═══ CALENDAR ═══ -->
 <div class="page" id="pg-cal">
-  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+  <div class="hd"><img src="logo-wide.png"/><span class="pp">PEOPLE</span>
     <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
   </div>
   <div class="calnav"><button onclick="calNav(-1)">‹</button><h2 id="calTitle"></h2><button onclick="calNav(1)">›</button></div>
@@ -295,7 +305,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <!-- ═══ PROFILE ═══ -->
 <div class="page" id="pg-me">
-  <div class="hd"><img src="/logo-wide.png"/><span class="pp">PEOPLE</span>
+  <div class="hd"><img src="logo-wide.png"/><span class="pp">PEOPLE</span>
     <button class="bell" onclick="openNoti()"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7M10.3 20a2 2 0 003.4 0"/></svg></button>
   </div>
   <div class="prof">
@@ -355,10 +365,20 @@ input,select,textarea{font:inherit;color:var(--ink)}
 <script>
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+// ── Dual-mode: เว็บ (เสิร์ฟจากเซิร์ฟเวอร์ · BASE ว่าง) หรือแอป native (bundle ในเครื่อง · BASE ตั้งค่าได้) ──
+const NATIVE = !!window.Capacitor;
+const BASE = NATIVE ? (localStorage.getItem('jc_server') || '').replace(/\/+$/, '') : '';
+const TOKEN = () => localStorage.getItem('jc_token') || '';
 const api = async (url, opt) => {
-  const r = await fetch(url, opt ? { headers: { 'Content-Type': 'application/json' }, ...opt, body: opt.body ? JSON.stringify(opt.body) : undefined } : undefined);
+  const headers = { 'Content-Type': 'application/json' };
+  if (TOKEN()) headers.Authorization = 'Bearer ' + TOKEN();
+  const r = await fetch(BASE + url, {
+    method: opt?.method || 'GET', headers,
+    body: opt?.body ? JSON.stringify(opt.body) : undefined,
+  });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || r.status);
+  if (j.token) localStorage.setItem('jc_token', j.token); // เก็บ token อัตโนมัติทุกครั้งที่ล็อกอินสำเร็จ
   return j;
 };
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -370,6 +390,29 @@ const thLong = d => d.toLocaleDateString('th-TH', { weekday: 'long', day: 'numer
 
 let ME = null, GEO = null, CAL = { shifts: [], cks: [], cur: new Date(), sel: iso(new Date()) };
 
+// ═══ ตั้งค่าเซิร์ฟเวอร์ (เฉพาะแอป native) ═══
+if (NATIVE) {
+  $('#srvLink').style.display = 'inline-block';
+  $('#srvUrl').value = localStorage.getItem('jc_server') || 'http://192.168.0.221:3011';
+  if (!localStorage.getItem('jc_server')) $('#srvPanel').style.display = 'block';
+}
+async function srvTest() {
+  const u = $('#srvUrl').value.trim().replace(/\/+$/, '');
+  if (!u) return;
+  $('#srvMsg').textContent = 'กำลังทดสอบ…';
+  try {
+    const r = await fetch(u + '/api/ping');
+    const j = await r.json();
+    $('#srvMsg').innerHTML = j.ok ? '✅ เชื่อมต่อสำเร็จ: <b>' + (j.company || j.name) + '</b>' : '❌ เซิร์ฟเวอร์ตอบผิดปกติ';
+  } catch (e) { $('#srvMsg').textContent = '❌ เชื่อมต่อไม่ได้ — ตรวจ URL และเครือข่าย'; }
+}
+function srvSave() {
+  const u = $('#srvUrl').value.trim().replace(/\/+$/, '');
+  if (!u) return;
+  localStorage.setItem('jc_server', u);
+  localStorage.removeItem('jc_token');
+  location.reload();
+}
 // ═══ LOGIN: เลขท้ายบัตร 4 ตัว → PIN 6 หลัก ═══
 async function loginStep1() {
   $('#loginErr').textContent = '';
@@ -400,16 +443,25 @@ async function chooseRole(as) {
   try {
     await api('/api/login', { method: 'POST', body: { id_last4: $('#id4').value, pin: $('#pin').value, as } });
     $('#rolePop').classList.remove('on');
-    if (as === 'admin') location.href = '/admin';
+    if (as === 'admin') location.href = (BASE || '') + '/admin' + (TOKEN() ? '?t=' + TOKEN() : '');
     else enter();
   } catch (e) { $('#rolePop').classList.remove('on'); $('#loginErr').textContent = e.message; }
 }
 function backStep() { $('#step2').style.display = 'none'; $('#step1').style.display = 'block'; $('#stp2').classList.remove('on'); $('#loginErr').textContent = ''; }
-function logout() { api('/api/logout', { method: 'POST', body: {} }).then(() => location.reload()); }
+function logout() { localStorage.removeItem('jc_token'); api('/api/logout', { method: 'POST', body: {} }).finally(() => location.reload()); }
 
 // ═══ SHELL ═══
 async function enter() {
-  try { ME = await api('/api/me/dashboard'); } catch { return; } // ยังไม่ล็อกอิน
+  // แอป native ต้องตั้งค่าเซิร์ฟเวอร์ก่อนเสมอ
+  if (NATIVE && !localStorage.getItem('jc_server')) { $('#srvPanel').style.display = 'block'; return; }
+  try {
+    ME = await api('/api/me/dashboard');
+    if (!ME || !ME.name) throw new Error('no-session'); // กัน SPA fallback ตอบ HTML แทน JSON
+  }
+  catch (e) {
+    if (NATIVE && /fetch|Failed|Network/i.test(e.message)) { $('#loginErr').textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — กด ⚙️ ตั้งค่าเซิร์ฟเวอร์ด้านล่าง'; $('#srvPanel').style.display = 'block'; }
+    return; // ยังไม่ล็อกอิน
+  }
   $('#pg-login').classList.remove('on'); $('#tabbar').style.display = 'flex';
   tab('home');
   startClock(); watchGeo(); refreshBadges();
@@ -727,7 +779,7 @@ function viewSlip(p) {
       <div class="row"><span class="k">หัก ภาษี</span><b style="color:var(--red)">-${THB(p.tax)}</b></div>
       <div class="row"><span class="k" style="font-weight:800;color:var(--ink)">เงินได้สุทธิ</span><b style="font-size:1.2rem">${THB(p.net)}</b></div>
     </div>
-    <a class="go" style="display:block;text-align:center;text-decoration:none;background:var(--gold);margin-bottom:10px" href="/api/me/payslip-print?month=${p.month}">🖨 สลิปเต็มรูปแบบ · บันทึก PDF</a>
+    <a class="go" style="display:block;text-align:center;text-decoration:none;background:var(--gold);margin-bottom:10px" href="${BASE}/api/me/payslip-print?month=${p.month}&t=${TOKEN()}">🖨 สลิปเต็มรูปแบบ · บันทึก PDF</a>
     <button class="go" onclick="openNoti()">← กลับไปแจ้งเตือน</button>`);
 }
 

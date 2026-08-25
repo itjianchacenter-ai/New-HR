@@ -16,6 +16,18 @@ const DATA = path.join(__dirname, 'data.json');
 app.use(express.json({ limit: '3mb' })); // เผื่อรูปถ่ายยืนยันตอนลงเวลา (base64)
 app.use(cookieParser('jc-byte-demo'));
 app.use(express.static(path.join(__dirname, 'public')));
+// ── CORS: ให้แอปมือถือ (bundle ในเครื่อง) เรียก API ข้าม origin ได้ ──
+app.use((req, res, next) => {
+  const o = req.headers.origin;
+  if (o) {
+    res.setHeader('Access-Control-Allow-Origin', o);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 const iso = d => new Date(d).toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
@@ -140,7 +152,20 @@ function load() { if (!fs.existsSync(DATA)) fs.writeFileSync(DATA, JSON.stringif
 function save(db) { fs.writeFileSync(DATA + '.tmp', JSON.stringify(db, null, 2)); fs.renameSync(DATA + '.tmp', DATA); }
 
 function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 3600 * 1000 }); } // จำล็อกอิน 30 วัน
-function sess(req) { try { return JSON.parse(req.signedCookies.s || 'null'); } catch { return null; } }
+// ── token สำหรับแอปมือถือ (HMAC-signed · ไม่ต้องพึ่ง cookie ข้าม origin) ──
+const signTok = s => crypto.createHmac('sha256', 'jc-byte-demo').update(s).digest('hex').slice(0, 32);
+function makeToken(o) { const p = Buffer.from(JSON.stringify(o)).toString('base64url'); return p + '.' + signTok(p); }
+function readToken(t) {
+  const [p, sig] = String(t || '').split('.');
+  if (!p || sig !== signTok(p)) return null;
+  try { return JSON.parse(Buffer.from(p, 'base64url').toString()); } catch { return null; }
+}
+function sess(req) {
+  const h = req.headers.authorization;
+  if (h && h.startsWith('Bearer ')) { const s = readToken(h.slice(7)); if (s) return s; }
+  if (req.query && req.query.t) { const s = readToken(req.query.t); if (s) return s; } // สำหรับลิงก์เปิดหน้า (เช่น สลิป PDF)
+  try { return JSON.parse(req.signedCookies.s || 'null'); } catch { return null; }
+}
 const dist = (a, b, c, d) => { const R = 6371e3, r = x => x * Math.PI / 180;
   const p = r(c - a), q = r(d - b), s = Math.sin(p / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(q / 2) ** 2;
   return Math.round(R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))); };
@@ -171,7 +196,7 @@ const id4 = e => digits(e.national_id || e.tax_no).slice(-4);
 app.post('/api/login', (req, res) => {
   const { pin, password, phone, id_last4, as } = req.body || {};
   const db = load();
-  if (password === db.admin_pw) { setSess(res, { role: 'admin' }); return res.json({ role: 'admin' }); }
+  if (password === db.admin_pw) { const o = { role: 'admin' }; setSess(res, o); return res.json({ role: 'admin', token: makeToken(o) }); }
   // ── ล็อกอินพนักงาน 2 ขั้น (flow หลัก): เลข 4 ตัวท้ายบัตรประชาชน → PIN พนักงาน 6 หลัก ──
   // พนักงานที่มี is_admin จะได้เลือก Role (Admin/Employee) เป็นขั้นที่ 3
   if (id_last4 && !phone) {
@@ -182,12 +207,12 @@ app.post('/api/login', (req, res) => {
     if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
     if (as === 'admin') {
       if (!e.is_admin) return res.status(403).json({ error: 'บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบ — ติดต่อ HR' });
-      setSess(res, { role: 'admin', id: e.id });
-      return res.json({ role: 'admin', name: e.name });
+      const o = { role: 'admin', id: e.id }; setSess(res, o);
+      return res.json({ role: 'admin', name: e.name, token: makeToken(o) });
     }
     if (e.is_admin && !as) return res.json({ step: 'role', nickname: e.nickname || e.name.split(' ')[0], name: e.name });
-    setSess(res, { role: 'employee', id: e.id });
-    return res.json({ role: 'employee', name: e.name });
+    const o = { role: 'employee', id: e.id }; setSess(res, o);
+    return res.json({ role: 'employee', name: e.name, token: makeToken(o) });
   }
   // ── flow สำรอง: เบอร์โทร → เลข 4 ตัวท้ายบัตรประชาชน ──
   if (phone) {
@@ -195,14 +220,15 @@ app.post('/api/login', (req, res) => {
     if (!e) return res.status(401).json({ error: 'ไม่พบเบอร์นี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' });
     if (!id_last4) return res.json({ step: 'verify', nickname: e.nickname || e.name.split(' ')[0] });
     if (digits(id_last4) !== id4(e)) return res.status(401).json({ error: 'เลข 4 ตัวท้ายไม่ถูกต้อง' });
-    setSess(res, { role: 'employee', id: e.id });
-    return res.json({ role: 'employee', name: e.name });
+    const o = { role: 'employee', id: e.id }; setSess(res, o);
+    return res.json({ role: 'employee', name: e.name, token: makeToken(o) });
   }
   const e = db.employees.find(x => x.pin === String(pin || password || ''));
   if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
-  setSess(res, { role: 'employee', id: e.id });
-  res.json({ role: 'employee', name: e.name });
+  const o = { role: 'employee', id: e.id }; setSess(res, o);
+  res.json({ role: 'employee', name: e.name, token: makeToken(o) });
 });
+app.get('/api/ping', (req, res) => res.json({ ok: true, name: 'JC People', company: load().company.name }));
 app.post('/api/logout', (req, res) => { res.clearCookie('s'); res.json({ ok: true }); });
 
 // ═══ ฝั่งพนักงาน ═══
@@ -351,34 +377,43 @@ app.get('/api/me/payslip-print', (req, res) => {
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px}
-.sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.82rem}
+.sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.74rem}
 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
-.s2co b{font-size:.95rem}.s2logo{align-self:center;padding:0 6px}.s2logo img{height:32px}
-.s2meta h3{margin:0 0 8px;font-size:1.15rem;text-align:right;font-weight:800}
-.kv2{display:grid;grid-template-columns:118px 1fr;gap:0 12px;margin-top:7px;font-size:.78rem;align-items:start}
-.kv2 span{color:#555;line-height:1.25}.kv2 i{font-size:.66rem;color:#999;font-style:normal;font-weight:400}
-.kv2 b{font-weight:600;font-size:.8rem;white-space:nowrap;text-align:left}
-.s2meta .kv2{grid-template-columns:1fr auto}.s2meta .kv2 b{text-align:right}
+.s2co b{font-size:.85rem;color:#000}.s2logo{align-self:center;padding:0 6px}.s2logo img{height:32px}
+.s2meta h3{margin:0 0 8px;font-size:1rem;text-align:right;font-weight:800;color:#000}
+.kv2{display:grid;grid-template-columns:104px 1fr;gap:0 10px;margin-top:6px;font-size:.7rem;align-items:start}
+.kv2 span{color:#000;line-height:1.25}.kv2 i{font-size:.6rem;color:#555;font-style:normal;font-weight:400}
+.kv2 b{font-weight:700;font-size:.72rem;white-space:nowrap;text-align:left;color:#000}
+.s2meta .kv2{grid-template-columns:104px 1fr}.s2meta .kv2 b{text-align:left}
 .s2cols{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.5px solid #1a1712}
 .s2cols table{border-collapse:collapse;width:100%}
 .s2cols table:not(:last-child){border-right:1px solid #1a1712}
-th{border-bottom:1px solid #1a1712;padding:6px;font-size:.78rem;text-align:center}
-th i{font-size:.64rem;color:#777;font-style:normal;font-weight:400}
+th{border-bottom:1px solid #1a1712;padding:5px;font-size:.7rem;text-align:center;color:#000}
+th i{font-size:.58rem;color:#555;font-style:normal;font-weight:400}
 td{padding:5px 8px;vertical-align:top}
-td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.8rem;white-space:nowrap}
-.l1{font-size:.76rem}.l2{font-size:.62rem;color:#999}
+td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.72rem;white-space:nowrap;color:#000}
+.l1{font-size:.7rem;color:#000}.l2{font-size:.56rem;color:#555}
 tr.sep td{border-top:1px solid #1a1712}
 tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
-.s2foot{display:flex;justify-content:space-between;margin-top:14px;font-size:.76rem;color:#555}
-.s2foot i{font-size:.64rem;color:#999;font-style:normal}
+.s2foot{display:flex;justify-content:space-between;margin-top:12px;font-size:.7rem;color:#000}
+.s2foot i{font-size:.58rem;color:#555;font-style:normal}
 .sig{text-align:right}.sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
-.s2legal{border-top:1px solid #ccc;margin-top:16px;padding-top:8px;text-align:center;font-size:.62rem;color:#777}
-.s2legal i{font-style:normal;color:#999}
+.s2legal{border-top:1px solid #ccc;margin-top:12px;padding-top:6px;text-align:center;font-size:.56rem;color:#444}
+.s2legal i{font-style:normal;color:#666}
 .bar{max-width:860px;margin:0 auto 12px;display:flex;gap:10px;justify-content:space-between}
 .bar button{font:inherit;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer}
 .bar .p{background:#221f19;color:#fff;border-color:#221f19}
-@media(max-width:720px){.s2cols{grid-template-columns:1fr}.s2cols table:not(:last-child){border-right:0;border-bottom:1px solid #1a1712}.s2head{grid-template-columns:1fr;text-align:left}.s2meta h3{text-align:left}}
-@media print{body{background:#fff;padding:0}.bar{display:none}.sheet{box-shadow:none;border-radius:0;max-width:100%}}
+@media screen and (max-width:720px){.s2cols{grid-template-columns:1fr}.s2cols table:not(:last-child){border-right:0;border-bottom:1px solid #1a1712}.s2head{grid-template-columns:1fr;text-align:left}.s2meta h3{text-align:left}}
+@media print{
+@page{size:A4 landscape;margin:8mm}
+body{background:#fff;padding:0}.bar{display:none}
+.sheet{box-shadow:none;border-radius:0;max-width:100%;padding:4px;font-size:.74rem}
+.s2cols{grid-template-columns:1fr 1fr 1fr !important}
+.s2cols table:not(:last-child){border-right:1px solid #1a1712 !important;border-bottom:0 !important}
+.s2head{grid-template-columns:1.35fr auto 1fr !important;margin-bottom:8px}
+td{padding:3px 6px}th{padding:4px}
+.s2foot{margin-top:8px}.sig .line{margin-top:16px}.s2legal{margin-top:8px;padding-top:5px}
+}
 </style></head><body>
 <div class="bar"><button onclick="history.back()">← กลับ</button><button class="p" onclick="print()">🖨 พิมพ์ / บันทึก PDF</button></div>
 <div class="sheet">
@@ -739,6 +774,28 @@ app.get('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return
     checkins: db.checkins.filter(x => x.emp_id === e.id).slice(-10).reverse(),
     payslips: db.payslips.filter(p => p.emp_id === e.id).reverse() }); });
 
+// นโยบายความเป็นส่วนตัว — จำเป็นสำหรับส่งแอปขึ้น App Store / Google Play
+app.get('/privacy', (req, res) => res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/><title>นโยบายความเป็นส่วนตัว · JIANCHA HR</title>
+<style>body{font-family:'IBM Plex Sans Thai',-apple-system,'Thonburi',sans-serif;max-width:720px;margin:0 auto;padding:40px 24px;line-height:1.75;color:#221f19;background:#faf8f3}
+h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:28px}p,li{font-size:.95rem}.en{color:#888;font-size:.85rem}</style></head><body>
+<h1>นโยบายความเป็นส่วนตัว — แอปพลิเคชัน JIANCHA HR</h1>
+<p class="en">Privacy Policy — JIANCHA HR (Employee self-service application)</p>
+<p>แอปพลิเคชันนี้เป็นระบบภายในสำหรับพนักงานของบริษัทในเครือ JIANCHA เท่านั้น ใช้สำหรับการลงเวลาทำงาน ยื่นคำร้อง ดูตารางกะ และสลิปเงินเดือน</p>
+<h2>ข้อมูลที่เราเก็บและวัตถุประสงค์</h2>
+<ul>
+<li><b>ตำแหน่งที่ตั้ง (Location)</b> — ใช้ขณะลงเวลาเข้า-ออกงานเท่านั้น เพื่อตรวจว่าอยู่ในรัศมีสาขา ไม่มีการติดตามตำแหน่งเบื้องหลัง</li>
+<li><b>รูปถ่าย (Camera)</b> — ถ่ายภาพยืนยันตัวตนขณะลงเวลา (เลือกข้ามได้) เก็บไว้ให้ฝ่ายบุคคลตรวจสอบ</li>
+<li><b>ข้อมูลพนักงาน</b> — ชื่อ ตำแหน่ง สังกัด เงินเดือน และประวัติการลงเวลา ตามความจำเป็นของการจ้างงาน</li>
+</ul>
+<h2>การเปิดเผยข้อมูล</h2>
+<p>ข้อมูลทั้งหมดเก็บบนเซิร์ฟเวอร์ของบริษัท ใช้ภายในฝ่ายบุคคลเท่านั้น <b>ไม่ขายหรือแบ่งปันให้บุคคลที่สาม</b> และไม่ใช้เพื่อการโฆษณา</p>
+<h2>การเก็บรักษาและสิทธิของท่าน</h2>
+<p>ข้อมูลเก็บตลอดอายุการจ้างงานตามกฎหมายแรงงานและกฎหมายภาษี พนักงานสามารถขอดู แก้ไข หรือลบข้อมูลได้โดยติดต่อฝ่ายบุคคล</p>
+<h2>ติดต่อ</h2>
+<p>ฝ่ายบุคคล JIANCHA COMPANY LIMITED · อีเมล itjianchacenter@gmail.com</p>
+<p class="en">Last updated: August 2026</p>
+</body></html>`));
 app.get('/scan', (req, res) => res.sendFile(path.join(__dirname, 'public', 'scan.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
