@@ -3,7 +3,7 @@
   "appName": "JIANCHA HR",
   "webDir": "www",
   "server": {
-    "url": "http://localhost:3011",
+    "url": "http://192.168.0.221:3011",
     "cleartext": true
   },
   "ios": {

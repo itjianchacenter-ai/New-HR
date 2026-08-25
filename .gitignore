@@ -4,3 +4,6 @@ data.json.tmp
 *.log
 node_modules/
 .DS_Store
+
+# ไฟล์ APK ที่ build แล้ว
+*.apk

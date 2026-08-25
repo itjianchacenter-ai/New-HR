@@ -18,8 +18,8 @@
 "server": { "url": "https://hr.yourcompany.com", "cleartext": false }
 ```
 
-- ตอนนี้ตั้งเป็น `http://localhost:3011` (เซิร์ฟเวอร์เดโม่ของ repo นี้ — รันด้วย `PORT=3011 node server.js`) — ใช้ได้เฉพาะ **iOS Simulator บนเครื่องที่รันเซิร์ฟเวอร์**
-- ทดสอบบนมือถือจริงในวง LAN: ใช้ IP เครื่อง เช่น `http://192.168.0.221:3010`
+- ตอนนี้ตั้งเป็น `http://192.168.0.221:3011` (IP วง LAN ของเครื่อง dev — รันเซิร์ฟเวอร์ด้วย `PORT=3011 node server.js`)
+  ใช้ได้ทั้ง iOS Simulator และ**มือถือจริงที่ต่อ WiFi วงเดียวกัน** · ถ้า IP เครื่องเปลี่ยน แก้ค่านี้แล้ว `npx cap sync` + build ใหม่
 - **ก่อนส่งขึ้น store ต้องเป็น HTTPS จริง** แล้ว:
   - ลบ `NSAppTransportSecurity` ออกจาก `ios/App/App/Info.plist`
   - ลบ `android:usesCleartextTraffic="true"` ออกจาก `android/app/src/main/AndroidManifest.xml`
@@ -36,12 +36,12 @@ npx cap open ios
 ```
 แล้วกด Run ใน Xcode (เลือก Simulator หรือเครื่องจริง)
 
-## รัน Android (ต้องติดตั้ง Android Studio ก่อน)
-1. ติดตั้ง [Android Studio](https://developer.android.com/studio) (มี SDK + JDK ในตัว)
-2. ```bash
-   npx cap open android
-   ```
-3. กด Run ใน Android Studio
+## Build Android APK (เครื่อง dev นี้ติดตั้ง JDK 21 + Android SDK ไว้แล้ว)
+```bash
+cd android && JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=$HOME/Library/Android/sdk ./gradlew assembleDebug
+```
+ได้ไฟล์ `android/app/build/outputs/apk/debug/app-debug.apk` — ส่งให้พนักงานติดตั้งได้เลย
+(ขึ้น Google Play ต้องใช้ AAB แบบ signed — ทำผ่าน Android Studio: Build → Generate Signed Bundle)
 
 ## เปลี่ยนไอคอน / splash
 แทนที่ `assets/logo.png` (1024×1024) แล้ว:
