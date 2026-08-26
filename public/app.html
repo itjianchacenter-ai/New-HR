@@ -211,7 +211,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
       <p class="d" style="margin-top:16px" id="verifyName"></p>
     </div>
     <div class="err" id="loginErr"></div>
-    <div class="hint">เดโม่: เลขท้ายบัตร <b>0001</b> · PIN <b>111111</b></div>
+    <div class="hint" id="demoHint" style="display:none">เดโม่: เลขท้ายบัตร <b>0001</b> · PIN <b>111111</b></div>
     <div id="srvPanel" style="display:none;margin-top:22px;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px">
       <label style="font-size:.84rem;font-weight:700;color:var(--soft)">🖥 เซิร์ฟเวอร์ระบบ HR</label>
       <input id="srvUrl" type="url" style="margin-top:8px;font-size:.9rem;letter-spacing:0;text-align:left;font-family:'IBM Plex Mono',monospace" placeholder="เช่น https://hr.jianchatea.com"/>
@@ -395,6 +395,9 @@ const thLong = d => d.toLocaleDateString(TL, { weekday: 'long', day: 'numeric', 
 
 let ME = null, GEO = null, CAL = { shifts: [], cks: [], cur: new Date(), sel: iso(new Date()) };
 
+// โชว์คำใบ้เดโม่เฉพาะเซิร์ฟเวอร์เดโม่ (ไม่ใช่ production)
+fetch((typeof BASE !== 'undefined' ? BASE : '') + '/api/ping').then(r => r.json())
+  .then(j => { if (/demo/i.test(j.company || '')) { const h = document.getElementById('demoHint'); if (h) h.style.display = 'block'; } }).catch(() => {});
 // ป้ายปุ่มสลับภาษา
 document.querySelectorAll('.langLbl').forEach(el => el.textContent = LANG === 'th' ? 'English' : 'ภาษาไทย');
 // ═══ ตั้งค่าเซิร์ฟเวอร์ (เฉพาะแอป native) ═══
