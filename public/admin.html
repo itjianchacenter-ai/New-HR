@@ -1018,7 +1018,7 @@ async function openEmpForm(id) {
         ${sel('level', 'Level', e.level || 'staff', [['staff', 'Staff'], ['supervisor', 'Supervisor'], ['manager', 'Manager'], ['director', 'Director']])}
         ${sel('payment_type', 'Payment type', e.payment_type || 'Monthly', [['Monthly', 'Monthly'], ['Daily', 'Daily']])}
         ${sel('contract', 'Contract type', e.contract || 'Full Time', [['Full Time', 'Full Time'], ['Part Time', 'Part Time']])}
-        ${isNew ? inp('pin', 'PIN 6 หลัก (เว้นว่าง = สุ่มให้อัตโนมัติ)', '', 'เช่น 777777') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
+        ${isNew ? inp('pin', 'PIN (เว้นว่าง = ใช้รหัสพนักงาน)', '', 'เช่น 105005') : sel('status', 'Status', e.status || 'active', [['active', 'Active'], ['resigned', 'Resigned']])}
         ${sel('is_admin', 'สิทธิ์แอดมิน (เข้าหลังบ้านได้)', String(!!e.is_admin), [['false', 'ไม่มี — พนักงานทั่วไป'], ['true', 'มี — เลือก Role ตอนล็อกอิน']])}
       </div>
       <div class="sec-t">Payroll</div>

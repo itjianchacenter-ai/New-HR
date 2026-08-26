@@ -523,8 +523,9 @@ app.post('/api/admin/employees', (req, res) => { if (!admin(req, res)) return;
   const { name, employee_no, role, dept, branch_id, pay, phone, email, hire_date } = req.body || {};
   if (!name || !String(name).trim()) return res.status(400).json({ error: 'กรอกชื่อพนักงาน' });
   const db = load();
-  // ไม่กรอก PIN → สุ่มให้อัตโนมัติ (6 หลัก ไม่ซ้ำใคร) แล้วส่งกลับให้ HR แจ้งพนักงาน
+  // ไม่กรอก PIN → ใช้รหัสพนักงานเป็น PIN (ไม่มีรหัสพนักงาน → สุ่ม 6 หลักไม่ซ้ำ)
   let pin = String(req.body.pin || '').trim();
+  if (!pin) pin = String(employee_no || '').replace(/\D/g, '');
   if (!pin) { do { pin = String(Math.floor(100000 + Math.random() * 900000)); } while (db.employees.some(e => e.pin === pin)); }
   const quota = {}; db.leave_types.forEach(t => quota[t.key] = { total: t.days, used: 0 });
   const obj = { id: 'e' + Date.now(), name, employee_no: employee_no || '', role: role || '', dept: dept || '',
@@ -546,7 +547,11 @@ app.put('/api/admin/employees/:id', (req, res) => { if (!admin(req, res)) return
   const allow = ['name', 'employee_no', 'role', 'dept', 'branch_id', 'phone', 'email', 'bank', 'bank_account',
     'birth_date', 'hire_date', 'tax_no', 'sso_no', 'gender', 'marital', 'nationality', 'address',
     'salutation', 'name_en', 'photo', 'level', 'nickname', 'national_id', 'contract', 'status', 'probation_end', 'payment_type'];
+  // PIN ผูกกับรหัสพนักงาน: ถ้าแก้รหัสพนักงาน (และ PIN เดิมตามรหัสเดิมอยู่) ให้ PIN ตามไปด้วย
+  const oldNo = String(e.employee_no || '').replace(/\D/g, '');
   for (const k of allow) if (k in (req.body || {}) && req.body[k] !== null) e[k] = String(req.body[k]);
+  const newNo = String(e.employee_no || '').replace(/\D/g, '');
+  if (newNo && newNo !== oldNo && e.pin === oldNo) e.pin = newNo;
   if ('pay' in (req.body || {})) e.pay = +req.body.pay || e.pay;
   ['bonus', 'allowance_pos', 'allowance_living'].forEach(k => { if (k in (req.body || {})) e[k] = +req.body[k] || 0; });
   if ('is_admin' in (req.body || {})) e.is_admin = req.body.is_admin === true || req.body.is_admin === 'true';
