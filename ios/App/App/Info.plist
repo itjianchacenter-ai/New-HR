@@ -22,18 +22,14 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>ใช้กล้องถ่ายรูปยืนยันตัวตนตอนลงเวลาเข้า-ออกงาน</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ใช้ตำแหน่งเพื่อตรวจว่าอยู่ในรัศมีสาขาตอนลงเวลา</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<!-- อนุญาต HTTP สำหรับเซิร์ฟเวอร์เดโม่ในวง LAN — ตอนขึ้น production ให้ใช้ HTTPS แล้วลบส่วนนี้ -->
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

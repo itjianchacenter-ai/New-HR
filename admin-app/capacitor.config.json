@@ -2,9 +2,7 @@
   "appId": "com.jiancha.hradmin",
   "appName": "JIANCHA HR Admin",
   "webDir": "www",
-  "android": {
-    "allowMixedContent": true
-  },
+  "android": {},
   "server": {
     "allowNavigation": [
       "*"

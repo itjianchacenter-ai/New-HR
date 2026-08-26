@@ -464,8 +464,16 @@ function logout() { localStorage.removeItem('jc_token'); api('/api/logout', { me
 
 // ═══ SHELL ═══
 async function enter() {
-  // แอป native ต้องตั้งค่าเซิร์ฟเวอร์ก่อนเสมอ
-  if (NATIVE && !localStorage.getItem('jc_server')) { $('#srvPanel').style.display = 'block'; return; }
+  // เปิดครั้งแรกบนแอป: ลองเชื่อมเซิร์ฟเวอร์หลักอัตโนมัติ — สำเร็จก็ใช้เลย ไม่ต้องตั้งค่า
+  if (NATIVE && !localStorage.getItem('jc_server')) {
+    const def = 'https://people.jc-group-global.com';
+    try {
+      const r = await fetch(def + '/api/ping');
+      const j = await r.json();
+      if (j.ok) { localStorage.setItem('jc_server', def); location.reload(); return; }
+    } catch {}
+    $('#srvPanel').style.display = 'block'; return;
+  }
   try {
     ME = await api('/api/me/dashboard');
     if (!ME || !ME.name) throw new Error('no-session'); // กัน SPA fallback ตอบ HTML แทน JSON
