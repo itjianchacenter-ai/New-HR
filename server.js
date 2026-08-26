@@ -11,10 +11,17 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
-const DATA = path.join(__dirname, 'data.json');
+const DATA = process.env.DATA_FILE || path.join(__dirname, 'data.json'); // production ชี้ไฟล์นอก repo ได้
+// ── production config ผ่าน environment ──
+const SECRET = process.env.JC_SECRET || 'jc-byte-demo';
+const ADMIN_PW_ENV = process.env.ADMIN_PASSWORD || null;
+const UPLOAD_DIR = path.join(__dirname, 'uploads', 'checkins');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+app.set('trust proxy', 1); // อยู่หลัง nginx/Cloudflare
+const clientIp = req => req.headers['cf-connecting-ip'] || req.ip || 'unknown';
 
 app.use(express.json({ limit: '3mb' })); // เผื่อรูปถ่ายยืนยันตอนลงเวลา (base64)
-app.use(cookieParser('jc-byte-demo'));
+app.use(cookieParser(SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 // ── CORS: ให้แอปมือถือ (bundle ในเครื่อง) เรียก API ข้าม origin ได้ ──
 app.use((req, res, next) => {
@@ -152,9 +159,9 @@ function seed() {
 function load() { if (!fs.existsSync(DATA)) fs.writeFileSync(DATA, JSON.stringify(seed(), null, 2)); return JSON.parse(fs.readFileSync(DATA, 'utf8')); }
 function save(db) { fs.writeFileSync(DATA + '.tmp', JSON.stringify(db, null, 2)); fs.renameSync(DATA + '.tmp', DATA); }
 
-function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 3600 * 1000 }); } // จำล็อกอิน 30 วัน
+function setSess(res, o) { res.cookie('s', JSON.stringify(o), { signed: true, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 30 * 24 * 3600 * 1000 }); } // จำล็อกอิน 30 วัน · Secure เมื่อรัน production (HTTPS)
 // ── token สำหรับแอปมือถือ (HMAC-signed · ไม่ต้องพึ่ง cookie ข้าม origin) ──
-const signTok = s => crypto.createHmac('sha256', 'jc-byte-demo').update(s).digest('hex').slice(0, 32);
+const signTok = s => crypto.createHmac('sha256', SECRET).update(s).digest('hex').slice(0, 32);
 function makeToken(o) { const p = Buffer.from(JSON.stringify(o)).toString('base64url'); return p + '.' + signTok(p); }
 function readToken(t) {
   const [p, sig] = String(t || '').split('.');
@@ -194,18 +201,25 @@ function applyDecision(db, kind, it, status, byName, comment) {
 // ═══ AUTH ═══
 const digits = v => String(v || '').replace(/\D/g, '');
 const id4 = e => digits(e.national_id || e.tax_no).slice(-4);
+const loginFails = new Map(); // ip → {n, until}
 app.post('/api/login', (req, res) => {
+  const ip = clientIp(req);
+  const rl = loginFails.get(ip);
+  if (rl && rl.until > Date.now()) return res.status(429).json({ error: 'พยายามหลายครั้งเกินไป — ลองใหม่ใน 10 นาที' });
+  const fail = () => { const r = loginFails.get(ip) || { n: 0 }; r.n++; if (r.n >= 15) { r.until = Date.now() + 10 * 60000; r.n = 0; } loginFails.set(ip, r); };
+  const okIp = () => loginFails.delete(ip);
   const { pin, password, phone, id_last4, as } = req.body || {};
   const db = load();
-  if (password === db.admin_pw) { const o = { role: 'admin' }; setSess(res, o); return res.json({ role: 'admin', token: makeToken(o) }); }
+  if (password && password === (ADMIN_PW_ENV || db.admin_pw)) { okIp(); const o = { role: 'admin' }; setSess(res, o); return res.json({ role: 'admin', token: makeToken(o) }); }
   // ── ล็อกอินพนักงาน 2 ขั้น (flow หลัก): เลข 4 ตัวท้ายบัตรประชาชน → PIN พนักงาน 6 หลัก ──
   // พนักงานที่มี is_admin จะได้เลือก Role (Admin/Employee) เป็นขั้นที่ 3
   if (id_last4 && !phone) {
     const matches = db.employees.filter(e => e.status !== 'resigned' && id4(e) === digits(id_last4));
-    if (!matches.length) return res.status(401).json({ error: 'ไม่พบเลขท้ายบัตรนี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' });
+    if (!matches.length) { fail(); return res.status(401).json({ error: 'ไม่พบเลขท้ายบัตรนี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' }); }
     if (!pin) return res.json({ step: 'pin', nickname: matches[0].nickname || matches[0].name.split(' ')[0] });
     const e = matches.find(x => x.pin === String(pin));
-    if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+    if (!e) { fail(); return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' }); }
+    okIp();
     if (as === 'admin') {
       if (!e.is_admin) return res.status(403).json({ error: 'บัญชีนี้ไม่มีสิทธิ์ผู้ดูแลระบบ — ติดต่อ HR' });
       const o = { role: 'admin', id: e.id }; setSess(res, o);
@@ -218,14 +232,15 @@ app.post('/api/login', (req, res) => {
   // ── flow สำรอง: เบอร์โทร → เลข 4 ตัวท้ายบัตรประชาชน ──
   if (phone) {
     const e = db.employees.find(x => digits(x.phone) === digits(phone) && x.status !== 'resigned');
-    if (!e) return res.status(401).json({ error: 'ไม่พบเบอร์นี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' });
+    if (!e) { fail(); return res.status(401).json({ error: 'ไม่พบเบอร์นี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' }); }
     if (!id_last4) return res.json({ step: 'verify', nickname: e.nickname || e.name.split(' ')[0] });
-    if (digits(id_last4) !== id4(e)) return res.status(401).json({ error: 'เลข 4 ตัวท้ายไม่ถูกต้อง' });
+    if (digits(id_last4) !== id4(e)) { fail(); return res.status(401).json({ error: 'เลข 4 ตัวท้ายไม่ถูกต้อง' }); }
     const o = { role: 'employee', id: e.id }; setSess(res, o);
     return res.json({ role: 'employee', name: e.name, token: makeToken(o) });
   }
   const e = db.employees.find(x => x.pin === String(pin || password || ''));
-  if (!e) return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' });
+  if (!e) { fail(); return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' }); }
+  okIp();
   const o = { role: 'employee', id: e.id }; setSess(res, o);
   res.json({ role: 'employee', name: e.name, token: makeToken(o) });
 });
@@ -289,8 +304,14 @@ app.post('/api/checkin', (req, res) => {
   }
   const rec = { id: 'ck' + Date.now(), emp_id: emp.id, type: type === 'out' ? 'out' : 'in', method, note, at: now(), late_min: late };
   if (isOffsite) { rec.offsite = true; rec.lat = +lat; rec.lng = +lng; }
-  // รูปถ่ายยืนยันตอนลงเวลา (data URL — จำกัดขนาดกันไฟล์บวม)
-  if (typeof photo === 'string' && photo.startsWith('data:image/') && photo.length < 400000) rec.photo = photo;
+  // รูปถ่ายยืนยัน: เก็บเป็นไฟล์ใน uploads/ (ไม่บวม data.json) — ลบอัตโนมัติเมื่อครบ 90 วัน
+  if (typeof photo === 'string' && photo.startsWith('data:image/') && photo.length < 400000) {
+    try {
+      const b64 = photo.slice(photo.indexOf(',') + 1);
+      fs.writeFileSync(path.join(UPLOAD_DIR, rec.id + '.jpg'), Buffer.from(b64, 'base64'));
+      rec.photo = '/uploads/checkins/' + rec.id + '.jpg';
+    } catch {}
+  }
   db.checkins.push(rec); save(db);
   res.json({ ok: true, rec });
 });
@@ -805,6 +826,19 @@ h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:28px}p,li{font-size:.95rem}.e
 <p>ฝ่ายบุคคล JIANCHA COMPANY LIMITED · อีเมล itjianchacenter@gmail.com</p>
 <p class="en">Last updated: August 2026</p>
 </body></html>`));
+// รูปลงเวลา: ต้องล็อกอินก่อนดู (คุ้มครองข้อมูลส่วนบุคคล)
+app.use('/uploads', (req, res, next) => { if (!sess(req)) return res.status(401).end(); next(); },
+  express.static(path.join(__dirname, 'uploads')));
+// ลบรูปลงเวลาที่เกิน 90 วัน (PDPA) — ตรวจวันละครั้ง
+setInterval(() => {
+  try {
+    const cut = Date.now() - 90 * 86400000;
+    for (const f of fs.readdirSync(UPLOAD_DIR)) {
+      const p = path.join(UPLOAD_DIR, f);
+      if (fs.statSync(p).mtimeMs < cut) fs.unlinkSync(p);
+    }
+  } catch {}
+}, 24 * 3600 * 1000);
 app.get('/scan', (req, res) => res.sendFile(path.join(__dirname, 'public', 'scan.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));

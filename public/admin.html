@@ -394,6 +394,8 @@ main{margin-left:var(--side);min-height:100vh}
           <button id="edRes" onclick="edTab('resigned',this)">Resigned <span id="edResN"></span></button>
         </div>
         <span class="sp"></span>
+        <button class="btn" onclick="$('#idImp').click()">⬆ นำเข้า CSV (เลขบัตร/เบอร์/สาขา)</button>
+        <input type="file" id="idImp" accept=".csv" style="display:none" onchange="importIds(this)"/>
         <button class="btn green" onclick="edCsv()">⬇ Download</button>
         <button class="btn dark" onclick="openEmpForm(null)">+ Add Employee</button>
       </div>
@@ -917,6 +919,30 @@ function renderEmp() {
         <td class="mono">${esc(e.employee_no)}</td><td><span class="pill">${esc(brName(e.branch_id))}</span></td>
         <td>${esc(e.nickname || '–')}</td><td>${g}</td><td>${esc(e.name)}</td><td>${esc(e.name_en || '–')}</td></tr>`;
     }).join('') : '<tr><td colspan="10"><div class="empty">ไม่พบพนักงานตามเงื่อนไข</div></td></tr>');
+}
+// ── นำเข้าข้อมูลเพิ่มเติมจาก CSV: employee_no,national_id,phone,branch (ชื่อสาขา) ──
+async function importIds(inp) {
+  const text = await inp.files[0].text(); inp.value = '';
+  const lines = text.trim().split(/\r?\n/);
+  const head = lines[0].toLowerCase().split(',').map(x => x.trim());
+  const col = k => head.indexOf(k);
+  if (col('employee_no') < 0) return toast('CSV ต้องมีคอลัมน์ employee_no');
+  let done = 0, miss = 0;
+  for (const ln of lines.slice(1)) {
+    const c = ln.split(',').map(x => x.trim().replace(/^"|"$/g, ''));
+    const e = EMPS.find(x => x.employee_no === c[col('employee_no')]);
+    if (!e) { miss++; continue; }
+    const body = {};
+    if (col('national_id') >= 0 && c[col('national_id')]) body.national_id = c[col('national_id')];
+    if (col('phone') >= 0 && c[col('phone')]) body.phone = c[col('phone')];
+    if (col('branch') >= 0 && c[col('branch')]) {
+      const b = BRANCHES.find(x => x.name.toLowerCase().includes(c[col('branch')].toLowerCase()) || c[col('branch')].toLowerCase().includes(x.name.toLowerCase()));
+      if (b) body.branch_id = b.id;
+    }
+    if (Object.keys(body).length) { await api('/api/admin/employees/' + e.id, { method: 'PUT', body }); done++; }
+  }
+  toast(`นำเข้าแล้ว ${done} คน` + (miss ? ` · ไม่พบรหัส ${miss} รายการ` : ''));
+  loadEmp();
 }
 function edCsv() {
   dl('employees.csv', csv([['No', 'Department', 'Position', 'Status', 'Employee ID', 'Branch', 'Nickname', 'Gender', 'Name TH', 'Name EN', 'Phone', 'Email', 'Start date', 'Base salary'],

@@ -400,7 +400,7 @@ document.querySelectorAll('.langLbl').forEach(el => el.textContent = LANG === 't
 // ═══ ตั้งค่าเซิร์ฟเวอร์ (เฉพาะแอป native) ═══
 if (NATIVE) {
   $('#srvLink').style.display = 'inline-block';
-  $('#srvUrl').value = localStorage.getItem('jc_server') || 'http://192.168.0.221:3011';
+  $('#srvUrl').value = localStorage.getItem('jc_server') || 'https://people.jc-group-global.com';
   if (!localStorage.getItem('jc_server')) $('#srvPanel').style.display = 'block';
 }
 const normUrl = v => { let u = String(v || '').trim().replace(/\/+$/, ''); if (u && !/^https?:\/\//i.test(u)) u = 'http://' + u; return u; };
