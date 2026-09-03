@@ -11,6 +11,14 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
+/* DB Helvethaica X — ไทยหลัก · subset ไทย+ละติน (25KB/น้ำหนัก)
+   size-adjust 139% ชดเชยความสูงตัวไทย 0.420 em เทียบ Anuphan 0.582
+   ไม่ใส่แล้วตัวหนังสือทั้งแอปเล็กลงราว 30%
+   Anuphan อยู่ถัดไปเพื่อรับลูกศร → (U+2192) ที่ DB Helvethaica ไม่มี */
+@font-face{font-family:'DB Helvethaica X';src:url('/fonts/dbh-400.woff2') format('woff2');font-weight:400;font-display:swap;size-adjust:139%}
+@font-face{font-family:'DB Helvethaica X';src:url('/fonts/dbh-500.woff2') format('woff2');font-weight:500;font-display:swap;size-adjust:139%}
+@font-face{font-family:'DB Helvethaica X';src:url('/fonts/dbh-700.woff2') format('woff2');font-weight:600 700;font-display:swap;size-adjust:139%}
+@font-face{font-family:'DB Helvethaica X';src:url('/fonts/dbh-900.woff2') format('woff2');font-weight:800 900;font-display:swap;size-adjust:139%}
 :root{
   /* ── CI 4 สี (ค่าตรงตามที่กำหนด ไม่ดัดแปลง) ──
      #4e2d23 Freshly Roasted · #BF7E46 Caramel · #fff4dc Papaya · #98C5E2 Blue
@@ -32,7 +40,7 @@
   --shadow:0 1px 2px rgba(78,45,35,.06),0 10px 30px -12px rgba(78,45,35,.22);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Anuphan","IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-text-size-adjust:100%;touch-action:manipulation}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"DB Helvethaica X","Anuphan","IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-text-size-adjust:100%;touch-action:manipulation}
 button{font:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--ink)}
 .mono{font-family:"IBM Plex Mono",monospace}
