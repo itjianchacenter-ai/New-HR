@@ -33,7 +33,7 @@
   --side:250px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Sukhumvit Set","IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--ink)}
 .mono{font-family:"IBM Plex Mono",monospace}
@@ -602,7 +602,7 @@ const thDate = s => new Date(s + 'T00:00').toLocaleDateString(TL, { weekday: 'lo
 const hm = t => t ? new Date(t).toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' }) : '–';
 const dl = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: mime || 'text/csv;charset=utf-8' })); a.download = name; a.click(); };
 const csv = rows => rows.map(r => r.map(c => /[",\n]/.test(String(c ?? '')) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c ?? '')).join(',')).join('\n');
-const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#4e2d23}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
+const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'Sukhumvit Set','IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#4e2d23}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
 
 // ── state ──
 let EMPS = [], BRANCHES = [], PATTERNS = [], HQ_ID = null;
