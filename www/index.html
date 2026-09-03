@@ -13,23 +13,23 @@
 <style>
 :root{
   /* ── CI 4 สี (ค่าตรงตามที่กำหนด ไม่ดัดแปลง) ──
-     #4B2E1F Freshly Roasted · #BF7E46 Caramel · #FDECD8 Papaya · #98C5E2 Blue
+     #4e2d23 Freshly Roasted · #BF7E46 Caramel · #fff4dc Papaya · #98C5E2 Blue
 
-     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (papaya 10.63 · ขาว 12.28 ·
-     blue 6.68) และเป็นพื้นเดียวที่รองรับตัวขาว (12.28) ส่วน Caramel กับ Blue
-     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 2.89 บน papaya
+     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (cream 11.15 · ขาว 12.18 ·
+     blue 6.63) และเป็นพื้นเดียวที่รองรับตัวขาว (12.18) ส่วน Caramel กับ Blue
+     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 3.06 บน cream
      และตัวขาวบน Caramel/Blue ตกทั้งคู่ (3.34 / 1.84)
      → ปุ่มหลักใช้ Roasted+ตัวขาว · Caramel/Blue เป็นพื้นที่มีตัว Roasted ทับ
-     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (4.86 บน papaya)
+     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (5.10 บน cream)
      ซึ่ง Caramel ตัวจริงทำไม่ได้ ── */
-  --roasted:#4b2e1f; --caramel:#bf7e46; --papaya:#fdecd8; --ci-blue:#98c5e2;
-  --bg:#fdecd8; --surface:#fef2e5; --card:#ffffff;
-  --ink:#4b2e1f; --soft:#6b442a; --faint:#875833; --line:#e8c7a6;
-  --caramel-ink:#8e5c36;
+  --roasted:#4e2d23; --caramel:#bf7e46; --papaya:#fff4dc; --ci-blue:#98c5e2;
+  --bg:#fff4dc; --surface:#fff7e7; --card:#ffffff;
+  --ink:#4e2d23; --soft:#6b422c; --faint:#875635; --line:#ebceac;
+  --caramel-ink:#905c37;
   --gold:#bf7e46; --gold-soft:#bf7e46;   /* alias เดิม → Caramel */
   --green:#2f6a53; --red:#a43e2e;
-  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#3f5f70;
-  --shadow:0 1px 2px rgba(75,46,31,.06),0 10px 30px -12px rgba(75,46,31,.22);
+  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#466274;
+  --shadow:0 1px 2px rgba(78,45,35,.06),0 10px 30px -12px rgba(78,45,35,.22);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-text-size-adjust:100%;touch-action:manipulation}
@@ -77,11 +77,11 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .empcard{background:linear-gradient(150deg,#2e281f,#181510);color:#fff;border-radius:20px;box-shadow:var(--shadow);margin:14px 16px 0;padding:18px;position:relative;overflow:hidden}
 .empcard::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(200,162,90,.25),transparent 70%)}
 .empcard .row1{display:flex;gap:13px;align-items:center}
-.empcard .av{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#d49a66,#8d7440);display:grid;place-items:center;font-weight:800;font-size:1.1rem;flex:none}
+.empcard .av{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#d1a27a,#8d7440);display:grid;place-items:center;font-weight:800;font-size:1.1rem;flex:none}
 .empcard h2{margin:0;font-size:1.12rem}
 .empcard .r{color:#b6ac99;font-size:.82rem}
 .empcard .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:15px;position:relative;z-index:1}
-.empcard .kv .k{font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#875833}
+.empcard .kv .k{font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#875635}
 .empcard .kv b{font-size:.9rem;font-weight:700}
 .shift-strip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin:12px 16px 0;padding:11px 14px;font-size:.9rem}
 .shift-strip .ic{width:36px;height:36px;border-radius:11px;background:linear-gradient(180deg,#f6e7cf,#efd9b4);display:grid;place-items:center;flex:none}
@@ -91,8 +91,8 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .fpwrap{text-align:center;margin-top:20px}
 .fpbtn{width:172px;height:172px;border-radius:50%;border:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;box-shadow:0 16px 36px -12px rgba(34,31,25,.45);transition:transform .1s}
 .fpbtn:active{transform:scale(.96)}
-.fpbtn.in{background:radial-gradient(120% 120% at 30% 20%,#63402b,#4b2e1f)}
-.fpbtn.out{background:radial-gradient(120% 120% at 30% 20%,#d49a66,#bf7e46)}
+.fpbtn.in{background:radial-gradient(120% 120% at 30% 20%,#56392d,#4e2d23)}
+.fpbtn.out{background:radial-gradient(120% 120% at 30% 20%,#d1a27a,#bf7e46)}
 .fpbtn svg{width:52px;height:52px;fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
 .fpbtn .th{font-size:1.1rem;font-weight:800}
 .fpbtn .en{font-size:.76rem;opacity:.7;margin-top:-3px}
@@ -153,7 +153,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 /* ── profile ── */
 .prof{margin:16px}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 18px;text-align:center}
-.pcard .av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(160deg,#d49a66,#8d7440);color:#fff;font-size:1.7rem;font-weight:800}
+.pcard .av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(160deg,#d1a27a,#8d7440);color:#fff;font-size:1.7rem;font-weight:800}
 .pcard h2{margin:0;font-size:1.3rem}
 .pcard .r{color:var(--soft);font-size:.92rem}
 .pcard .br{display:inline-block;margin-top:10px;background:color-mix(in srgb,var(--gold) 10%,#fff);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));color:var(--caramel-ink);font-weight:700;font-size:.82rem;padding:5px 14px;border-radius:99px}
@@ -190,7 +190,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 #cam .capbar .skip{color:#b6ac99;background:none;border:0;font-weight:700}
 #cam .shutter{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.35)}
 #cam .caption{text-align:center;color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 10px;font-weight:700;background:#0e0c09}
-#cam .caption small{display:block;color:#875833;font-weight:400}
+#cam .caption small{display:block;color:#875635;font-weight:400}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:.88rem;font-weight:600;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .toast.on{opacity:1}
 .okpop{position:fixed;inset:0;background:rgba(20,17,12,.55);z-index:50;display:none;place-items:center;padding:24px}

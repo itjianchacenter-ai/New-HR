@@ -13,23 +13,23 @@
 <style>
 :root{
   /* ── CI 4 สี (ค่าตรงตามที่กำหนด ไม่ดัดแปลง) ──
-     #4B2E1F Freshly Roasted · #BF7E46 Caramel · #FDECD8 Papaya · #98C5E2 Blue
+     #4e2d23 Freshly Roasted · #BF7E46 Caramel · #fff4dc Papaya · #98C5E2 Blue
 
-     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (papaya 10.63 · ขาว 12.28 ·
-     blue 6.68) และเป็นพื้นเดียวที่รองรับตัวขาว (12.28) ส่วน Caramel กับ Blue
-     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 2.89 บน papaya
+     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (cream 11.15 · ขาว 12.18 ·
+     blue 6.63) และเป็นพื้นเดียวที่รองรับตัวขาว (12.18) ส่วน Caramel กับ Blue
+     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 3.06 บน cream
      และตัวขาวบน Caramel/Blue ตกทั้งคู่ (3.34 / 1.84)
      → ปุ่มหลักใช้ Roasted+ตัวขาว · Caramel/Blue เป็นพื้นที่มีตัว Roasted ทับ
-     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (4.86 บน papaya)
+     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (5.10 บน cream)
      ซึ่ง Caramel ตัวจริงทำไม่ได้ ── */
-  --roasted:#4b2e1f; --caramel:#bf7e46; --papaya:#fdecd8; --ci-blue:#98c5e2;
-  --bg:#fdecd8; --surface:#fef2e5; --surface-2:#ffffff;
-  --ink:#4b2e1f; --soft:#6b442a; --faint:#875833; --line:#e8c7a6;
-  --caramel-ink:#8e5c36;
+  --roasted:#4e2d23; --caramel:#bf7e46; --papaya:#fff4dc; --ci-blue:#98c5e2;
+  --bg:#fff4dc; --surface:#fff7e7; --surface-2:#ffffff;
+  --ink:#4e2d23; --soft:#6b422c; --faint:#875635; --line:#ebceac;
+  --caramel-ink:#905c37;
   --gold:#bf7e46; --gold-soft:#bf7e46;   /* alias เดิม → Caramel */
   --green:#2f6a53; --red:#a43e2e;
-  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#3f5f70;
-  --shadow:0 1px 2px rgba(75,46,31,.06),0 10px 30px -12px rgba(75,46,31,.22);
+  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#466274;
+  --shadow:0 1px 2px rgba(78,45,35,.06),0 10px 30px -12px rgba(78,45,35,.22);
   --side:250px;
 }
 *{box-sizing:border-box}
@@ -59,7 +59,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .side .grp{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:20px 8px 8px}
 .side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;color:var(--soft);text-decoration:none;font-size:.93rem;border:1px solid transparent;margin-bottom:2px}
 .side a svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.side a.on{background:var(--surface-2);color:var(--ink);font-weight:700;border-color:var(--line);box-shadow:0 1px 4px rgba(75,46,31,.08)}
+.side a.on{background:var(--surface-2);color:var(--ink);font-weight:700;border-color:var(--line);box-shadow:0 1px 4px rgba(78,45,35,.08)}
 .side a .bdg{margin-left:auto;background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;border-radius:99px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
 .side .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:.72rem;color:var(--faint)}
 main{margin-left:var(--side);min-height:100vh}
@@ -82,7 +82,7 @@ main{margin-left:var(--side);min-height:100vh}
 }
 .top h1{font-size:1.75rem;margin:0;font-weight:800;letter-spacing:-.01em}
 .top .sub{color:var(--soft);font-size:.88rem;margin-top:2px}
-.top .out{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.9rem;box-shadow:0 1px 3px rgba(75,46,31,.06)}
+.top .out{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.9rem;box-shadow:0 1px 3px rgba(78,45,35,.06)}
 .wrap{padding:24px 30px 60px}
 .page{display:none}
 .page.on{display:block}
@@ -95,10 +95,10 @@ main{margin-left:var(--side);min-height:100vh}
 .stat b{display:block;font-size:1.9rem;line-height:1.15;margin-top:4px}
 .stat b small{font-size:1.05rem;color:var(--faint);font-weight:600}
 .stat .s{font-size:.78rem;color:var(--faint);margin-top:2px}
-.stat.dark{background:linear-gradient(180deg,#5c3a27,#4b2e1f);border-color:#4b2e1f;color:#fff}
+.stat.dark{background:linear-gradient(180deg,#603a29,#4e2d23);border-color:#4e2d23;color:#fff}
 .stat.dark::before{display:none}
 .stat.dark .k{color:#cbbf9f}
-.stat.dark .s{color:#875833}
+.stat.dark .s{color:#875635}
 
 /* panels & tables */
 .panel{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden}
@@ -125,7 +125,7 @@ main{margin-left:var(--side);min-height:100vh}
 .name-cell{display:flex;align-items:center;gap:11px;font-weight:700}
 
 /* buttons & inputs */
-.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.88rem;color:var(--ink);box-shadow:0 1px 3px rgba(75,46,31,.06)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.88rem;color:var(--ink);box-shadow:0 1px 3px rgba(78,45,35,.06)}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
 .btn.green{background:var(--green);border-color:var(--green);color:#fff}
 .btn.sm{padding:6px 12px;font-size:.8rem;border-radius:9px}
@@ -161,7 +161,7 @@ main{margin-left:var(--side);min-height:100vh}
 /* manning */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .mcard{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.mcard .mh{background:linear-gradient(180deg,#5c3a27,#1d1a14);color:#fff;padding:16px 18px 14px}
+.mcard .mh{background:linear-gradient(180deg,#603a29,#1d1a14);color:#fff;padding:16px 18px 14px}
 .mcard .mh .t{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;font-weight:800}
 .mcard .mh .t .st{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.14em;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:99px}
 .mcard .mh .d{font-size:.78rem;color:#b6ac99;margin-top:2px}
@@ -190,7 +190,7 @@ main{margin-left:var(--side);min-height:100vh}
 #ovl.on{display:block}
 #drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--surface);z-index:41;transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-18px 0 50px rgba(30,25,15,.3)}
 #drawer.on{transform:none}
-#drawer .dh{background:linear-gradient(180deg,#5c3a27,#1d1a14);color:#fff;padding:22px 24px 18px;position:relative}
+#drawer .dh{background:linear-gradient(180deg,#603a29,#1d1a14);color:#fff;padding:22px 24px 18px;position:relative}
 #drawer .dh .x{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.12);border:0;color:#fff;width:32px;height:32px;border-radius:9px;font-size:1rem}
 #drawer .dh .idrow{display:flex;gap:14px;align-items:center}
 #drawer .dh .av{width:56px;height:56px;font-size:1.1rem;background:#4b4436}
@@ -591,7 +591,7 @@ const api = async (url, opt) => {
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const THB = n => '฿' + (+n || 0).toLocaleString(TL);
 const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2400); };
-const AV = ['#4b2e1f', '#bf7e46', '#2f6a53', '#98c5e2', '#7a5c46', '#3d7d8a'];
+const AV = ['#4e2d23', '#bf7e46', '#2f6a53', '#98c5e2', '#7a5c46', '#3d7d8a'];
 const avColor = n => AV[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
 const initials = e => { const en = e.name_en || ''; if (en.trim()) return en.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(); return String(e.name || '?').trim().slice(0, 2); };
 const avatar = e => e.photo
@@ -602,7 +602,7 @@ const thDate = s => new Date(s + 'T00:00').toLocaleDateString(TL, { weekday: 'lo
 const hm = t => t ? new Date(t).toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' }) : '–';
 const dl = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: mime || 'text/csv;charset=utf-8' })); a.download = name; a.click(); };
 const csv = rows => rows.map(r => r.map(c => /[",\n]/.test(String(c ?? '')) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c ?? '')).join(',')).join('\n');
-const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#4b2e1f}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
+const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#4e2d23}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
 
 // ── state ──
 let EMPS = [], BRANCHES = [], PATTERNS = [], HQ_ID = null;
@@ -669,7 +669,7 @@ async function loadDash() {
      <span class="t">${hm(a.at)}</span></div>`).join('')
     : `<div class="empty">ยังไม่มีความเคลื่อนไหววันนี้<br/><small>รายการจะขึ้นเมื่อพนักงานลงเวลาผ่านแอป</small></div>`;
   const tot = o.by_branch.reduce((n, b) => n + b.count, 0) || 1;
-  const COLORS = ['#4b2e1f', '#bf7e46', '#98c5e2', '#2f6a53', '#7a5c46'];
+  const COLORS = ['#4e2d23', '#bf7e46', '#98c5e2', '#2f6a53', '#7a5c46'];
   $('#dashHB').innerHTML = o.by_branch.map((b, i) => {
     const p = Math.round(b.count / tot * 100);
     return `<div class="row"><div class="l"><b>${esc(b.name)}</b><span>${b.count} staff · ${p}%</span></div><div class="track"><i style="width:${p}%;background:${COLORS[i % COLORS.length]}"></i></div></div>`;
