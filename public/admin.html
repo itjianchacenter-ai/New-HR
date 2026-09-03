@@ -12,9 +12,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --bg:#ece6da; --surface:#fbf9f4; --surface-2:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
-  --line:#e0d8c9; --gold:#a5843f; --gold-soft:#c8a25a; --green:#2f6a53; --red:#a43e2e; --blue:#4a5fc4;
-  --shadow:0 1px 2px rgba(45,38,26,.05),0 12px 34px -14px rgba(45,38,26,.22);
+  /* ── CI 4 สี (ค่าตรงตามที่กำหนด ไม่ดัดแปลง) ──
+     #4B2E1F Freshly Roasted · #BF7E46 Caramel · #FDECD8 Papaya · #98C5E2 Blue
+
+     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (papaya 10.63 · ขาว 12.28 ·
+     blue 6.68) และเป็นพื้นเดียวที่รองรับตัวขาว (12.28) ส่วน Caramel กับ Blue
+     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 2.89 บน papaya
+     และตัวขาวบน Caramel/Blue ตกทั้งคู่ (3.34 / 1.84)
+     → ปุ่มหลักใช้ Roasted+ตัวขาว · Caramel/Blue เป็นพื้นที่มีตัว Roasted ทับ
+     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (4.86 บน papaya)
+     ซึ่ง Caramel ตัวจริงทำไม่ได้ ── */
+  --roasted:#4b2e1f; --caramel:#bf7e46; --papaya:#fdecd8; --ci-blue:#98c5e2;
+  --bg:#fdecd8; --surface:#fef2e5; --surface-2:#ffffff;
+  --ink:#4b2e1f; --soft:#6b442a; --faint:#875833; --line:#e8c7a6;
+  --caramel-ink:#8e5c36;
+  --gold:#bf7e46; --gold-soft:#bf7e46;   /* alias เดิม → Caramel */
+  --green:#2f6a53; --red:#a43e2e;
+  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#3f5f70;
+  --shadow:0 1px 2px rgba(75,46,31,.06),0 10px 30px -12px rgba(75,46,31,.22);
   --side:250px;
 }
 *{box-sizing:border-box}
@@ -27,7 +42,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 #login{min-height:100vh;display:grid;place-items:center;padding:20px}
 #login .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:44px 40px;width:100%;max-width:420px;text-align:center}
 #login img{height:44px;margin-bottom:2px}
-#login .sub{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin:0 0 26px}
+#login .sub{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.28em;color:var(--caramel-ink);text-transform:uppercase;margin:0 0 26px}
 #login h1{font-size:1.35rem;margin:0 0 6px}
 #login p.d{color:var(--soft);font-size:.92rem;margin:0 0 24px}
 #login input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:1rem;margin-bottom:14px}
@@ -39,12 +54,12 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .side{position:fixed;inset:0 auto 0 0;width:var(--side);background:var(--surface);border-right:1px solid var(--line);padding:22px 14px;overflow-y:auto;z-index:10}
 .side .logo img{height:34px;display:block}
 .side .brand{font-size:1.06rem;font-weight:700;margin-top:8px}
-.side .brand span{color:var(--gold);font-weight:400}
+.side .brand span{color:var(--caramel-ink);font-weight:400}
 .side .tag{font-size:.72rem;color:var(--faint);line-height:1.35;margin-top:2px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .side .grp{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:20px 8px 8px}
 .side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;color:var(--soft);text-decoration:none;font-size:.93rem;border:1px solid transparent;margin-bottom:2px}
 .side a svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.side a.on{background:var(--surface-2);color:var(--ink);font-weight:700;border-color:var(--line);box-shadow:0 1px 4px rgba(45,38,26,.08)}
+.side a.on{background:var(--surface-2);color:var(--ink);font-weight:700;border-color:var(--line);box-shadow:0 1px 4px rgba(75,46,31,.08)}
 .side a .bdg{margin-left:auto;background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;border-radius:99px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
 .side .foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:.72rem;color:var(--faint)}
 main{margin-left:var(--side);min-height:100vh}
@@ -67,7 +82,7 @@ main{margin-left:var(--side);min-height:100vh}
 }
 .top h1{font-size:1.75rem;margin:0;font-weight:800;letter-spacing:-.01em}
 .top .sub{color:var(--soft);font-size:.88rem;margin-top:2px}
-.top .out{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.9rem;box-shadow:0 1px 3px rgba(45,38,26,.06)}
+.top .out{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.9rem;box-shadow:0 1px 3px rgba(75,46,31,.06)}
 .wrap{padding:24px 30px 60px}
 .page{display:none}
 .page.on{display:block}
@@ -80,10 +95,10 @@ main{margin-left:var(--side);min-height:100vh}
 .stat b{display:block;font-size:1.9rem;line-height:1.15;margin-top:4px}
 .stat b small{font-size:1.05rem;color:var(--faint);font-weight:600}
 .stat .s{font-size:.78rem;color:var(--faint);margin-top:2px}
-.stat.dark{background:linear-gradient(180deg,#2a251c,#221f19);border-color:#221f19;color:#fff}
+.stat.dark{background:linear-gradient(180deg,#5c3a27,#4b2e1f);border-color:#4b2e1f;color:#fff}
 .stat.dark::before{display:none}
 .stat.dark .k{color:#cbbf9f}
-.stat.dark .s{color:#9a9184}
+.stat.dark .s{color:#875833}
 
 /* panels & tables */
 .panel{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden}
@@ -102,15 +117,15 @@ main{margin-left:var(--side);min-height:100vh}
 /* pills & avatar */
 .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 11px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--soft);white-space:nowrap}
 .pill.ok{color:var(--green);background:color-mix(in srgb,var(--green) 10%,#fff);border-color:color-mix(in srgb,var(--green) 25%,var(--line))}
-.pill.warn{color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,#fff);border-color:color-mix(in srgb,var(--gold) 30%,var(--line))}
+.pill.warn{color:var(--caramel-ink);background:color-mix(in srgb,var(--gold) 12%,#fff);border-color:color-mix(in srgb,var(--gold) 30%,var(--line))}
 .pill.bad{color:var(--red);background:color-mix(in srgb,var(--red) 9%,#fff);border-color:color-mix(in srgb,var(--red) 25%,var(--line))}
-.pill.info{color:var(--blue);background:color-mix(in srgb,var(--blue) 9%,#fff);border-color:color-mix(in srgb,var(--blue) 22%,var(--line))}
+.pill.info{color:var(--blue-ink);background:color-mix(in srgb,var(--blue) 9%,#fff);border-color:color-mix(in srgb,var(--blue) 22%,var(--line))}
 .pill .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:1px}
 .av{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:700;font-size:.76rem;flex:none}
 .name-cell{display:flex;align-items:center;gap:11px;font-weight:700}
 
 /* buttons & inputs */
-.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.88rem;color:var(--ink);box-shadow:0 1px 3px rgba(45,38,26,.06)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:9px 16px;font-weight:700;font-size:.88rem;color:var(--ink);box-shadow:0 1px 3px rgba(75,46,31,.06)}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
 .btn.green{background:var(--green);border-color:var(--green);color:#fff}
 .btn.sm{padding:6px 12px;font-size:.8rem;border-radius:9px}
@@ -146,7 +161,7 @@ main{margin-left:var(--side);min-height:100vh}
 /* manning */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
 .mcard{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.mcard .mh{background:linear-gradient(180deg,#2a251c,#1d1a14);color:#fff;padding:16px 18px 14px}
+.mcard .mh{background:linear-gradient(180deg,#5c3a27,#1d1a14);color:#fff;padding:16px 18px 14px}
 .mcard .mh .t{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;font-weight:800}
 .mcard .mh .t .st{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.14em;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:99px}
 .mcard .mh .d{font-size:.78rem;color:#b6ac99;margin-top:2px}
@@ -175,7 +190,7 @@ main{margin-left:var(--side);min-height:100vh}
 #ovl.on{display:block}
 #drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--surface);z-index:41;transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-18px 0 50px rgba(30,25,15,.3)}
 #drawer.on{transform:none}
-#drawer .dh{background:linear-gradient(180deg,#2a251c,#1d1a14);color:#fff;padding:22px 24px 18px;position:relative}
+#drawer .dh{background:linear-gradient(180deg,#5c3a27,#1d1a14);color:#fff;padding:22px 24px 18px;position:relative}
 #drawer .dh .x{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.12);border:0;color:#fff;width:32px;height:32px;border-radius:9px;font-size:1rem}
 #drawer .dh .idrow{display:flex;gap:14px;align-items:center}
 #drawer .dh .av{width:56px;height:56px;font-size:1.1rem;background:#4b4436}
@@ -184,7 +199,7 @@ main{margin-left:var(--side);min-height:100vh}
 #drawer .dh .chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 #drawer .dh .chips .pill{background:rgba(255,255,255,.12);border-color:transparent;color:#fff}
 #drawer .db{flex:1;overflow-y:auto;padding:20px 24px}
-#drawer .sec-t{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;font-weight:600}
+#drawer .sec-t{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--caramel-ink);margin:18px 0 10px;font-weight:600}
 #drawer .sec-t:first-child{margin-top:0}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
 .kv .f{min-width:0}
@@ -266,7 +281,7 @@ main{margin-left:var(--side);min-height:100vh}
       <input type="checkbox" onchange="document.getElementById('pw').type=this.checked?'text':'password'" style="width:auto;margin:0"/> แสดงรหัสผ่าน</label>
     <button onclick="doLogin()">เข้าสู่ระบบ</button>
     <div class="err" id="loginErr"></div>
-    <div style="margin-top:16px;font-size:.8rem;color:var(--faint)">พนักงาน HR ที่มีสิทธิ์แอดมิน: ล็อกอินผ่าน<a href="/" style="color:var(--gold);font-weight:700">แอปพนักงาน</a> แล้วเลือก Role Admin</div>
+    <div style="margin-top:16px;font-size:.8rem;color:var(--faint)">พนักงาน HR ที่มีสิทธิ์แอดมิน: ล็อกอินผ่าน<a href="/" style="color:var(--caramel-ink);font-weight:700">แอปพนักงาน</a> แล้วเลือก Role Admin</div>
   </div>
 </div>
 
@@ -576,7 +591,7 @@ const api = async (url, opt) => {
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const THB = n => '฿' + (+n || 0).toLocaleString(TL);
 const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2400); };
-const AV = ['#221f19', '#a5843f', '#2f6a53', '#4a5fc4', '#7a5c46', '#3d7d8a'];
+const AV = ['#4b2e1f', '#bf7e46', '#2f6a53', '#98c5e2', '#7a5c46', '#3d7d8a'];
 const avColor = n => AV[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
 const initials = e => { const en = e.name_en || ''; if (en.trim()) return en.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(); return String(e.name || '?').trim().slice(0, 2); };
 const avatar = e => e.photo
@@ -587,7 +602,7 @@ const thDate = s => new Date(s + 'T00:00').toLocaleDateString(TL, { weekday: 'lo
 const hm = t => t ? new Date(t).toLocaleTimeString(TL, { hour: '2-digit', minute: '2-digit' }) : '–';
 const dl = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: mime || 'text/csv;charset=utf-8' })); a.download = name; a.click(); };
 const csv = rows => rows.map(r => r.map(c => /[",\n]/.test(String(c ?? '')) ? '"' + String(c).replace(/"/g, '""') + '"' : String(c ?? '')).join(',')).join('\n');
-const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#221f19}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
+const printHtml = (title, inner) => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>${esc(title)}</title><meta charset="utf-8"><style>body{font-family:'IBM Plex Sans Thai','Sarabun',sans-serif;padding:30px;color:#4b2e1f}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ccc;padding:6px 9px;text-align:left}th{background:#f4efe6}h2{margin:0 0 4px}</style></head><body>${inner}<script>print()<\/script></body></html>`); w.document.close(); };
 
 // ── state ──
 let EMPS = [], BRANCHES = [], PATTERNS = [], HQ_ID = null;
@@ -654,7 +669,7 @@ async function loadDash() {
      <span class="t">${hm(a.at)}</span></div>`).join('')
     : `<div class="empty">ยังไม่มีความเคลื่อนไหววันนี้<br/><small>รายการจะขึ้นเมื่อพนักงานลงเวลาผ่านแอป</small></div>`;
   const tot = o.by_branch.reduce((n, b) => n + b.count, 0) || 1;
-  const COLORS = ['#221f19', '#a5843f', '#4a5fc4', '#2f6a53', '#7a5c46'];
+  const COLORS = ['#4b2e1f', '#bf7e46', '#98c5e2', '#2f6a53', '#7a5c46'];
   $('#dashHB').innerHTML = o.by_branch.map((b, i) => {
     const p = Math.round(b.count / tot * 100);
     return `<div class="row"><div class="l"><b>${esc(b.name)}</b><span>${b.count} staff · ${p}%</span></div><div class="track"><i style="width:${p}%;background:${COLORS[i % COLORS.length]}"></i></div></div>`;
@@ -1080,7 +1095,7 @@ async function saveEmp(id) {
 
 // ═══ MANNING ═══
 function manCard(title, sub, people) {
-  const rows = people.map((p, i) => `<div class="pr click-person" onclick="openProfile('${p.id}')" title="ดูโปรไฟล์"><span class="no">${i + 1}</span><b>${esc(p.name)}</b>${p.nickname ? `<span class="nk">(${esc(p.nickname)})</span>` : ''}<span class="rl">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? '<span class="pill warn">Part time</span>' : ''} <span style="color:var(--gold);font-size:.75rem">›</span></div>`).join('');
+  const rows = people.map((p, i) => `<div class="pr click-person" onclick="openProfile('${p.id}')" title="ดูโปรไฟล์"><span class="no">${i + 1}</span><b>${esc(p.name)}</b>${p.nickname ? `<span class="nk">(${esc(p.nickname)})</span>` : ''}<span class="rl">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? '<span class="pill warn">Part time</span>' : ''} <span style="color:var(--caramel-ink);font-size:.75rem">›</span></div>`).join('');
   return `<div class="mcard"><div class="mh"><div class="t">${esc(title)}<span class="st">ACTIVE</span></div><div class="d">${esc(sub)}</div><div class="track"><i style="width:100%"></i></div></div>
     <div class="mb"><div class="cap">Positions (${people.length})</div>${rows || '<div class="empty">ไม่มีพนักงาน</div>'}</div></div>`;
 }
@@ -1117,7 +1132,7 @@ function renderBrm() {
   const pick = $('#brmSel').value, onlyStaffed = $('#brmStaffed').checked;
   const list = stores.filter(b => !pick || b.id === pick).filter(b => !onlyStaffed || cnt(b.id).length);
   $('#brmCount').textContent = `แสดง ${list.length} / ${stores.length} สาขา`;
-  const person = p => `<span class="click-person" onclick="event.stopPropagation();openProfile('${p.id}')" title="ดูโปรไฟล์" style="cursor:pointer"><b>${esc(p.name)}</b>${p.nickname ? ` <span style="color:var(--faint)">(${esc(p.nickname)})</span>` : ''} <span style="color:var(--soft);font-size:.82rem">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? ' <span class="pill warn">PT</span>' : ''} <span style="color:var(--gold);font-size:.75rem">›</span></span>`;
+  const person = p => `<span class="click-person" onclick="event.stopPropagation();openProfile('${p.id}')" title="ดูโปรไฟล์" style="cursor:pointer"><b>${esc(p.name)}</b>${p.nickname ? ` <span style="color:var(--faint)">(${esc(p.nickname)})</span>` : ''} <span style="color:var(--soft);font-size:.82rem">· ${esc(p.role)}</span>${p.contract === 'Part Time' ? ' <span class="pill warn">PT</span>' : ''} <span style="color:var(--caramel-ink);font-size:.75rem">›</span></span>`;
   $('#brTbl').innerHTML = `<tr><th>สาขา</th><th style="text-align:center">พนักงาน</th><th>Manager</th><th>รายชื่อพนักงาน</th><th>สถานะ</th></tr>` +
     (list.length ? list.map(b => {
       const ppl = cnt(b.id);
@@ -1338,7 +1353,7 @@ async function loadSettings() {
       const cnt = EMPS.filter(e => e.branch_id === b.id && e.status !== 'resigned').length;
       return `<tr><td style="font-weight:700">${esc(b.name)}</td><td class="mono" style="font-size:.8rem">${b.lat}, ${b.lng}</td><td>${b.radius} ม.</td>
       <td>${cnt} คน</td>
-      <td><a href="/scan" target="_blank" style="color:var(--gold);font-weight:700">เปิดหน้า QR ↗</a></td>
+      <td><a href="/scan" target="_blank" style="color:var(--caramel-ink);font-weight:700">เปิดหน้า QR ↗</a></td>
       <td style="white-space:nowrap"><button class="btn sm" onclick="brFormEdit('${b.id}')">แก้ไข</button>
         <button class="btn sm danger" onclick="brDelete('${b.id}')">ลบ</button></td></tr>`;
     }).join('');
@@ -1366,7 +1381,7 @@ function renderBrMap(branches) {
   branches.forEach(b => {
     pts.push([b.lat, b.lng]);
     L.marker([b.lat, b.lng]).addTo(LLAYER).bindPopup(`<b>${esc(b.name)}</b><br/>รัศมี ${b.radius} ม.`);
-    L.circle([b.lat, b.lng], { radius: b.radius, color: '#a5843f', weight: 1.5, fillOpacity: .12 }).addTo(LLAYER);
+    L.circle([b.lat, b.lng], { radius: b.radius, color: '#bf7e46', weight: 1.5, fillOpacity: .12 }).addTo(LLAYER);
   });
   if (pts.length) LMAP.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
   setTimeout(() => LMAP.invalidateSize(), 150); // เผื่อ div เพิ่งแสดงผล

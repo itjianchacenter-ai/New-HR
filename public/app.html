@@ -12,9 +12,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --bg:#f1ede4; --surface:#fbf9f4; --card:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
-  --line:#e0d8c9; --gold:#a5843f; --gold-soft:#c8a25a; --green:#2f6a53; --red:#a43e2e;
-  --shadow:0 1px 2px rgba(45,38,26,.05),0 10px 30px -12px rgba(45,38,26,.2);
+  /* ── CI 4 สี (ค่าตรงตามที่กำหนด ไม่ดัดแปลง) ──
+     #4B2E1F Freshly Roasted · #BF7E46 Caramel · #FDECD8 Papaya · #98C5E2 Blue
+
+     วัดแล้ว: Roasted เป็นตัวหนังสือได้ทุกพื้น (papaya 10.63 · ขาว 12.28 ·
+     blue 6.68) และเป็นพื้นเดียวที่รองรับตัวขาว (12.28) ส่วน Caramel กับ Blue
+     เป็นพื้นบล็อกอย่างเดียว — Caramel เป็นตัวหนังสือได้แค่ 2.89 บน papaya
+     และตัวขาวบน Caramel/Blue ตกทั้งคู่ (3.34 / 1.84)
+     → ปุ่มหลักใช้ Roasted+ตัวขาว · Caramel/Blue เป็นพื้นที่มีตัว Roasted ทับ
+     --caramel-ink คือ Caramel เวอร์ชันเข้มพอให้เป็นตัวหนังสือ (4.86 บน papaya)
+     ซึ่ง Caramel ตัวจริงทำไม่ได้ ── */
+  --roasted:#4b2e1f; --caramel:#bf7e46; --papaya:#fdecd8; --ci-blue:#98c5e2;
+  --bg:#fdecd8; --surface:#fef2e5; --card:#ffffff;
+  --ink:#4b2e1f; --soft:#6b442a; --faint:#875833; --line:#e8c7a6;
+  --caramel-ink:#8e5c36;
+  --gold:#bf7e46; --gold-soft:#bf7e46;   /* alias เดิม → Caramel */
+  --green:#2f6a53; --red:#a43e2e;
+  --blue:#98c5e2; --blue-wash:#d8e9f4; --blue-ink:#3f5f70;
+  --shadow:0 1px 2px rgba(75,46,31,.06),0 10px 30px -12px rgba(75,46,31,.22);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-text-size-adjust:100%;touch-action:manipulation}
@@ -29,7 +44,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 #pg-login.on{display:grid}
 .lg{width:100%;text-align:center}
 .lg img{height:44px}
-.lg .pp{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin:4px 0 34px}
+.lg .pp{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.3em;color:var(--caramel-ink);text-transform:uppercase;margin:4px 0 34px}
 .lg h1{font-size:1.5rem;margin:0 0 8px}
 .lg p.d{color:var(--soft);font-size:.94rem;margin:0 0 26px}
 .lg .steps{display:flex;justify-content:center;gap:8px;margin-bottom:22px}
@@ -41,13 +56,13 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .lg .go{width:100%;margin-top:16px;padding:16px;border:0;border-radius:16px;background:var(--ink);color:#fff;font-weight:800;font-size:1.05rem}
 .lg .back{width:100%;margin-top:10px;padding:15px;border:1px solid var(--line);border-radius:16px;background:var(--card);font-weight:700}
 .lg .hint{margin-top:30px;font-size:.84rem;color:var(--soft)}
-.lg .hint b{color:var(--gold)}
+.lg .hint b{color:var(--caramel-ink)}
 .lg .err{color:var(--red);font-size:.87rem;min-height:22px;margin-top:12px}
 
 /* ── header ── */
 .hd{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
 .hd img{height:26px}
-.hd .pp{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.22em;color:var(--gold);font-weight:600}
+.hd .pp{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.22em;color:var(--caramel-ink);font-weight:600}
 .hd .bell{margin-left:auto;width:42px;height:42px;border:1px solid var(--line);background:var(--card);border-radius:14px;display:grid;place-items:center;position:relative}
 .hd .bell svg{width:19px;height:19px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hd .bell .n{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#fff;font-size:.62rem;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
@@ -62,11 +77,11 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .empcard{background:linear-gradient(150deg,#2e281f,#181510);color:#fff;border-radius:20px;box-shadow:var(--shadow);margin:14px 16px 0;padding:18px;position:relative;overflow:hidden}
 .empcard::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(200,162,90,.25),transparent 70%)}
 .empcard .row1{display:flex;gap:13px;align-items:center}
-.empcard .av{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#c8a25a,#8d7440);display:grid;place-items:center;font-weight:800;font-size:1.1rem;flex:none}
+.empcard .av{width:52px;height:52px;border-radius:50%;background:linear-gradient(160deg,#d49a66,#8d7440);display:grid;place-items:center;font-weight:800;font-size:1.1rem;flex:none}
 .empcard h2{margin:0;font-size:1.12rem}
 .empcard .r{color:#b6ac99;font-size:.82rem}
 .empcard .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:15px;position:relative;z-index:1}
-.empcard .kv .k{font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#9a9184}
+.empcard .kv .k{font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#875833}
 .empcard .kv b{font-size:.9rem;font-weight:700}
 .shift-strip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin:12px 16px 0;padding:11px 14px;font-size:.9rem}
 .shift-strip .ic{width:36px;height:36px;border-radius:11px;background:linear-gradient(180deg,#f6e7cf,#efd9b4);display:grid;place-items:center;flex:none}
@@ -76,8 +91,8 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .fpwrap{text-align:center;margin-top:20px}
 .fpbtn{width:172px;height:172px;border-radius:50%;border:0;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;box-shadow:0 16px 36px -12px rgba(34,31,25,.45);transition:transform .1s}
 .fpbtn:active{transform:scale(.96)}
-.fpbtn.in{background:radial-gradient(120% 120% at 30% 20%,#3a342a,#221f19)}
-.fpbtn.out{background:radial-gradient(120% 120% at 30% 20%,#c8a25a,#a5843f)}
+.fpbtn.in{background:radial-gradient(120% 120% at 30% 20%,#63402b,#4b2e1f)}
+.fpbtn.out{background:radial-gradient(120% 120% at 30% 20%,#d49a66,#bf7e46)}
 .fpbtn svg{width:52px;height:52px;fill:none;stroke:#fff;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.95}
 .fpbtn .th{font-size:1.1rem;font-weight:800}
 .fpbtn .en{font-size:.76rem;opacity:.7;margin-top:-3px}
@@ -93,7 +108,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .io .s{font-size:.76rem;color:var(--faint)}
 .io .s.ok{color:var(--green);font-weight:700}
 .io .s.bad{color:var(--red);font-weight:700}
-.qrlink{display:block;text-align:center;margin-top:16px;color:var(--gold);font-weight:700;font-size:.88rem;text-decoration:none}
+.qrlink{display:block;text-align:center;margin-top:16px;color:var(--caramel-ink);font-weight:700;font-size:.88rem;text-decoration:none}
 
 /* ── requests page ── */
 .rq{margin:16px}
@@ -138,10 +153,10 @@ input,select,textarea{font:inherit;color:var(--ink)}
 /* ── profile ── */
 .prof{margin:16px}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px 18px;text-align:center}
-.pcard .av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(160deg,#c8a25a,#8d7440);color:#fff;font-size:1.7rem;font-weight:800}
+.pcard .av{width:84px;height:84px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:linear-gradient(160deg,#d49a66,#8d7440);color:#fff;font-size:1.7rem;font-weight:800}
 .pcard h2{margin:0;font-size:1.3rem}
 .pcard .r{color:var(--soft);font-size:.92rem}
-.pcard .br{display:inline-block;margin-top:10px;background:color-mix(in srgb,var(--gold) 10%,#fff);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));color:var(--gold);font-weight:700;font-size:.82rem;padding:5px 14px;border-radius:99px}
+.pcard .br{display:inline-block;margin-top:10px;background:color-mix(in srgb,var(--gold) 10%,#fff);border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));color:var(--caramel-ink);font-weight:700;font-size:.82rem;padding:5px 14px;border-radius:99px}
 .info{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:6px 18px}
 .info .row{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
 .info .row:last-child{border-bottom:0}
@@ -175,7 +190,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 #cam .capbar .skip{color:#b6ac99;background:none;border:0;font-weight:700}
 #cam .shutter{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.35)}
 #cam .caption{text-align:center;color:#fff;padding:calc(16px + env(safe-area-inset-top)) 16px 10px;font-weight:700;background:#0e0c09}
-#cam .caption small{display:block;color:#9a9184;font-weight:400}
+#cam .caption small{display:block;color:#875833;font-weight:400}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border-radius:99px;font-size:.88rem;font-weight:600;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 .toast.on{opacity:1}
 .okpop{position:fixed;inset:0;background:rgba(20,17,12,.55);z-index:50;display:none;place-items:center;padding:24px}
@@ -222,7 +237,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
       <div id="srvMsg" style="font-size:.82rem;margin-top:8px;min-height:18px;color:var(--soft)"></div>
     </div>
     <a id="srvLink" style="display:none;margin-top:14px;color:var(--faint);font-size:.8rem;cursor:pointer" onclick="$('#srvPanel').style.display=$('#srvPanel').style.display==='none'?'block':'none'">⚙️ ตั้งค่าเซิร์ฟเวอร์</a>
-    <div style="margin-top:18px"><a style="color:var(--gold);font-weight:700;font-size:.85rem;cursor:pointer" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></a></div>
+    <div style="margin-top:18px"><a style="color:var(--caramel-ink);font-weight:700;font-size:.85rem;cursor:pointer" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></a></div>
   </div>
 </div>
 
@@ -249,7 +264,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
   </div>
   <div class="shift-strip">
     <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-    <div><div style="font-size:.72rem;color:var(--gold);font-weight:700;letter-spacing:.1em">กะวันนี้ · TODAY'S SHIFT</div><b id="shToday">–</b></div>
+    <div><div style="font-size:.72rem;color:var(--caramel-ink);font-weight:700;letter-spacing:.1em">กะวันนี้ · TODAY'S SHIFT</div><b id="shToday">–</b></div>
     <div class="r" id="shBranch"></div>
   </div>
   <div class="fpwrap">
@@ -324,7 +339,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <div class="info" id="meEmployment"></div>
     <div class="sec-t">วันลาคงเหลือ · Leave balance</div>
     <div class="info" id="meLeave"></div>
-    <button class="lo" style="color:var(--gold);margin-bottom:0" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></button>
+    <button class="lo" style="color:var(--caramel-ink);margin-bottom:0" onclick="setLang(LANG==='th'?'en':'th')">🌐 <span class="langLbl"></span></button>
     <button class="lo" onclick="logout()">ออกจากระบบ</button>
   </div>
 </div>
@@ -358,7 +373,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 
 <!-- role chooser popup (พนักงานที่มีสิทธิ์แอดมิน) -->
 <div class="okpop" id="rolePop"><div class="box">
-  <div class="cir" style="background:color-mix(in srgb,var(--gold) 14%,#fff);color:var(--gold)">🔑</div>
+  <div class="cir" style="background:color-mix(in srgb,var(--gold) 14%,#fff);color:var(--caramel-ink)">🔑</div>
   <h3>เลือกโหมดการใช้งาน</h3>
   <p id="roleName">บัญชีนี้มีสิทธิ์ผู้ดูแลระบบ</p>
   <button onclick="chooseRole('admin')" style="display:flex;align-items:center;justify-content:center;gap:8px">🖥️ Role Admin · หลังบ้าน HR</button>
@@ -638,7 +653,7 @@ function openMap() {
     if (CKMAP) { CKMAP.remove(); CKMAP = null; }
     CKMAP = L.map('ckMap').setView([g.lat, g.lng], 16);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(CKMAP);
-    L.circle([g.lat, g.lng], { radius: g.radius, color: '#a5843f', weight: 2, fillOpacity: .15 }).addTo(CKMAP);
+    L.circle([g.lat, g.lng], { radius: g.radius, color: '#bf7e46', weight: 2, fillOpacity: .15 }).addTo(CKMAP);
     L.marker([g.lat, g.lng]).addTo(CKMAP).bindPopup(`<b>${esc(ME.branch)}</b>`);
     if (GEO) {
       const me = L.circleMarker([GEO.lat, GEO.lng], { radius: 8, color: '#2f6a53', fillColor: '#2f6a53', fillOpacity: .9 }).addTo(CKMAP).bindPopup('📍 ตำแหน่งของฉัน');
