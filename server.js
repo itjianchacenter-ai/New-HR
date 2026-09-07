@@ -215,7 +215,7 @@ app.post('/api/login', (req, res) => {
   // พนักงานที่มี is_admin จะได้เลือก Role (Admin/Employee) เป็นขั้นที่ 3
   if (id_last4 && !phone) {
     const matches = db.employees.filter(e => e.status !== 'resigned' && id4(e) === digits(id_last4));
-    if (!matches.length) { fail(); return res.status(401).json({ error: 'ไม่พบเลขท้ายบัตรนี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน' }); }
+    if (!matches.length) { fail(); return res.status(401).json({ error: 'ไม่พบข้อมูลเลขบัตรนี้ในระบบ — กรุณาติดต่อฝ่ายบุคคลเพื่อลงทะเบียน' }); }
     if (!pin) return res.json({ step: 'pin', nickname: matches[0].nickname || matches[0].name.split(' ')[0] });
     const e = matches.find(x => x.pin === String(pin));
     if (!e) { fail(); return res.status(401).json({ error: 'PIN ไม่ถูกต้อง' }); }

@@ -215,15 +215,15 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <img src="brand-mark-dark.png" alt="JIANCHA"/>
     <div class="pp"><img src="brand-wordmark-stack.png" alt="JIANCHA People" style="height:64px"/></div>
     <h1>เข้าสู่ระบบพนักงาน</h1>
-    <p class="d">ล็อกอินครั้งแรกใช้ 2 ขั้นตอน<br/>ระบบจะจำการเข้าสู่ระบบไว้ให้</p>
+    <p class="d">เข้าสู่ระบบครั้งแรกเพียง 2 ขั้นตอน<br/>ครั้งถัดไประบบจะจดจำให้อัตโนมัติ</p>
     <div class="steps"><i id="stp1" class="on"></i><i id="stp2"></i></div>
     <div id="step1">
-      <label>ขั้นที่ 1 เลข 4 ตัวท้ายบัตรประชาชน</label>
+      <label>ขั้นที่ 1 กรอกเลขบัตรประชาชน 4 ตัวท้าย</label>
       <input id="id4" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')loginStep1()"/>
       <button class="go arw" onclick="loginStep1()" aria-label="ถัดไป">→</button>
     </div>
     <div id="step2" style="display:none">
-      <label>ขั้นที่ 2 PIN (รหัสพนักงาน)</label>
+      <label>ขั้นที่ 2 กรอก PIN (รหัสพนักงานของคุณ)</label>
       <input id="pin" type="password" inputmode="numeric" maxlength="8" placeholder="••••••" onkeydown="if(event.key==='Enter')loginStep2()"/>
       <button class="go" onclick="loginStep2()">เข้าสู่ระบบ</button>
       <button class="back" onclick="backStep()" aria-label="ย้อนกลับ">←</button>
@@ -514,7 +514,7 @@ async function enter() {
     if (!ME || !ME.name) throw new Error('no-session'); // กัน SPA fallback ตอบ HTML แทน JSON
   }
   catch (e) {
-    if (NATIVE && /fetch|Failed|Network/i.test(e.message)) { $('#loginErr').textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — กด ⚙️ ตั้งค่าเซิร์ฟเวอร์ด้านล่าง'; $('#srvPanel').style.display = 'block'; }
+    if (NATIVE && /fetch|Failed|Network/i.test(e.message)) { $('#loginErr').textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ — แตะ ⚙️ ตั้งค่าเซิร์ฟเวอร์ด้านล่าง'; $('#srvPanel').style.display = 'block'; }
     return; // ยังไม่ล็อกอิน
   }
   $('#pg-login').classList.remove('on'); $('#tabbar').style.display = 'flex';
@@ -633,7 +633,7 @@ async function submitCheckin(photo, extra) {
   try {
     const r = await api('/api/checkin', { method: 'POST', body: { lat: GEO.lat, lng: GEO.lng, type: camMode, photo, ...(extra || {}) } });
     closeSheet();
-    $('#okT').textContent = (camMode === 'in' ? 'ลงเวลาเข้าสำเร็จ' : 'ลงเวลาออกสำเร็จ') + (extra?.offsite ? ' (นอกสถานที่)' : '');
+    $('#okT').textContent = (camMode === 'in' ? 'บันทึกเวลาเข้างานเรียบร้อย' : 'บันทึกเวลาออกงานเรียบร้อย') + (extra?.offsite ? ' (นอกสถานที่)' : '');
     $('#okD').textContent = `${hm(r.rec.at)} · ${r.rec.note}${r.rec.late_min > 15 ? ` · สาย ${r.rec.late_min} นาที` : ''}`;
     $('#okImgWrap').innerHTML = photo ? `<img src="${photo}"/>` : '<div class="cir">✓</div>';
     $('#okpop').classList.add('on');
@@ -646,7 +646,7 @@ async function submitCheckin(photo, extra) {
 }
 function openOffsiteSheet(msg) {
   openSheet(`<h3>📍 เช็คอินนอกสถานที่</h3>
-    <p style="margin:0 0 14px;color:var(--soft);font-size:.9rem">${esc(msg)}<br/>หากปฏิบัติงานนอกสถานที่ (ออกบูธ / ประชุม / ส่งของ) ระบุเหตุผลเพื่อบันทึกให้ HR ตรวจสอบ</p>
+    <p style="margin:0 0 14px;color:var(--soft);font-size:.9rem">${esc(msg)}<br/>กรณีปฏิบัติงานนอกสถานที่ เช่น ออกบูธ ประชุม หรือส่งของ โปรดระบุเหตุผลเพื่อให้ฝ่ายบุคคลตรวจสอบ</p>
     <div class="fld"><label>เหตุผล *</label><input id="osReason" placeholder="เช่น ออกบูธที่สยามพารากอน"/></div>
     <div class="fld"><label>สถานที่ (ระบบหาให้อัตโนมัติ)</label><input id="osPlace" placeholder="กำลังค้นหาตำแหน่ง…"/></div>
     <button class="go" onclick="submitOffsite()">ยืนยันเช็คอินนอกสถานที่</button>`);
@@ -658,7 +658,7 @@ function openOffsiteSheet(msg) {
 }
 function submitOffsite() {
   const reason = $('#osReason').value.trim();
-  if (!reason) return toast('ระบุเหตุผลก่อนครับ');
+  if (!reason) return toast('กรุณาระบุเหตุผลก่อน');
   submitCheckin(pendingPhoto, { offsite: true, reason, place: $('#osPlace').value.trim() });
 }
 
@@ -696,7 +696,7 @@ async function renderReq() {
     r.leaves.map(l => `<div class="it"><span><b>${esc(r.types.find(t => t.key === l.type)?.name || l.type)} ${l.days} วัน</b><span class="s">${l.from}${l.to !== l.from ? ' → ' + l.to : ''} · ${esc(l.reason || '')}</span></span><span style="text-align:right">${stTag(l.status)}<br/>${cancelBtn('leave', l)}</span></div>`).join('') +
     r.ot.map(o => `<div class="it"><span><b>OT ${o.hours} ชม.</b><span class="s">${o.date} · ${esc(o.reason || '')}</span></span><span style="text-align:right">${stTag(o.status)}<br/>${cancelBtn('ot', o)}</span></div>`).join('') +
     r.claims.map(c => `<div class="it"><span><b>เบิก ${THB(c.amount)}</b><span class="s">${esc(c.title)}</span></span><span style="text-align:right">${stTag(c.status)}<br/>${cancelBtn('claim', c)}</span></div>`).join('');
-  $('#reqList').innerHTML = items || '<div class="empty">ยังไม่มีคำร้อง — กดปุ่มด้านบนเพื่อยื่นใหม่</div>';
+  $('#reqList').innerHTML = items || '<div class="empty">ยังไม่มีรายการคำร้อง — เริ่มยื่นได้จากปุ่มด้านบน</div>';
   if (ME?.approver) {
     $('#apprSec').style.display = 'block';
     const a = await api('/api/me/approvals');
@@ -708,7 +708,7 @@ async function renderReq() {
     $('#apprList').innerHTML = ai || '<div class="empty">ไม่มีรายการรออนุมัติ 🎉</div>';
   }
 }
-async function cancelReq(kind, id) { await api('/api/me/requests/cancel', { method: 'POST', body: { kind, id } }); toast('ยกเลิกคำร้องแล้ว'); renderReq(); refreshBadges(); }
+async function cancelReq(kind, id) { await api('/api/me/requests/cancel', { method: 'POST', body: { kind, id } }); toast('ยกเลิกคำร้องเรียบร้อยแล้ว'); renderReq(); refreshBadges(); }
 async function decide(kind, id, status) {
   try { await api('/api/me/approve', { method: 'POST', body: { kind, id, status } }); toast(status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธแล้ว'); renderReq(); }
   catch (e) { toast(e.message); }
@@ -738,7 +738,7 @@ function formClaim() {
     <button class="go" onclick="submitReq({kind:'claim',title:$('#fT').value,amount:$('#fA').value})">ส่งคำร้อง</button>`);
 }
 async function submitReq(body) {
-  try { await api('/api/me/requests', { method: 'POST', body }); toast('ส่งคำร้องแล้ว — รอหัวหน้าอนุมัติ'); closeSheet(); renderReq(); refreshBadges(); }
+  try { await api('/api/me/requests', { method: 'POST', body }); toast('ส่งคำร้องเรียบร้อย — อยู่ระหว่างรอการอนุมัติ'); closeSheet(); renderReq(); refreshBadges(); }
   catch (e) { toast(e.message); }
 }
 
@@ -829,7 +829,7 @@ async function renderSlips() {
     const isNew = gi === 0;
     return `<div class="it" onclick="viewSlip(SLIPS[${gi}])" style="cursor:pointer"><span><b>ใบสลิปเงินเดือน</b><span class="s">${p.month}-28</span></span>${isNew ? '<span class="newpill">ใหม่</span>' : ''}</div>`;
   }).join('');
-  $('#slipList').innerHTML = rows || '<div class="empty">ยังไม่มีสลิป — รอ HR ปิดงวด</div>';
+  $('#slipList').innerHTML = rows || '<div class="empty">ยังไม่มีสลิปเงินเดือน — จะแสดงทันทีเมื่อฝ่ายบุคคลปิดงวด</div>';
   const pg = $('#slipPager');
   if (list.length > PER) { pg.style.display = 'flex'; pg.innerHTML = `<button onclick="SLIP_PG=Math.max(1,SLIP_PG-1);renderSlips()">‹</button><button class="cur">${SLIP_PG}</button><button onclick="SLIP_PG=Math.min(${pages},SLIP_PG+1);renderSlips()">›</button>`; }
   else pg.style.display = 'none';
@@ -850,7 +850,7 @@ async function openNoti() {
   openSheet(`<h3>แจ้งเตือน</h3>
     <div class="sec-t" style="margin-top:4px">สลิปเงินเดือน · Pay slips</div>
     <div class="lst">
-      ${slips.map((p, i) => `<div class="it" onclick="viewSlip(SLIPS[${i}])" style="cursor:pointer"><span><b>💸 สลิปงวด ${p.month} ออกแล้ว</b><span class="s">แตะเพื่อดูรายละเอียด</span></span><b>${THB(p.net)}</b></div>`).join('') || '<div class="empty">ยังไม่มีสลิป — รอ HR ปิดงวด</div>'}
+      ${slips.map((p, i) => `<div class="it" onclick="viewSlip(SLIPS[${i}])" style="cursor:pointer"><span><b>💸 สลิปงวด ${p.month} ออกแล้ว</b><span class="s">แตะเพื่อเปิดดูรายละเอียด</span></span><b>${THB(p.net)}</b></div>`).join('') || '<div class="empty">ยังไม่มีสลิปเงินเดือน — จะแสดงทันทีเมื่อฝ่ายบุคคลปิดงวด</div>'}
     </div>
     <div class="sec-t">ประกาศจากบริษัท · Announcements</div>
     <div class="lst">
