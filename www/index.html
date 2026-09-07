@@ -861,6 +861,14 @@ async function openNoti() {
       ${(d.announcements || []).map(a => `<div class="it"><span><b>📣 ${esc(a.title)}</b><span class="s">${esc(a.body)}</span></span></div>`).join('') || '<div class="empty">ไม่มีประกาศ</div>'}
     </div>`);
 }
+
+// เปิดหน้าสลิปเต็ม: ในแอปใช้เบราว์เซอร์ในตัว (มีปุ่มแชร์ → บันทึกไฟล์/พิมพ์), บนเว็บเปิดแท็บใหม่
+function openSlipPage(month) {
+  const url = `${BASE}/api/me/payslip-print?month=${month}&t=${TOKEN()}&r=${Date.now()}`;
+  const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+  if (NATIVE && B) B.open({ url });
+  else if (!window.open(url, '_blank')) location.href = url;
+}
 function viewSlip(p) {
   openSheet(`<h3>PAY SLIP · งวด ${p.month}</h3>
     <div class="info" style="margin-bottom:14px">
@@ -871,7 +879,7 @@ function viewSlip(p) {
       <div class="row"><span class="k">หัก ภาษี</span><b style="color:var(--red)">-${THB(p.tax)}</b></div>
       <div class="row"><span class="k" style="font-weight:800;color:var(--ink)">เงินได้สุทธิ</span><b style="font-size:1.2rem">${THB(p.net)}</b></div>
     </div>
-    <a class="go" style="display:block;text-align:center;text-decoration:none;background:var(--gold);margin-bottom:10px" href="${BASE}/api/me/payslip-print?month=${p.month}&t=${TOKEN()}">🖨 สลิปเต็มรูปแบบ · บันทึก PDF</a>
+    <a class="go" style="display:block;text-align:center;text-decoration:none;background:var(--gold);margin-bottom:10px;cursor:pointer" onclick="openSlipPage('${p.month}')">🖨 สลิปเต็มรูปแบบ · บันทึก PDF</a>
     <button class="go" onclick="openNoti()">← กลับไปแจ้งเตือน</button>`);
 }
 

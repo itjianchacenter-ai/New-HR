@@ -210,7 +210,7 @@ app.post('/api/login', (req, res) => {
   const okIp = () => loginFails.delete(ip);
   const { pin, password, phone, id_last4, as } = req.body || {};
   const db = load();
-  if (password && password === (ADMIN_PW_ENV || db.admin_pw)) { okIp(); const o = { role: 'admin' }; setSess(res, o); return res.json({ role: 'admin', token: makeToken(o) }); }
+  if (password && (password === db.admin_pw || (ADMIN_PW_ENV && password === ADMIN_PW_ENV))) { okIp(); const o = { role: 'admin' }; setSess(res, o); return res.json({ role: 'admin', token: makeToken(o) }); }
   // ── ล็อกอินพนักงาน 2 ขั้น (flow หลัก): เลข 4 ตัวท้ายบัตรประชาชน → PIN พนักงาน 6 หลัก ──
   // พนักงานที่มี is_admin จะได้เลือก Role (Admin/Employee) เป็นขั้นที่ 3
   if (id_last4 && !phone) {
@@ -375,6 +375,7 @@ app.get('/api/me/payslips', (req, res) => {
 // หน้าสลิปเต็มรูปแบบ (พิมพ์/บันทึก PDF ได้) — เปิดจากแอปพนักงาน
 app.get('/api/me/payslip-print', (req, res) => {
   const c = me(req, res); if (!c) return;
+  res.set('Cache-Control', 'no-store');
   const { db, emp } = c;
   const month = String(req.query.month || '');
   const p = db.payslips.find(x => x.emp_id === emp.id && x.month === month);
@@ -394,7 +395,7 @@ app.get('/api/me/payslip-print', (req, res) => {
   const L = (th, en) => `<div class="l1">${th}</div><div class="l2">${en}</div>`;
   const row = (th, en, v) => `<tr><td>${L(th, en)}</td><td class="amt">${v}</td></tr>`;
   res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="viewport" content="width=940"/>
 <title>Pay Slip ${month} · ${esc(emp.name)}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -422,7 +423,7 @@ tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
 .sig{text-align:right}.sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
 .s2legal{border-top:1px solid #ccc;margin-top:12px;padding-top:6px;text-align:center;font-size:.56rem;color:#444}
 .s2legal i{font-style:normal;color:#666}
-.bar{max-width:860px;margin:0 auto 12px;padding-top:calc(env(safe-area-inset-top,0px));display:flex;gap:10px;justify-content:space-between}
+.bar{max-width:904px;margin:0 auto 12px;display:flex;gap:10px;justify-content:space-between}
 .bar button{font:inherit;font-weight:700;padding:10px 14px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer;font-size:.92rem;white-space:nowrap}
 .bar .p{background:#221f19;color:#fff;border-color:#221f19}
 #fit{transform-origin:top left}
@@ -475,18 +476,18 @@ td{padding:3px 6px}th{padding:4px}
 <script>
 (function(){
   var f = document.getElementById('fit');
+  var bar = document.querySelector('.bar');
   function fit(){
-    var natural = 910;
-    var avail = document.documentElement.clientWidth - 28;
-    var z = Math.min(1, avail / natural);
-    f.style.zoom = z;                                   // ย่อทั้งเลย์เอาต์ ไม่มีล้นขอบ
-    var bar = document.querySelector('.bar');
-    var barB = bar ? bar.getBoundingClientRect().bottom : 0;
+    // จอโทรศัพท์: เว้นพื้นที่ status bar (viewport ถูกซูมออก จึงคูณสัดส่วน)
+    var zoomed = 940 / Math.max(320, Math.min(screen.width, 940));
+    if (screen.width < 700) bar.style.paddingTop = Math.round(62 * zoomed) + 'px';
+    // จัดใบสลิปกึ่งกลางแนวตั้งของจอ
+    var barB = bar.getBoundingClientRect().bottom;
     var h = f.getBoundingClientRect().height;
-    f.style.marginTop = (Math.max(6, (window.innerHeight - barB - h) / 2) / z) + 'px';
+    f.style.marginTop = Math.max(0, (window.innerHeight - barB - h) / 2 - 12) + 'px';
   }
   fit(); addEventListener('resize', fit);
-  addEventListener('beforeprint', function(){ f.style.zoom = 1; f.style.marginTop = '0'; });
+  addEventListener('beforeprint', function(){ f.style.marginTop = '0'; bar.style.paddingTop = '0'; });
 })();
 </script>
 </body></html>`);
