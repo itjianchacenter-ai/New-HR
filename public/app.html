@@ -346,6 +346,8 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <div class="info" id="meEmployment"></div>
     <div class="sec-t">วันลาคงเหลือ · Leave balance</div>
     <div class="info" id="meLeave"></div>
+    <div class="sec-t">เอกสารของฉัน · MY DOCUMENTS</div>
+    <div class="info" id="meDocs"><div class="row"><span class="k">กำลังโหลด…</span></div></div>
     <button class="lo" style="color:var(--gold);margin-bottom:0" onclick="setLang(LANG==='th'?'en':'th')"><img src="flag-en.png" style="height:16px;width:16px;border-radius:50%;vertical-align:-3px;margin-right:5px" alt=""/><span class="langLbl"></span></button>
     <button class="lo" style="background:var(--gold-soft);border:0;color:#251c3d;font-weight:800;font-family:'Poppins','Sukhumvit Set',sans-serif" onclick="showSlips()">payslip <span class="n" id="slipBdg" style="display:none;background:#d9534f;color:#fff;font-size:.68rem;min-width:17px;height:17px;border-radius:99px;display:none;padding:1px 6px;margin-left:6px">0</span></button>
     <button class="lo" style="background:var(--brown);border:0;color:#fff;font-weight:800" onclick="logout()">Logout</button>
@@ -799,6 +801,11 @@ async function renderMe() {
   ME = await api('/api/me/dashboard');
   const ini = (ME.name_en || ME.name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
   setAv($('#meAv'), ini);
+  api('/api/me/docs').then(docs => {
+    $('#meDocs').innerHTML = docs.map(d =>
+      `<div class="row"><span class="k">📄 ${esc(d.type)}</span><b><a style="color:var(--gold);text-decoration:none" onclick="openDocFile('${d.file}')">${esc(d.name)}</a></b></div>`).join('')
+      || '<div class="row"><span class="k">ยังไม่มีเอกสาร — ฝ่ายบุคคลเป็นผู้อัปโหลดให้</span></div>';
+  }).catch(() => {});
   $('#meName').textContent = ME.name_en || ME.name;
   $('#meRole').textContent = `${ME.role} · ${ME.dept}`;
   $('#meBranch').textContent = ME.branch;
@@ -863,6 +870,11 @@ async function openNoti() {
 }
 
 // เปิดหน้าสลิปเต็ม: ในแอปใช้เบราว์เซอร์ในตัว (มีปุ่มแชร์ → บันทึกไฟล์/พิมพ์), บนเว็บเปิดแท็บใหม่
+function openDocFile(file) {
+  const url = `${BASE}${file}?t=${TOKEN()}`;
+  const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+  if (NATIVE && B) B.open({ url }); else if (!window.open(url, '_blank')) location.href = url;
+}
 function openSlipPage(month) {
   const url = `${BASE}/api/me/payslip-print?month=${month}&t=${TOKEN()}&r=${Date.now()}`;
   const B = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;

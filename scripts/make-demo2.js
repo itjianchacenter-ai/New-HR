@@ -24,6 +24,13 @@ db.employees.forEach((e, i) => {
   if (!e.bank_account) e.bank_account = `045-1-${String(11111 + i).padStart(5,'0')}-${(i%9)+1}`;
   if (!e.national_id) e.national_id = `1-1014-${String(10000+i).slice(1)}-${String(22+i).slice(0,2)}-${(i%9)+1}`;
 });
+db.company.tax_mode = 'progressive';                   // ภาษีก้าวหน้าเต็มรูปแบบสรรพากร
+// ผู้สมัครตัวอย่าง 2 คน
+db.applicants = [
+  { id: 'ap-demo1', name: 'ปวีณา รักงาน', phone: '0812345678', position: 'บาริสต้า', branch_id: db.branches[0].id, note: 'มีประสบการณ์ร้านชา 2 ปี', status: 'new', applied_at: `${month}-05` },
+  { id: 'ap-demo2', name: 'กิตติ ขยันยิ่ง', phone: '0898765432', position: 'ผู้ช่วยผู้จัดการร้าน', branch_id: db.branches[1] ? db.branches[1].id : db.branches[0].id, note: '', status: 'interview', applied_at: `${month}-03` },
+];
+db.documents = []; db.offboards = [];
 db.payslips = db.payslips.filter(p => p.month !== month);   // เปิดงวดปัจจุบันให้ทดลองปิดเอง
 fs.writeFileSync(DST, JSON.stringify(db, null, 1));
 console.log('demo2-data.json พร้อม ·', db.employees.length, 'คน · เดือนทดสอบ', month, '· OT:', wk, '+', sun);

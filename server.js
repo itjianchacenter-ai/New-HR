@@ -16,11 +16,13 @@ const DATA = process.env.DATA_FILE || path.join(__dirname, 'data.json'); // prod
 const SECRET = process.env.JC_SECRET || 'jc-byte-demo';
 const ADMIN_PW_ENV = process.env.ADMIN_PASSWORD || null;
 const UPLOAD_DIR = path.join(__dirname, 'uploads', 'checkins');
+const DOC_DIR = path.join(__dirname, 'uploads', 'docs');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(DOC_DIR, { recursive: true });
 app.set('trust proxy', 1); // อยู่หลัง nginx/Cloudflare
 const clientIp = req => req.headers['cf-connecting-ip'] || req.ip || 'unknown';
 
-app.use(express.json({ limit: '3mb' })); // เผื่อรูปถ่ายยืนยันตอนลงเวลา (base64)
+app.use(express.json({ limit: '10mb' })); // รูปลงเวลา + เอกสาร PDF (base64)
 app.use(cookieParser(SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 // ── CORS: ให้แอปมือถือ (bundle ในเครื่อง) เรียก API ข้าม origin ได้ ──
@@ -760,7 +762,19 @@ function calcMonth(db, month) {
     const taxTh = c.tax_threshold != null ? +c.tax_threshold : 26000;
     const taxRate = c.tax_rate != null ? +c.tax_rate : 5;
     const sso = Math.min(Math.round(e.pay * ssoRate / 100), ssoCap);
-    const tax = e.pay > taxTh ? Math.round((e.pay - taxTh) * taxRate / 100) : 0;
+    let tax;
+    if (c.tax_mode === 'progressive') {
+      // ภาษีก้าวหน้าแบบสรรพากร (ประมาณการรายปี ÷ 12): หักค่าใช้จ่าย 50% ไม่เกิน 100,000 · ลดหย่อนส่วนตัว 60,000 · ปกส.ทั้งปี
+      const yearly = e.pay * 12;
+      const expense = Math.min(yearly * 0.5, 100000);
+      const taxable = Math.max(0, yearly - expense - 60000 - sso * 12);
+      const brackets = [[150000, 0], [300000, .05], [500000, .10], [750000, .15], [1000000, .20], [2000000, .25], [5000000, .30], [Infinity, .35]];
+      let t = 0, prev = 0;
+      for (const [cap2, rate] of brackets) { if (taxable > prev) t += (Math.min(taxable, cap2) - prev) * rate; prev = cap2; if (taxable <= cap2) break; }
+      tax = Math.round(t / 12);
+    } else {
+      tax = e.pay > taxTh ? Math.round((e.pay - taxTh) * taxRate / 100) : 0;
+    }
     // เงินเพิ่ม: เบี้ยเลี้ยงตำแหน่ง / ค่าครองชีพ / โบนัส (ตั้งค่ารายคนในฟอร์มพนักงาน)
     const allow_pos = +e.allowance_pos || 0, allow_living = +e.allowance_living || 0, bonus = +e.bonus || 0;
     return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot,
@@ -790,6 +804,144 @@ app.post('/api/admin/payroll/close', (req, res) => { if (!admin(req, res)) retur
   if (db.payslips.some(p => p.month === month)) return res.status(409).json({ error: 'งวดนี้ปิดแล้ว' });
   calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, ot_h15: r.ot_h15, ot_h30: r.ot_h30, ded_leave: r.ded_leave, unpaid_days: r.unpaid_days, absent_days: r.absent_days, allow_pos: r.allow_pos, allow_living: r.allow_living, bonus: r.bonus, sso: r.sso, tax: r.tax, net: r.net }));
   save(db); res.json({ ok: true, month }); });
+// ═══ รับสมัครงาน (Recruitment) ═══
+const OB_ITEMS = [
+  ['id_card', 'สำเนาบัตรประชาชน'], ['house_reg', 'สำเนาทะเบียนบ้าน'], ['edu', 'วุฒิการศึกษา'],
+  ['bank', 'สำเนาหน้าบัญชีธนาคาร'], ['contract', 'เซ็นสัญญาจ้าง'], ['uniform', 'รับยูนิฟอร์ม/อุปกรณ์'],
+];
+app.get('/apply', (req, res) => {
+  const db = load();
+  res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>สมัครงาน · ${esc2(db.company.name)}</title><style>:root{color-scheme:light}
+body{margin:0;background:#fdfded;font-family:'Poppins','Sukhumvit Set',system-ui,sans-serif;color:#1c2120}
+.top{background:#4e2d23;color:#fdfded;padding:18px;text-align:center;font-weight:700;font-size:1.1rem}
+.wrap{max-width:430px;margin:0 auto;padding:20px}
+label{display:block;font-size:.85rem;font-weight:600;margin:12px 0 5px}
+input,select,textarea{width:100%;box-sizing:border-box;padding:12px;border:1.5px solid #8b8175;border-radius:10px;background:#fff;font:inherit}
+button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:12px;background:#ad93ee;color:#fff;font-weight:800;font-size:1rem}
+.ok{display:none;text-align:center;padding:40px 10px}.ok b{font-size:1.2rem}</style></head><body>
+<div class="top">📋 สมัครงานกับ ${esc2(db.company.name)}</div>
+<div class="wrap"><form id="f">
+<label>ชื่อ-นามสกุล *</label><input name="name" required/>
+<label>เบอร์โทร *</label><input name="phone" type="tel" required/>
+<label>ตำแหน่งที่สมัคร *</label><input name="position" required placeholder="เช่น บาริสต้า"/>
+<label>สาขาที่สะดวก</label><select name="branch_id">${db.branches.map(b => `<option value="${b.id}">${esc2(b.name)}</option>`).join('')}</select>
+<label>แนะนำตัวสั้น ๆ</label><textarea name="note" rows="3"></textarea>
+<label>แนบเรซูเม่ (PDF ไม่เกิน 5MB)</label><input type="file" id="cv" accept="application/pdf"/>
+<button>ส่งใบสมัคร</button></form>
+<div class="ok" id="ok"><b>✅ ส่งใบสมัครแล้ว</b><br/>ฝ่ายบุคคลจะติดต่อกลับโดยเร็ว</div></div>
+<script>
+document.getElementById('f').onsubmit = async ev => {
+  ev.preventDefault();
+  const fd = Object.fromEntries(new FormData(ev.target));
+  const cv = document.getElementById('cv').files[0];
+  if (cv) { if (cv.size > 5*1024*1024) return alert('ไฟล์เกิน 5MB'); fd.resume = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(cv); }); }
+  const r = await fetch('/api/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fd) });
+  if (r.ok) { ev.target.style.display = 'none'; document.getElementById('ok').style.display = 'block'; } else alert('ส่งไม่สำเร็จ ลองใหม่');
+};
+</script></body></html>`); });
+app.post('/api/apply', (req, res) => {
+  const { name, phone, position, branch_id, note, resume } = req.body || {};
+  if (!name || !phone || !position) return res.status(400).json({ error: 'กรอกข้อมูลให้ครบ' });
+  const db = load(); db.applicants = db.applicants || [];
+  const id = 'ap' + Date.now();
+  const rec = { id, name: String(name), phone: String(phone), position: String(position), branch_id, note: String(note || ''), status: 'new', applied_at: iso(new Date()) };
+  if (resume) { try { fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), Buffer.from(String(resume), 'base64')); rec.resume = '/uploads/docs/' + id + '.pdf'; } catch {} }
+  db.applicants.push(rec); save(db); res.json({ ok: true }); });
+app.get('/api/admin/applicants', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); res.json((db.applicants || []).map(a => ({ ...a, branch: db.branches.find(b => b.id === a.branch_id)?.name })).reverse()); });
+app.post('/api/admin/applicants/:id/status', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const a = (db.applicants || []).find(x => x.id === req.params.id);
+  if (!a) return res.status(404).json({ error: 'not found' });
+  a.status = String((req.body || {}).status || 'new'); save(db); res.json({ ok: true }); });
+// แปลงผู้สมัคร → พนักงานใหม่ พร้อมเช็คลิสต์รับเข้า
+app.post('/api/admin/applicants/:id/hire', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const a = (db.applicants || []).find(x => x.id === req.params.id);
+  if (!a) return res.status(404).json({ error: 'not found' });
+  const no = String((req.body || {}).employee_no || (1000 + db.employees.length + 1));
+  const quota = {}; db.leave_types.forEach(t => quota[t.key] = { total: t.days, used: 0 });
+  const obj = { id: 'e' + Date.now(), name: a.name, employee_no: no, role: a.position, dept: '', branch_id: a.branch_id || db.branches[0].id,
+    pin: no.replace(/\D/g, ''), pay: +(req.body || {}).pay || 15000, phone: a.phone, email: '', birth_date: null,
+    hire_date: (req.body || {}).hire_date || iso(new Date()), bank: '', bank_account: '', status: 'active', level: 'staff', leave: quota,
+    onboarding: OB_ITEMS.map(([k, n]) => ({ key: k, name: n, done: false })) };
+  db.employees.push(obj); a.status = 'hired'; a.emp_id = obj.id;
+  save(db); res.json({ ok: true, id: obj.id, employee_no: no, pin: obj.pin }); });
+app.put('/api/admin/employees/:id/onboarding', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const e = db.employees.find(x => x.id === req.params.id);
+  if (!e) return res.status(404).json({ error: 'not found' });
+  e.onboarding = e.onboarding || OB_ITEMS.map(([k, n]) => ({ key: k, name: n, done: false }));
+  const it = e.onboarding.find(x => x.key === (req.body || {}).key);
+  if (it) it.done = !!(req.body || {}).done;
+  save(db); res.json({ ok: true, onboarding: e.onboarding }); });
+
+// ═══ คลังเอกสาร PDF ออนไลน์ (ข้อมูลพนักงาน/เอกสาร HR) ═══
+app.post('/api/admin/employees/:id/docs', (req, res) => { if (!admin(req, res)) return;
+  const { name, type, data } = req.body || {};
+  if (!name || !data) return res.status(400).json({ error: 'ระบุชื่อไฟล์และแนบไฟล์' });
+  const db = load(); const e = db.employees.find(x => x.id === req.params.id);
+  if (!e) return res.status(404).json({ error: 'not found' });
+  const buf = Buffer.from(String(data), 'base64');
+  if (buf.length > 8 * 1024 * 1024) return res.status(400).json({ error: 'ไฟล์เกิน 8MB' });
+  if (buf.slice(0, 4).toString() !== '%PDF') return res.status(400).json({ error: 'รองรับเฉพาะไฟล์ PDF' });
+  db.documents = db.documents || [];
+  const id = 'doc' + Date.now();
+  fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), buf);
+  db.documents.push({ id, emp_id: e.id, name: String(name), type: String(type || 'อื่นๆ'), file: '/uploads/docs/' + id + '.pdf', at: iso(new Date()) });
+  save(db); res.json({ ok: true, id }); });
+app.get('/api/admin/employees/:id/docs', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); res.json((db.documents || []).filter(d => d.emp_id === req.params.id)); });
+app.delete('/api/admin/docs/:id', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const i = (db.documents || []).findIndex(d => d.id === req.params.id);
+  if (i < 0) return res.status(404).json({ error: 'not found' });
+  try { fs.unlinkSync(path.join(DOC_DIR, db.documents[i].id + '.pdf')); } catch {}
+  db.documents.splice(i, 1); save(db); res.json({ ok: true }); });
+app.get('/api/me/docs', (req, res) => {
+  const c = me(req, res); if (!c) return;
+  res.json((c.db.documents || []).filter(d => d.emp_id === c.emp.id)); });
+
+// ═══ พ้นสภาพ (Offboarding) — ค่าชดเชย ม.118 + พักร้อนคงเหลือ + หนังสือรับรอง ═══
+function severanceDays(years) {
+  if (years < 120 / 365) return 0;
+  if (years < 1) return 30; if (years < 3) return 90; if (years < 6) return 180;
+  if (years < 10) return 240; if (years < 20) return 300; return 400;
+}
+app.post('/api/admin/employees/:id/offboard', (req, res) => { if (!admin(req, res)) return;
+  const { date, kind, reason } = req.body || {};
+  const db = load(); const e = db.employees.find(x => x.id === req.params.id);
+  if (!e) return res.status(404).json({ error: 'not found' });
+  const end = date || iso(new Date());
+  const daily = (+e.pay || 0) / 30;
+  const years = e.hire_date ? (new Date(end) - new Date(e.hire_date)) / 3.15576e10 : 0;
+  const sevDays = kind === 'terminate' ? severanceDays(years) : 0;
+  const vac = (e.leave && e.leave.vacation) ? Math.max(0, (+e.leave.vacation.total || 0) - (+e.leave.vacation.used || 0)) : 0;
+  const rec = { id: 'ob' + Date.now(), emp_id: e.id, kind: kind === 'terminate' ? 'terminate' : 'resign', reason: String(reason || ''),
+    end_date: end, years: +years.toFixed(2),
+    severance: Math.round(sevDays * daily), severance_days: sevDays,
+    notice_pay: kind === 'terminate' ? Math.round(30 * daily) : 0,
+    vacation_days: vac, vacation_pay: Math.round(vac * daily),
+    final_due: iso(new Date(new Date(end).getTime() + 3 * 86400000)) };
+  db.offboards = db.offboards || []; db.offboards.push(rec);
+  e.status = 'resigned'; e.end_date = end;
+  save(db); res.json({ ok: true, ...rec }); });
+app.get('/api/admin/employees/:id/offboard-letter', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const e = db.employees.find(x => x.id === req.params.id);
+  const ob = (db.offboards || []).filter(o => o.emp_id === req.params.id).pop();
+  if (!e || !ob) return res.status(404).send('ยังไม่มีข้อมูลพ้นสภาพ');
+  const br = db.branches.find(b => b.id === e.branch_id);
+  const money = n => (+n || 0).toLocaleString('th-TH') + ' บาท';
+  res.send(govDoc('หนังสือรับรองการทำงาน / สรุปการพ้นสภาพ',
+    `${esc2(db.company.name)} · ออกให้ ณ วันที่ ${iso(new Date())} · (เอกสารเดโม่)`,
+    '<th style="width:38%">รายการ</th><th>รายละเอียด</th>',
+    `<tr><td>ชื่อ-สกุล</td><td>${esc2(e.name)} (รหัส ${esc2(e.employee_no)})</td></tr>
+     <tr><td>ตำแหน่ง / สังกัด</td><td>${esc2(e.role || '—')} · ${esc2(br ? br.name : '—')}</td></tr>
+     <tr><td>ระยะเวลาทำงาน</td><td>${e.hire_date || '—'} ถึง ${ob.end_date} (${ob.years} ปี)</td></tr>
+     <tr><td>ประเภทการพ้นสภาพ</td><td>${ob.kind === 'terminate' ? 'เลิกจ้างโดยนายจ้าง' : 'ลาออก'} ${ob.reason ? '· ' + esc2(ob.reason) : ''}</td></tr>
+     <tr><td>ค่าชดเชยตามกฎหมาย (ม.118)</td><td>${ob.severance_days} วัน = ${money(ob.severance)}</td></tr>
+     <tr><td>ค่าบอกกล่าวล่วงหน้า</td><td>${money(ob.notice_pay)}</td></tr>
+     <tr><td>ค่าจ้างวันพักร้อนคงเหลือ</td><td>${ob.vacation_days} วัน = ${money(ob.vacation_pay)}</td></tr>
+     <tr><td><b>กำหนดจ่ายงวดสุดท้าย</b></td><td><b>ภายใน ${ob.final_due} (3 วันนับแต่วันเลิกจ้าง)</b></td></tr>`,
+    '<td colspan="2">บริษัทขอรับรองว่าบุคคลดังกล่าวเคยเป็นพนักงานของบริษัทจริงตามรายละเอียดข้างต้น</td>')); });
+
 // ═══ ชุดส่งออกราชการ (เดโม่ครบวงจรตาม flow) ═══
 function govDoc(title, sub, headRow, bodyRows, footRow) {
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>

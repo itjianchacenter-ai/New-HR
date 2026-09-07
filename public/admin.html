@@ -285,6 +285,7 @@ main{margin-left:var(--side);min-height:100vh}
   <a data-p="approvals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Approvals<span class="bdg" id="apprBdg" style="display:none">0</span></a>
   <div class="grp">Workforce</div>
   <a data-p="empdb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 17c.8-2 2-3 3.5-3s2.7 1 3.5 3M15 9h4M15 13h4"/></svg>Employee Database</a>
+  <a data-p="recruit"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.9-3 2.9-4.5 5.5-4.5s4.6 1.5 5.5 4.5M16 8h5M18.5 5.5v5"/></svg>รับสมัครงาน<span class="bdg" id="apBdg" style="display:none">0</span></a>
   <a data-p="hqman"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>HQ Manning</a>
   <a data-p="brman"><svg viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M9 20v-6h6v6"/></svg>Branches Manning</a>
   <div class="grp">Records &amp; Pay</div>
@@ -487,6 +488,14 @@ main{margin-left:var(--side);min-height:100vh}
     </section>
 
     <!-- REPORTS -->
+    <section class="page" id="p-recruit">
+      <div class="tools">
+        <a class="btn" href="/apply" target="_blank">🔗 เปิดหน้าสมัครงานสาธารณะ (/apply)</a>
+        <span class="sp"></span>
+        <button class="btn dark" onclick="loadRecruit()">รีเฟรช</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่สมัคร</th><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>ตำแหน่ง</th><th>สาขา</th><th>เรซูเม่</th><th>สถานะ</th><th></th></tr></thead><tbody id="apRows"></tbody></table></div>
+    </section>
     <section class="page" id="p-reports">
       <div class="bar">
         <div><span class="flabel">Month</span><input class="in" type="month" id="rpMonth"/></div>
@@ -620,12 +629,12 @@ document.addEventListener('DOMContentLoaded', () => { const l = document.getElem
 const TITLES = {
   dash: ['Dashboard', () => thDate(iso(new Date()))], tna: ['Time & Attendance', () => 'บันทึกเวลาเรียลไทม์'],
   shifts: ['Shifts', () => 'Shift Scheduling'], approvals: ['Approvals', () => 'คิวคำขอรออนุมัติ'],
-  empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
+  empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], recruit: ['รับสมัครงาน', () => 'ผู้สมัคร · Recruitment'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
   brman: ['Branches Manning', () => 'Store manning by branch'], ot: ['OT Review', () => 'Overtime review & approval · by period'],
   payroll: ['Payroll', () => 'เงินเดือนและสลิป'], reports: ['Reports', () => 'Reports · export Excel / PDF'],
   ann: ['ประกาศ', () => 'Announcements'], settings: ['ตั้งค่า', () => 'System preferences'],
 };
-const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
+const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, recruit: loadRecruit, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
 function go(p) {
   $('.side')?.classList?.remove('open'); $('#sideOvl')?.classList?.remove('open'); // ปิดเมนูบนมือถือ
   $$('.side a').forEach(a => a.classList.toggle('on', a.dataset.p === p));
@@ -635,6 +644,53 @@ function go(p) {
 }
 $$('.side a').forEach(a => a.onclick = () => go(a.dataset.p));
 
+// ═══ เอกสาร HR / เช็คลิสต์ / พ้นสภาพ ═══
+async function docLoad(id) {
+  const docs = await api(`/api/admin/employees/${id}/docs`);
+  const box = $('#docList'); if (!box) return;
+  box.innerHTML = docs.map(d => `<div style="display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line);font-size:.88rem">
+    <span>📄</span><a href="${d.file}" target="_blank" style="flex:1"><b>${esc(d.name)}</b> <span style="color:var(--faint)">· ${esc(d.type)} · ${d.at}</span></a>
+    <button class="btn" style="padding:3px 10px;color:var(--red)" onclick="docDel('${d.id}','${id}')">ลบ</button></div>`).join('')
+    || '<span style="color:var(--faint);font-size:.86rem">ยังไม่มีเอกสาร — อัปโหลด PDF ด้านล่าง</span>';
+}
+async function docUpload(id) {
+  const f = $('#docFile').files[0];
+  if (!f) return toast('เลือกไฟล์ PDF ก่อน');
+  if (f.size > 8 * 1024 * 1024) return toast('ไฟล์เกิน 8MB');
+  const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
+  await api(`/api/admin/employees/${id}/docs`, { method: 'POST', body: { name: f.name, type: $('#docType').value, data } });
+  toast('อัปโหลดเอกสารแล้ว'); docLoad(id);
+}
+async function docDel(docId, empId) { if (!confirm('ลบเอกสารนี้?')) return; await api(`/api/admin/docs/${docId}`, { method: 'DELETE' }); docLoad(empId); }
+async function obToggle(id, key, done) { await api(`/api/admin/employees/${id}/onboarding`, { method: 'PUT', body: { key, done } }); }
+async function offboard(id, kind) {
+  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', new Date().toISOString().slice(0, 10)); if (!date) return;
+  const reason = prompt('เหตุผล', kind === 'terminate' ? 'ปรับโครงสร้าง' : 'ลาออกโดยสมัครใจ'); if (reason === null) return;
+  const r = await api(`/api/admin/employees/${id}/offboard`, { method: 'POST', body: { date, kind, reason } });
+  alert(`บันทึกพ้นสภาพแล้ว ✓\nอายุงาน: ${r.years} ปี\nค่าชดเชย ม.118: ${r.severance.toLocaleString()} บาท (${r.severance_days} วัน)\nค่าบอกกล่าว: ${r.notice_pay.toLocaleString()} บาท\nพักร้อนคงเหลือ ${r.vacation_days} วัน: ${r.vacation_pay.toLocaleString()} บาท\n⚠ ต้องจ่ายภายใน ${r.final_due}`);
+  openProfile(id); loadEmp();
+}
+// ═══ รับสมัครงาน ═══
+const AP_ST = { new: 'ใหม่', interview: 'นัดสัมภาษณ์', hired: 'รับเข้าแล้ว', rejected: 'ไม่ผ่าน' };
+async function loadRecruit() {
+  const rows = await api('/api/admin/applicants');
+  const pend = rows.filter(a => a.status === 'new' || a.status === 'interview').length;
+  $('#apBdg').textContent = pend; $('#apBdg').style.display = pend ? 'grid' : 'none';
+  $('#apRows').innerHTML = rows.map(a => `<tr>
+    <td>${a.applied_at || ''}</td><td><b>${esc(a.name)}</b>${a.note ? `<div style="font-size:.78rem;color:var(--soft)">${esc(a.note)}</div>` : ''}</td>
+    <td class="mono">${esc(a.phone)}</td><td>${esc(a.position)}</td><td>${esc(a.branch || '—')}</td>
+    <td>${a.resume ? `<a href="${a.resume}" target="_blank">📄 เปิด</a>` : '—'}</td>
+    <td><select class="in" style="padding:5px 8px" onchange="apStatus('${a.id}', this.value)">${Object.entries(AP_ST).map(([k, v]) => `<option value="${k}" ${a.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
+    <td>${a.status !== 'hired' ? `<button class="btn dark" style="padding:6px 12px" onclick="apHire('${a.id}')">รับเข้าทำงาน</button>` : '✓'}</td>
+  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--faint);padding:22px">ยังไม่มีผู้สมัคร — แชร์ลิงก์ /apply เพื่อรับใบสมัคร</td></tr>';
+}
+async function apStatus(id, status) { await api(`/api/admin/applicants/${id}/status`, { method: 'POST', body: { status } }); loadRecruit(); }
+async function apHire(id) {
+  const pay = prompt('เงินเดือนเริ่มต้น (บาท/เดือน)', '15000'); if (pay === null) return;
+  const r = await api(`/api/admin/applicants/${id}/hire`, { method: 'POST', body: { pay: +pay } });
+  alert(`รับเข้าทำงานแล้ว ✓\nรหัสพนักงาน: ${r.employee_no}\nPIN เข้าแอป: ${r.pin}\n(มีเช็คลิสต์รับเข้าในโปรไฟล์พนักงาน)`);
+  loadRecruit();
+}
 // ═══ DASHBOARD ═══
 async function loadDash() {
   const o = await api('/api/admin/overview');
@@ -981,7 +1037,23 @@ async function openProfile(id) {
         ลงเวลา ${e.checkins.length} รายการล่าสุด · สลิป ${e.payslips.length} งวด
       </div>
     </div>
+    <div class="sec-t">📁 เอกสาร HR (PDF)</div>
+    <div class="bd" id="docList">กำลังโหลด…</div>
+    <div class="bd" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="docType" class="in" style="width:auto;padding:7px 10px"><option>สัญญาจ้าง</option><option>สำเนาบัตรประชาชน</option><option>วุฒิการศึกษา</option><option>ใบรับรองแพทย์</option><option>อื่นๆ</option></select>
+      <input type="file" id="docFile" accept="application/pdf" style="font-size:.82rem"/>
+      <button class="btn dark" style="padding:7px 14px" onclick="docUpload('${e.id}')">⬆ อัปโหลด</button>
+    </div>
+    ${e.onboarding ? `<div class="sec-t">✅ เช็คลิสต์รับเข้าทำงาน</div><div class="bd" id="obList">${e.onboarding.map(o => `<label style="display:block;margin:4px 0;font-size:.9rem"><input type="checkbox" ${o.done ? 'checked' : ''} onchange="obToggle('${e.id}','${o.key}',this.checked)"/> ${esc(o.name)}</label>`).join('')}</div>` : ''}
+    <div class="sec-t">⛔ พ้นสภาพ</div>
+    <div class="bd" style="display:flex;gap:8px;flex-wrap:wrap">
+      ${e.status === 'resigned'
+        ? `<a class="btn" target="_blank" href="/api/admin/employees/${e.id}/offboard-letter${URLTOK ? '?t=' + URLTOK : ''}">📄 หนังสือรับรอง / สรุปเงินชดเชย</a>`
+        : `<button class="btn" style="color:var(--red)" onclick="offboard('${e.id}','resign')">ลาออก…</button>
+           <button class="btn" style="color:var(--red)" onclick="offboard('${e.id}','terminate')">เลิกจ้าง (คิดค่าชดเชย ม.118)…</button>`}
+    </div>
     <div class="df"><span class="grow"></span><button class="btn dark" onclick="openEmpForm('${e.id}')">Edit Information</button></div>`);
+  docLoad(e.id);
 }
 async function openEmpForm(id) {
   const e = id ? await api('/api/admin/employees/' + id) : {};
