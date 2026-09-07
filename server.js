@@ -394,7 +394,7 @@ app.get('/api/me/payslip-print', (req, res) => {
   const L = (th, en) => `<div class="l1">${th}</div><div class="l2">${en}</div>`;
   const row = (th, en, v) => `<tr><td>${L(th, en)}</td><td class="amt">${v}</td></tr>`;
   res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=920"/>
 <title>Pay Slip ${month} · ${esc(emp.name)}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -425,11 +425,12 @@ tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
 .bar{max-width:860px;margin:0 auto 12px;display:flex;gap:10px;justify-content:space-between}
 .bar button{font:inherit;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer}
 .bar .p{background:#221f19;color:#fff;border-color:#221f19}
-@media screen and (max-width:720px){.s2cols{grid-template-columns:1fr}.s2cols table:not(:last-child){border-right:0;border-bottom:1px solid #1a1712}.s2head{grid-template-columns:1fr;text-align:left}.s2meta h3{text-align:left}}
+/* มือถือแสดงเลย์เอาต์แนวนอนเหมือนกระดาษจริง (viewport กว้างคงที่ ซูมดูได้) */
 @media print{
-@page{size:A4 landscape;margin:8mm}
+@page{size:A5 landscape;margin:6mm}
 body{background:#fff;padding:0}.bar{display:none}
-.sheet{box-shadow:none;border-radius:0;max-width:100%;padding:4px;font-size:.74rem}
+.sheet{box-shadow:none;border-radius:0;max-width:100%;padding:2px;font-size:.62rem}
+.kv2{font-size:.6rem}.wm img{height:150px}
 .s2cols{grid-template-columns:1fr 1fr 1fr !important}
 .s2cols table:not(:last-child){border-right:1px solid #1a1712 !important;border-bottom:0 !important}
 .s2head{grid-template-columns:1.35fr auto 1fr !important;margin-bottom:8px}
