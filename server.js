@@ -394,7 +394,7 @@ app.get('/api/me/payslip-print', (req, res) => {
   const L = (th, en) => `<div class="l1">${th}</div><div class="l2">${en}</div>`;
   const row = (th, en, v) => `<tr><td>${L(th, en)}</td><td class="amt">${v}</td></tr>`;
   res.send(`<!doctype html><html lang="th"><head><meta charset="utf-8"/>
-<meta name="viewport" content="width=920"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Pay Slip ${month} · ${esc(emp.name)}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -422,13 +422,13 @@ tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
 .sig{text-align:right}.sig .line{display:block;border-bottom:1px solid #1a1712;width:200px;margin-top:26px}
 .s2legal{border-top:1px solid #ccc;margin-top:12px;padding-top:6px;text-align:center;font-size:.56rem;color:#444}
 .s2legal i{font-style:normal;color:#666}
-.bar{max-width:860px;margin:0 auto 12px;display:flex;gap:10px;justify-content:space-between}
+.bar{max-width:860px;margin:0 auto 12px;padding-top:calc(env(safe-area-inset-top,0px));display:flex;gap:10px;justify-content:space-between}
 .bar button{font:inherit;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer}
 .bar .p{background:#221f19;color:#fff;border-color:#221f19}
-/* มือถือแสดงเลย์เอาต์แนวนอนเหมือนกระดาษจริง (viewport กว้างคงที่ ซูมดูได้) */
+#fit{transform-origin:top left}
 @media print{
 @page{size:A5 landscape;margin:6mm}
-body{background:#fff;padding:0}.bar{display:none}
+body{background:#fff;padding:0}.bar{display:none}#fit{transform:none !important;width:auto !important;height:auto !important;margin:0 !important}
 .sheet{box-shadow:none;border-radius:0;max-width:100%;padding:2px;font-size:.62rem}
 .kv2{font-size:.6rem}.wm img{height:150px}
 .s2cols{grid-template-columns:1fr 1fr 1fr !important}
@@ -439,7 +439,7 @@ td{padding:3px 6px}th{padding:4px}
 }
 </style></head><body>
 <div class="bar"><button onclick="history.back()">← กลับ</button><button class="p" onclick="print()">🖨 พิมพ์ / บันทึก PDF</button></div>
-<div class="sheet">
+<div id="fit"><div class="sheet">
   <div class="s2head">
     <div class="s2co"><b>${esc(db.company.name)}</b>
       <div class="kv2"><span>ชื่อนามสกุล(รหัส):<br/><i>Emp. name (Code)</i></span><b>${esc(emp.name)} (${esc(emp.employee_no)})</b></div>
@@ -471,6 +471,28 @@ td{padding:3px 6px}th{padding:4px}
   <div class="s2legal">ข้อมูลเงินเดือนและค่าจ้างเป็นข้อมูลส่วนบุคคล ห้ามเปิดเผยโดยเด็ดขาด เอกสารนี้จะสมบูรณ์เมื่อมีลายเซ็นผู้มีอำนาจลงนามและตราประทับเท่านั้น<br/>
     <i>Salary and wages are confidential information. Disclosure is strictly prohibited. This document is only valid with an authorized signature and company stamp.</i></div>
 </div>
+</div>
+<script>
+(function(){
+  var f = document.getElementById('fit');
+  function fit(){
+    f.style.transform = 'none'; f.style.height = 'auto'; f.style.marginLeft = '0';
+    var natural = 910;                             // ความกว้างมาตรฐานใบสลิป (860 + ระยะขอบ)
+    var s = Math.min(1, (window.innerWidth - 12) / natural);
+    f.style.width = natural + 'px';
+    f.style.transform = 'scale(' + s + ')';
+    var h = f.scrollHeight * s;
+    f.style.height = h + 'px';
+    f.style.marginLeft = Math.max(0, (window.innerWidth - natural * s) / 2) + 'px';
+    // จัดใบสลิปกลางจอแนวตั้ง (เว้นพื้นที่แถบปุ่มด้านบน)
+    var bar = document.querySelector('.bar');
+    var barH = bar ? bar.offsetHeight + 24 : 0;
+    f.style.marginTop = Math.max(6, (window.innerHeight - barH - h) / 2) + 'px';
+  }
+  if (!matchMedia('print').matches) { fit(); addEventListener('resize', fit); }
+  addEventListener('beforeprint', function(){ f.style.transform = 'none'; f.style.height = 'auto'; f.style.width = 'auto'; f.style.marginLeft = '0'; });
+})();
+</script>
 </body></html>`);
 });
 function companyHolidays(db) {
