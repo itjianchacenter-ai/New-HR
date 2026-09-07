@@ -464,6 +464,10 @@ main{margin-left:var(--side);min-height:100vh}
           <div id="prMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-width:230px;z-index:9;overflow:hidden">
             <button class="prm" onclick="prClose()">ปิดงวดเดือนนี้ (สร้างสลิป)</button>
             <button class="prm" onclick="prBank()">ดาวน์โหลด Bank File (CSV)</button>
+            <button class="prm" onclick="prGov('gov/pnd1')">🧾 ภ.ง.ด.1 — ใบแนบรายเดือน</button>
+            <button class="prm" onclick="prGov('gov/sso110')">🧾 สปส.1-10 — เงินสมทบ ปกส.</button>
+            <button class="prm" onclick="prGov('gov/register')">📋 ทะเบียนลูกจ้าง (ม.112)</button>
+            <button class="prm" onclick="prGov('gov/gl.csv')">📒 GL Journal ส่งบัญชี (CSV)</button>
             <button class="prm" onclick="openSettingsModal()">ตั้งค่าเกณฑ์หัก ปกส. / ภาษี</button>
           </div>
         </div>
@@ -1208,6 +1212,12 @@ async function prClose() {
   catch (e) { toast(e.message); }
 }
 function prBank() { location.href = '/api/admin/bankfile.csv?month=' + PR.month; $('#prMenu').style.display = 'none'; }
+// เปิดเอกสารราชการ (แนบ token สำหรับเปิดแท็บใหม่)
+function prGov(path) {
+  const u = `/api/admin/${path}?month=${PR.month}` + (URLTOK ? `&t=${URLTOK}` : '');
+  if (path.endsWith('.csv')) location.href = u; else window.open(u, '_blank');
+  $('#prMenu').style.display = 'none';
+}
 // ── สลิปเงินเดือนฟอร์แมตมาตรฐาน: เงินได้ / รายการหัก / สะสมทั้งปี + ลายเซ็น ──
 const money = n => (+n || 0).toLocaleString(TL, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];

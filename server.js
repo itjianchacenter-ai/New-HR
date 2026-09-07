@@ -459,7 +459,7 @@ td{padding:3px 6px}th{padding:4px}
     <table><thead><tr><th colspan="2">รายการหัก<br/><i>Deductions</i></th></tr></thead><tbody>
       ${row('ประกันสังคม', 'Social Security Fund', money(p.sso))}${row('ภาษีหัก ณ ที่จ่าย', 'Withholding tax', money(p.tax))}
       ${row('เงินกู้ยืม กยศ./กรอ.', 'Student Loan Fund', money(0))}${row('เงินประกัน', 'Deposit', money(0))}
-      ${row('ขาด/ลา/มาสาย', 'Absent/Leave/Late', money(0))}${row('รายการหักอื่นๆ', 'Others', money(0))}</tbody></table>
+      ${row('ขาด/ลา/มาสาย', 'Absent/Leave/Late', money(p.ded_leave || 0))}${row('รายการหักอื่นๆ', 'Others', money(0))}</tbody></table>
     <table><thead><tr><th colspan="2">ปี<br/><i>${y + 543}</i></th></tr></thead><tbody>
       ${row('เงินได้สะสม', 'YTD earnings', money(ytd.earn))}${row('ภาษีหัก ณ ที่จ่ายสะสม', 'YTD Withholding tax', money(ytd.tax))}
       ${row('เงินประกันสังคมสะสม', 'Accumulated SSF', money(ytd.sso))}
@@ -729,9 +729,31 @@ app.put('/api/admin/leave-types', (req, res) => { if (!admin(req, res)) return;
 
 // เงินเดือน: คำนวณงวดปัจจุบัน + ปิดงวด (สร้าง payslip) + bank file
 function calcMonth(db, month) {
+  const hols = new Set((db.holidays || []).map(h => h.date));
+  const today = iso(new Date());
   return db.employees.map(e => {
-    const ot = db.ot.filter(o => o.emp_id === e.id && o.date.startsWith(month) && o.status === 'approved')
-      .reduce((t, o) => t + o.hours, 0) * Math.round(e.pay / 30 / 8 * 1.5);
+    const daily = e.pay / 30, hourly = daily / 8;
+    // ── OT ตามกฎหมาย: วันทำงานปกติ 1.5 เท่า · วันหยุด (อาทิตย์/วันหยุดบริษัท) 3 เท่า ──
+    let ot_h15 = 0, ot_h30 = 0;
+    db.ot.filter(o => o.emp_id === e.id && o.date.startsWith(month) && o.status === 'approved').forEach(o => {
+      const isHol = hols.has(o.date) || new Date(o.date + 'T00:00').getDay() === 0;
+      if (isHol) ot_h30 += o.hours; else ot_h15 += o.hours;
+    });
+    const ot = Math.round(ot_h15 * hourly * 1.5 + ot_h30 * hourly * 3);
+    // ── หักลาไม่รับค่าจ้าง + ขาดงาน (เปิด/ปิดได้ที่ตั้งค่า deduct_absent) ──
+    const unpaid_days = db.leaves.filter(l => l.emp_id === e.id && l.status === 'approved' && l.type === 'unpaid' && String(l.from || '').startsWith(month))
+      .reduce((n, l) => n + (+l.days || 0), 0);
+    let absent_days = 0;
+    if (db.company.deduct_absent) {
+      db.shifts.filter(x => x.emp_id === e.id && !x.off && x.date.startsWith(month) && x.date < today).forEach(x => {
+        if (!db.checkins.some(c => c.emp_id === e.id && c.type === 'in' && dOf(c.at) === x.date)) absent_days++;
+      });
+    }
+    let ded_leave = Math.round((unpaid_days + absent_days) * daily);
+    // เพดานหักตามกฎหมาย: รายการหัก (นอกเหนือ ปกส./ภาษี) ไม่เกิน 20% ของค่าจ้าง
+    const cap = Math.round(e.pay * 0.2);
+    const over_cap = ded_leave > cap;
+    if (over_cap) ded_leave = cap;
     // เกณฑ์หักเงิน ตั้งค่าได้จากหลังบ้าน (Preferences)
     const c = db.company;
     const ssoRate = +c.sso_rate || 0, ssoCap = +c.sso_cap || 0;
@@ -742,8 +764,9 @@ function calcMonth(db, month) {
     // เงินเพิ่ม: เบี้ยเลี้ยงตำแหน่ง / ค่าครองชีพ / โบนัส (ตั้งค่ารายคนในฟอร์มพนักงาน)
     const allow_pos = +e.allowance_pos || 0, allow_living = +e.allowance_living || 0, bonus = +e.bonus || 0;
     return { emp_id: e.id, name: e.name, bank: e.bank, bank_account: e.bank_account, month, base: e.pay, ot,
+      ot_h15, ot_h30, unpaid_days, absent_days, ded_leave, over_cap,
       allow_pos, allow_living, bonus, sso, tax,
-      net: e.pay + ot + allow_pos + allow_living + bonus - sso - tax };
+      net: e.pay + ot + allow_pos + allow_living + bonus - sso - tax - ded_leave };
   });
 }
 app.get('/api/admin/payroll', (req, res) => { if (!admin(req, res)) return;
@@ -765,8 +788,79 @@ app.get('/api/admin/payroll', (req, res) => { if (!admin(req, res)) return;
 app.post('/api/admin/payroll/close', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = (req.body || {}).month || iso(new Date()).slice(0, 7);
   if (db.payslips.some(p => p.month === month)) return res.status(409).json({ error: 'งวดนี้ปิดแล้ว' });
-  calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, allow_pos: r.allow_pos, allow_living: r.allow_living, bonus: r.bonus, sso: r.sso, tax: r.tax, net: r.net }));
+  calcMonth(db, month).forEach(r => db.payslips.push({ id: `ps-${r.emp_id}-${month}`, emp_id: r.emp_id, month, base: r.base, ot: r.ot, ot_h15: r.ot_h15, ot_h30: r.ot_h30, ded_leave: r.ded_leave, unpaid_days: r.unpaid_days, absent_days: r.absent_days, allow_pos: r.allow_pos, allow_living: r.allow_living, bonus: r.bonus, sso: r.sso, tax: r.tax, net: r.net }));
   save(db); res.json({ ok: true, month }); });
+// ═══ ชุดส่งออกราชการ (เดโม่ครบวงจรตาม flow) ═══
+function govDoc(title, sub, headRow, bodyRows, footRow) {
+  return `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${title}</title><style>
+:root{color-scheme:light}@page{size:A4;margin:12mm}html,body{background:#fff}body{font-family:'Sarabun','IBM Plex Sans Thai',sans-serif;color:#111;margin:24px}
+h1{font-size:18px;margin:0 0 2px;text-align:center}.sub{text-align:center;font-size:12.5px;color:#444;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #333;padding:4px 7px}th{background:#efefef}
+td.n{text-align:right;font-variant-numeric:tabular-nums}tfoot td{font-weight:700;background:#f7f7f7}
+.bar{text-align:right;margin-bottom:10px}.bar button{font:inherit;padding:8px 16px;border-radius:8px;border:1px solid #999;background:#222;color:#fff;cursor:pointer}
+@media print{.bar{display:none}}
+.sig{display:flex;justify-content:space-between;margin-top:34px;font-size:12.5px}.sig div{text-align:center;width:40%}.sig .l{border-top:1px dotted #333;margin-top:38px;padding-top:4px}
+</style></head><body><div class="bar"><button onclick="print()">🖨 พิมพ์ / บันทึก PDF</button></div>
+<h1>${title}</h1><div class="sub">${sub}</div>
+<table><thead><tr>${headRow}</tr></thead><tbody>${bodyRows}</tbody><tfoot><tr>${footRow}</tr></tfoot></table>
+<div class="sig"><div><div class="l">ผู้จัดทำ</div></div><div><div class="l">ผู้มีอำนาจลงนาม / ประทับตรา</div></div></div>
+</body></html>`;
+}
+const thMonth = m => { const [y, mm] = m.split('-'); return ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'][+mm] + ' ' + (+y + 543); };
+function payRows(db, month) {
+  const closed = db.payslips.filter(p => p.month === month);
+  return (closed.length ? closed : calcMonth(db, month)).map(r => ({ ...r, e: db.employees.find(x => x.id === r.emp_id) })).filter(r => r.e);
+}
+// ── ภ.ง.ด.1 — ใบแนบรายเดือน ──
+app.get('/api/admin/gov/pnd1', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const rows = payRows(db, month);
+  let n = 0, tEarn = 0, tTax = 0;
+  const body = rows.map(r => { n++; const earn = r.base + r.ot + (r.allow_pos||0) + (r.allow_living||0) + (r.bonus||0); tEarn += earn; tTax += r.tax;
+    return `<tr><td>${n}</td><td>${(r.e.national_id||'—')}</td><td>${esc2(r.e.name)}</td><td class="n">${earn.toLocaleString()}</td><td class="n">${r.tax.toLocaleString()}</td></tr>`; }).join('');
+  res.send(govDoc('ใบแนบ ภ.ง.ด.1 — ภาษีเงินได้หัก ณ ที่จ่าย', `${esc2(db.company.name)} · เดือน${thMonth(month)} · ผู้มีเงินได้ ${rows.length} ราย · (เอกสารเดโม่ ตรวจทานก่อนยื่นจริง)`,
+    '<th>ลำดับ</th><th>เลขประจำตัวผู้เสียภาษี</th><th>ชื่อ-สกุล</th><th>เงินได้ (บาท)</th><th>ภาษีหัก ณ ที่จ่าย</th>',
+    body, `<td colspan="3">รวม</td><td class="n">${tEarn.toLocaleString()}</td><td class="n">${tTax.toLocaleString()}</td>`)); });
+// ── สปส.1-10 — เงินสมทบประกันสังคมรายเดือน ──
+app.get('/api/admin/gov/sso110', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const rows = payRows(db, month);
+  let n = 0, tWage = 0, tEmp = 0;
+  const body = rows.map(r => { n++; tWage += r.base; tEmp += r.sso;
+    return `<tr><td>${n}</td><td>${(r.e.national_id||'—')}</td><td>${esc2(r.e.name)}</td><td class="n">${r.base.toLocaleString()}</td><td class="n">${r.sso.toLocaleString()}</td><td class="n">${r.sso.toLocaleString()}</td><td class="n">${(r.sso*2).toLocaleString()}</td></tr>`; }).join('');
+  res.send(govDoc('แบบ สปส.1-10 — รายการแสดงการส่งเงินสมทบ', `${esc2(db.company.name)} · งวดเดือน${thMonth(month)} · ผู้ประกันตน ${rows.length} ราย · (เอกสารเดโม่ ตรวจทานก่อนยื่นจริง)`,
+    '<th>ลำดับ</th><th>เลขบัตรประชาชน</th><th>ชื่อ-สกุลผู้ประกันตน</th><th>ค่าจ้าง</th><th>ลูกจ้างสมทบ</th><th>นายจ้างสมทบ</th><th>รวม</th>',
+    body, `<td colspan="3">รวม</td><td class="n">${tWage.toLocaleString()}</td><td class="n">${tEmp.toLocaleString()}</td><td class="n">${tEmp.toLocaleString()}</td><td class="n">${(tEmp*2).toLocaleString()}</td>`)); });
+// ── ทะเบียนลูกจ้าง (พ.ร.บ.คุ้มครองแรงงาน ม.112) ──
+app.get('/api/admin/gov/register', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  let n = 0;
+  const body = db.employees.filter(e => e.status !== 'resigned').map(e => { n++;
+    const br = db.branches.find(b => b.id === e.branch_id);
+    return `<tr><td>${n}</td><td>${esc2(e.name)}</td><td>${e.gender==='f'?'หญิง':e.gender==='m'?'ชาย':'—'}</td><td>${esc2(e.nationality||'ไทย')}</td><td>${e.birth_date||'—'}</td><td>${e.hire_date||'—'}</td><td>${esc2(e.role||'—')}</td><td>${esc2(br?br.name:'—')}</td><td class="n">${(+e.pay||0).toLocaleString()}</td></tr>`; }).join('');
+  res.send(govDoc('ทะเบียนลูกจ้าง', `${esc2(db.company.name)} · ตามมาตรา 112 พ.ร.บ.คุ้มครองแรงงาน · ลูกจ้าง ${n} คน · จัดทำ ${iso(new Date())} · (เดโม่ — เติมที่อยู่ลูกจ้างให้ครบก่อนใช้จริง)`,
+    '<th>ลำดับ</th><th>ชื่อ-สกุล</th><th>เพศ</th><th>สัญชาติ</th><th>วันเกิด</th><th>วันเริ่มจ้าง</th><th>ตำแหน่ง</th><th>สังกัด</th><th>อัตราค่าจ้าง</th>',
+    body, '<td colspan="9"></td>')); });
+// ── GL Journal — ตัวเลขส่งบัญชี ──
+app.get('/api/admin/gov/gl.csv', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
+  const rows = payRows(db, month);
+  const sum = k => rows.reduce((t, r) => t + (+r[k] || 0), 0);
+  const base = sum('base'), ot = sum('ot'), allow = sum('allow_pos') + sum('allow_living') + sum('bonus');
+  const sso = sum('sso'), tax = sum('tax'), ded = sum('ded_leave'), net = sum('net');
+  const L = [['วันที่','บัญชี','คำอธิบาย','เดบิต','เครดิต'],
+    [`${month}-28`,'5100 เงินเดือนพนักงาน',`เงินเดือนงวด ${month}`, base - ded, ''],
+    [`${month}-28`,'5110 ค่าล่วงเวลา',`OT งวด ${month}`, ot, ''],
+    [`${month}-28`,'5120 เบี้ยเลี้ยง/โบนัส',`งวด ${month}`, allow, ''],
+    [`${month}-28`,'5130 ปกส.ส่วนนายจ้าง',`สมทบนายจ้าง`, sso, ''],
+    [`${month}-28`,'2210 ปกส.ค้างจ่าย',`ลูกจ้าง+นายจ้าง`, '', sso * 2],
+    [`${month}-28`,'2220 ภาษีหัก ณ ที่จ่ายค้างจ่าย',`ภ.ง.ด.1`, '', tax],
+    [`${month}-28`,'1010 เงินฝากธนาคาร',`จ่ายสุทธิ ${rows.length} คน`, '', net]];
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="gl-${month}.csv"`);
+  res.send('\ufeff' + L.map(r => r.join(',')).join('\n')); });
+const esc2 = x => String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 app.get('/api/admin/bankfile.csv', (req, res) => { if (!admin(req, res)) return;
   const db = load(); const month = req.query.month || iso(new Date()).slice(0, 7);
   const rows = ['ลำดับ,ชื่อบัญชี,เลขบัญชี,ธนาคาร,จำนวนเงิน'];

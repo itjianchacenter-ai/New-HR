@@ -1,0 +1,2712 @@
+{
+  "company": {
+    "name": "JIANCHA DEMO 2 CO., LTD.",
+    "payday": 31,
+    "sso_rate": 5,
+    "sso_cap": 750,
+    "tax_threshold": 26000,
+    "tax_rate": 5,
+    "deduct_absent": true
+  },
+  "branches": [
+    {
+      "id": "b1",
+      "name": "Head Office สำนักงานใหญ่",
+      "lat": 13.7563,
+      "lng": 100.5018,
+      "radius": 120,
+      "qr_token": "d6d9c14f09c64540"
+    },
+    {
+      "id": "b2",
+      "name": "Central Westgate",
+      "lat": 13.877,
+      "lng": 100.411,
+      "radius": 90,
+      "qr_token": "74ad6e9e31172640"
+    },
+    {
+      "id": "b1787647220322",
+      "name": "JIAN CHA – Siam Paragon ชั้น 4",
+      "lat": 13.7462,
+      "lng": 100.5347,
+      "radius": 150,
+      "qr_token": "93f71350ba8c0046"
+    },
+    {
+      "id": "b1787647220328",
+      "name": "JIAN CHA – CentralWorld ชั้น 7",
+      "lat": 13.7466,
+      "lng": 100.5393,
+      "radius": 150,
+      "qr_token": "c88025fef08b6cda"
+    },
+    {
+      "id": "b1787647220330",
+      "name": "JIAN CHA – Siam Discovery",
+      "lat": 13.7464,
+      "lng": 100.5306,
+      "radius": 150,
+      "qr_token": "158eb81291352a73"
+    },
+    {
+      "id": "b1787647220333",
+      "name": "JIAN CHA – Central พระราม 9 ชั้น 5",
+      "lat": 13.7576,
+      "lng": 100.5654,
+      "radius": 150,
+      "qr_token": "127d762ff92cdb6b"
+    },
+    {
+      "id": "b1787647220336",
+      "name": "JIAN CHA – Central ปิ่นเกล้า ชั้น 3",
+      "lat": 13.7777,
+      "lng": 100.4762,
+      "radius": 150,
+      "qr_token": "8707f03b7c15226c"
+    },
+    {
+      "id": "b1787647220344",
+      "name": "JIAN CHA – Central EastVille",
+      "lat": 13.8057,
+      "lng": 100.6068,
+      "radius": 150,
+      "qr_token": "f1e6c64abdf69078"
+    },
+    {
+      "id": "b1787647220346",
+      "name": "JIAN CHA – Fashion Island",
+      "lat": 13.8253,
+      "lng": 100.6785,
+      "radius": 150,
+      "qr_token": "cdda6fac10636be5"
+    },
+    {
+      "id": "b1787647220347",
+      "name": "JIAN CHA – Mega Bangna ชั้น 1",
+      "lat": 13.6465,
+      "lng": 100.6805,
+      "radius": 180,
+      "qr_token": "923b6b683e6f9ef4"
+    },
+    {
+      "id": "b1787647220349",
+      "name": "JIAN CHA – Seacon บางแค ชั้น 1",
+      "lat": 13.7147,
+      "lng": 100.4356,
+      "radius": 150,
+      "qr_token": "ba5d994b077df5dc"
+    },
+    {
+      "id": "b1787647220351",
+      "name": "JIAN CHA – The Mall บางแค",
+      "lat": 13.7132,
+      "lng": 100.4088,
+      "radius": 150,
+      "qr_token": "359a544404447e8b"
+    },
+    {
+      "id": "b1787647220352",
+      "name": "JIAN CHA – ICONSIAM ชั้น 5",
+      "lat": 13.7263,
+      "lng": 100.51,
+      "radius": 150,
+      "qr_token": "c91c928e5f14676c"
+    },
+    {
+      "id": "b1787647220353",
+      "name": "JIAN CHA – One Bangkok ชั้น 5",
+      "lat": 13.7276,
+      "lng": 100.5468,
+      "radius": 150,
+      "qr_token": "dff6de99dd38bb70"
+    },
+    {
+      "id": "b1787647220354",
+      "name": "JIAN CHA – The PARQ พระราม 4",
+      "lat": 13.723,
+      "lng": 100.5607,
+      "radius": 120,
+      "qr_token": "7c7f8cd87fa5052a"
+    },
+    {
+      "id": "b1787647220355",
+      "name": "JIAN CHA – Athenee Tower",
+      "lat": 13.7413,
+      "lng": 100.5482,
+      "radius": 120,
+      "qr_token": "61ecd1bfae1e2102"
+    },
+    {
+      "id": "b1787647220356",
+      "name": "JIAN CHA – CW Tower รัชดา",
+      "lat": 13.7767,
+      "lng": 100.5703,
+      "radius": 120,
+      "qr_token": "9c3a680d1e70ebc4"
+    },
+    {
+      "id": "b1787647220357",
+      "name": "JIAN CHA – The Up พระราม 3",
+      "lat": 13.6963,
+      "lng": 100.5392,
+      "radius": 120,
+      "qr_token": "5efb385e6262171a"
+    },
+    {
+      "id": "b1787647220358",
+      "name": "JIAN CHA – Dragon Town บรรทัดทอง",
+      "lat": 13.7438,
+      "lng": 100.5231,
+      "radius": 120,
+      "qr_token": "5598e295e9e94ccf"
+    },
+    {
+      "id": "b1787647220359",
+      "name": "JIAN CHA – จุฬา-สามย่าน (U-Center)",
+      "lat": 13.735,
+      "lng": 100.5265,
+      "radius": 150,
+      "qr_token": "40d2a2538d6d209e"
+    },
+    {
+      "id": "b1787647220360",
+      "name": "JIAN CHA – Future Park รังสิต",
+      "lat": 13.9906,
+      "lng": 100.6172,
+      "radius": 180,
+      "qr_token": "90ecd5698ab7ffee"
+    },
+    {
+      "id": "b1787647220361",
+      "name": "JIAN CHA – Marketplace ประชาอุทิศ",
+      "lat": 13.6338,
+      "lng": 100.5045,
+      "radius": 150,
+      "qr_token": "6e31f0de305ce1fe"
+    },
+    {
+      "id": "b1787647220362",
+      "name": "JIAN CHA – Charn @ The Avenue แจ้งวัฒนะ",
+      "lat": 13.888,
+      "lng": 100.556,
+      "radius": 200,
+      "qr_token": "3559ade0afae82f5"
+    },
+    {
+      "id": "b1787647220363",
+      "name": "JIAN CHA – Central นครปฐม",
+      "lat": 13.8,
+      "lng": 100.08,
+      "radius": 200,
+      "qr_token": "d9c29f88c439a0fd"
+    },
+    {
+      "id": "b1787647220364",
+      "name": "JIAN CHA – OR Space รามคำแหง 129",
+      "lat": 13.7712,
+      "lng": 100.6625,
+      "radius": 200,
+      "qr_token": "5f67ff13ecd269fe"
+    },
+    {
+      "id": "b1787647220365",
+      "name": "JIAN CHA – The Circle ราชพฤกษ์",
+      "lat": 13.7787,
+      "lng": 100.4448,
+      "radius": 150,
+      "qr_token": "6e3ea32f96e2d425"
+    },
+    {
+      "id": "b1787647220366",
+      "name": "JIAN CHA – The Scene Town in Town",
+      "lat": 13.776,
+      "lng": 100.603,
+      "radius": 200,
+      "qr_token": "c694418daccc9bee"
+    },
+    {
+      "id": "b1787647220367",
+      "name": "JIAN CHA – Market Place ดุสิต",
+      "lat": 13.7818,
+      "lng": 100.527,
+      "radius": 150,
+      "qr_token": "7d8d19ea287759e2"
+    },
+    {
+      "id": "b1787647220369",
+      "name": "JIAN CHA – Cove Hill เจริญกรุง (Chatrium)",
+      "lat": 13.7048,
+      "lng": 100.509,
+      "radius": 150,
+      "qr_token": "35748f4431555514"
+    },
+    {
+      "id": "b1787647220370",
+      "name": "JIAN CHA – ปตท.บรมราชชนนี 97",
+      "lat": 13.7788,
+      "lng": 100.394,
+      "radius": 200,
+      "qr_token": "79414e015720dfd7"
+    },
+    {
+      "id": "b1787647336528",
+      "name": "JIAN CHA – Central หาดใหญ่",
+      "lat": 7.0072,
+      "lng": 100.4767,
+      "radius": 180,
+      "qr_token": "7cc60c1f9a5d0560"
+    },
+    {
+      "id": "b1787647336534",
+      "name": "JIAN CHA – G Tower พระราม 9",
+      "lat": 13.7586,
+      "lng": 100.5662,
+      "radius": 120,
+      "qr_token": "22cd55c9d5e1f1c9"
+    },
+    {
+      "id": "b1787647336536",
+      "name": "JIAN CHA – GUMP Cross เจริญนคร",
+      "lat": 13.7185,
+      "lng": 100.5075,
+      "radius": 150,
+      "qr_token": "ac9972c21ae8b800"
+    },
+    {
+      "id": "b1787648026746",
+      "name": "JIAN CHA – Central ลาดพร้าว (JC008)",
+      "lat": 13.8163,
+      "lng": 100.5609,
+      "radius": 150,
+      "qr_token": "2ff696d327d59c1a"
+    },
+    {
+      "id": "b1787648026754",
+      "name": "JIAN CHA – Emsphere (JC009)",
+      "lat": 13.7285,
+      "lng": 100.57,
+      "radius": 150,
+      "qr_token": "702a555f58036815"
+    },
+    {
+      "id": "b1787648026756",
+      "name": "JIAN CHA – CentralWorld Groove (JC010)",
+      "lat": 13.7477,
+      "lng": 100.5385,
+      "radius": 120,
+      "qr_token": "83222bb2aaa8f4d2"
+    },
+    {
+      "id": "b1787648026757",
+      "name": "JIAN CHA – Shell รามอินทรา กม.3.5 (JC011)",
+      "lat": 13.8555,
+      "lng": 100.622,
+      "radius": 250,
+      "qr_token": "3d89cc348569c13a"
+    },
+    {
+      "id": "b1787648026759",
+      "name": "JIAN CHA – Seacon ศรีนครินทร์ (JC012)",
+      "lat": 13.6944,
+      "lng": 100.6493,
+      "radius": 180,
+      "qr_token": "10894282a81ffb44"
+    },
+    {
+      "id": "b1787648026760",
+      "name": "JIAN CHA – Little Walk พรานนก (JC014)",
+      "lat": 13.754,
+      "lng": 100.477,
+      "radius": 250,
+      "qr_token": "f5cb1c3a18e07d6d"
+    },
+    {
+      "id": "b1787648026761",
+      "name": "JIAN CHA – True Digital Park (JF019)",
+      "lat": 13.6857,
+      "lng": 100.6109,
+      "radius": 150,
+      "qr_token": "ffe68b668dbf60cb"
+    },
+    {
+      "id": "b1787648026763",
+      "name": "JIAN CHA – Unilever House พระราม 9 (JF020)",
+      "lat": 13.7528,
+      "lng": 100.5648,
+      "radius": 120,
+      "qr_token": "da3096e3271e7a38"
+    },
+    {
+      "id": "b1787648026764",
+      "name": "JIAN CHA – Central พัทยา (JF023)",
+      "lat": 12.9329,
+      "lng": 100.8827,
+      "radius": 180,
+      "qr_token": "7e1a4678a0f15a4b"
+    },
+    {
+      "id": "b1787648026765",
+      "name": "JIAN CHA – Esplanade แคราย (JF026)",
+      "lat": 13.8547,
+      "lng": 100.5222,
+      "radius": 180,
+      "qr_token": "b574f38a7ca1a41b"
+    },
+    {
+      "id": "b1787648026767",
+      "name": "JIAN CHA – Thai Summit Tower (JF028)",
+      "lat": 13.7473,
+      "lng": 100.5719,
+      "radius": 120,
+      "qr_token": "51c7b3c2a2495db7"
+    },
+    {
+      "id": "b1787648026769",
+      "name": "JIAN CHA – Emporium (JF033)",
+      "lat": 13.7297,
+      "lng": 100.5688,
+      "radius": 150,
+      "qr_token": "5cb0ddfcc720ca8c"
+    },
+    {
+      "id": "b1787648026770",
+      "name": "JIAN CHA – Cosmo Bazaar เมืองทอง (JF035)",
+      "lat": 13.9126,
+      "lng": 100.5479,
+      "radius": 180,
+      "qr_token": "c3c927ab84562133"
+    },
+    {
+      "id": "b1787648026771",
+      "name": "JIAN CHA – La Villa อารีย์ (JF036)",
+      "lat": 13.7793,
+      "lng": 100.5449,
+      "radius": 120,
+      "qr_token": "3d8ca4b997208fa8"
+    },
+    {
+      "id": "b1787648026772",
+      "name": "JIAN CHA – Gateway บางซื่อ (JF037)",
+      "lat": 13.8064,
+      "lng": 100.5292,
+      "radius": 150,
+      "qr_token": "44ef9b49ba9f1994"
+    },
+    {
+      "id": "b1787648026773",
+      "name": "JIAN CHA – Maya เชียงใหม่ (JF039)",
+      "lat": 18.8022,
+      "lng": 98.9673,
+      "radius": 180,
+      "qr_token": "676047dbd7a1436a"
+    },
+    {
+      "id": "b1787648026774",
+      "name": "JIAN CHA – Mercury Ville ชิดลม (JF041)",
+      "lat": 13.7439,
+      "lng": 100.5427,
+      "radius": 120,
+      "qr_token": "cc8964dcef9394d4"
+    },
+    {
+      "id": "b1787648026775",
+      "name": "JIAN CHA – Sun Towers วิภาวดี (JF042)",
+      "lat": 13.7977,
+      "lng": 100.5537,
+      "radius": 150,
+      "qr_token": "a09e70954ef9f038"
+    },
+    {
+      "id": "b1787648026777",
+      "name": "JIAN CHA – Ekkamai Corner (JF046)",
+      "lat": 13.7196,
+      "lng": 100.5854,
+      "radius": 150,
+      "qr_token": "db2c9bb317706a29"
+    },
+    {
+      "id": "b1787648026778",
+      "name": "JIAN CHA – Passione ระยอง (JF050)",
+      "lat": 12.681,
+      "lng": 101.256,
+      "radius": 300,
+      "qr_token": "ae02a0f54e2e0fc1"
+    },
+    {
+      "id": "b1787648026779",
+      "name": "JIAN CHA – Silom Complex (JF051)",
+      "lat": 13.7283,
+      "lng": 100.5342,
+      "radius": 150,
+      "qr_token": "ec9615b638ceb208"
+    },
+    {
+      "id": "b1787648026780",
+      "name": "JIAN CHA – Avenue รัชโยธิน (JF052)",
+      "lat": 13.8296,
+      "lng": 100.5718,
+      "radius": 150,
+      "qr_token": "47d4479d07d5cb12"
+    },
+    {
+      "id": "b1787648026781",
+      "name": "JIAN CHA – Robinson Lifestyle สุวรรณภูมิ (JF056)",
+      "lat": 13.7215,
+      "lng": 100.716,
+      "radius": 300,
+      "qr_token": "3bef14cdce5f40d1"
+    },
+    {
+      "id": "b1787648026782",
+      "name": "JIAN CHA – PTT Park Mall ศรีนครินทร์ (JF058)",
+      "lat": 13.705,
+      "lng": 100.645,
+      "radius": 300,
+      "qr_token": "358ef59d348091be"
+    },
+    {
+      "id": "b1787648026784",
+      "name": "JIAN CHA – Robinson สมุทรปราการ (JF061)",
+      "lat": 13.5934,
+      "lng": 100.6072,
+      "radius": 180,
+      "qr_token": "bc4b84aacd58d602"
+    },
+    {
+      "id": "b1787648026784",
+      "name": "JIAN CHA – ตลาดกัลปพฤกษ์ (JF064)",
+      "lat": 13.698,
+      "lng": 100.443,
+      "radius": 250,
+      "qr_token": "1f9fae3bd26e88ab"
+    }
+  ],
+  "leave_types": [
+    {
+      "key": "sick",
+      "name": "ลาป่วย",
+      "days": 30,
+      "paid": true
+    },
+    {
+      "key": "personal",
+      "name": "ลากิจ",
+      "days": 3,
+      "paid": true
+    },
+    {
+      "key": "vacation",
+      "name": "ลาพักร้อน",
+      "days": 6,
+      "paid": true
+    },
+    {
+      "key": "maternity",
+      "name": "ลาคลอด",
+      "days": 98,
+      "paid": true
+    },
+    {
+      "key": "ordination",
+      "name": "ลาอุปสมบท",
+      "days": 15,
+      "paid": false
+    },
+    {
+      "key": "unpaid",
+      "name": "ลาไม่รับค่าจ้าง",
+      "days": 365
+    }
+  ],
+  "employees": [
+    {
+      "id": "e1",
+      "name": "สมชาย ใจดี",
+      "employee_no": "900001",
+      "role": "บาริสต้า",
+      "dept": "Operations",
+      "branch_id": "b2",
+      "pin": "111111",
+      "birth_date": "1998-08-21",
+      "hire_date": "2024-03-01",
+      "phone": "0811111111",
+      "pay": 15000,
+      "bank": "KBANK",
+      "bank_account": "045-1-11111-1",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 4
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 2
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "staff",
+      "gender": "ชาย",
+      "marital": "โสด",
+      "nationality": "ไทย",
+      "nickname": "ชาย",
+      "name_en": "Somchai Jaidee",
+      "is_admin": false,
+      "national_id": "0-9000-00000-00-1",
+      "email": "emp900001@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900001-90",
+      "address": "อ.บางใหญ่ จ.นนทบุรี",
+      "photo": "data:image/jpeg;base64,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",
+      "salutation": "",
+      "contract": "Full Time",
+      "probation_end": "",
+      "payment_type": "Monthly",
+      "bonus": 0,
+      "allowance_pos": 0,
+      "allowance_living": 0
+    },
+    {
+      "id": "e2",
+      "name": "น้องแพรว วรรณดี",
+      "employee_no": "900002",
+      "role": "หัวหน้าสาขา",
+      "dept": "Operations",
+      "branch_id": "b2",
+      "pin": "222222",
+      "birth_date": "1996-02-14",
+      "hire_date": "2023-06-15",
+      "phone": "0822222222",
+      "pay": 22000,
+      "bank": "SCB",
+      "bank_account": "234-2-22222-2",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 3
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 2
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "manager",
+      "gender": "หญิง",
+      "marital": "โสด",
+      "nationality": "ไทย",
+      "nickname": "แพรว",
+      "name_en": "Praew Wandee",
+      "is_admin": false,
+      "national_id": "0-9000-00000-00-2",
+      "email": "emp900002@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900002-90",
+      "address": "อ.บางใหญ่ จ.นนทบุรี"
+    },
+    {
+      "id": "e3",
+      "name": "กัญภัคภัชสร ภาคสุวรรณ",
+      "employee_no": "900003",
+      "role": "Web Application & PMO Supervisor",
+      "dept": "Information Technology",
+      "branch_id": "b1",
+      "pin": "333333",
+      "birth_date": "1997-05-22",
+      "hire_date": "2025-10-27",
+      "phone": "0634515323",
+      "pay": 45000,
+      "bank": "KBANK",
+      "bank_account": "045-3-33333-3",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 3
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 2
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "manager",
+      "gender": "หญิง",
+      "marital": "โสด",
+      "nationality": "ไทย",
+      "nickname": "กัญ",
+      "name_en": "Kanphakphatsorn Phaksuwan",
+      "is_admin": true,
+      "national_id": "0-9000-00000-00-3",
+      "email": "emp900003@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900003-90",
+      "address": "เขตปทุมวัน กรุงเทพมหานคร"
+    },
+    {
+      "id": "e4",
+      "name": "ต่อพงศ์ ศิริลักษณ์",
+      "employee_no": "900004",
+      "role": "IT Supervisor",
+      "dept": "Information Technology",
+      "branch_id": "b1",
+      "pin": "444444",
+      "birth_date": "1995-08-30",
+      "hire_date": "2025-01-10",
+      "phone": "0844444444",
+      "pay": 800,
+      "bank": "BBL",
+      "bank_account": "101-4-44444-4",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 3
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 2
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "staff",
+      "gender": "ชาย",
+      "marital": "สมรส",
+      "nationality": "ไทย",
+      "nickname": "ต่อ",
+      "name_en": "Torpong Siriluck",
+      "is_admin": false,
+      "national_id": "0-9000-00000-00-4",
+      "email": "emp900004@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900004-90",
+      "address": "เขตปทุมวัน กรุงเทพมหานคร",
+      "salutation": "",
+      "photo": "",
+      "contract": "Full Time",
+      "probation_end": "",
+      "payment_type": "Monthly",
+      "bonus": 0,
+      "allowance_pos": 0,
+      "allowance_living": 0
+    },
+    {
+      "id": "e5",
+      "name": "ทรรศนวรรณ นาคนุ",
+      "employee_no": "900005",
+      "role": "Head Of Human Resource",
+      "dept": "Human Resource",
+      "branch_id": "b1",
+      "pin": "555555",
+      "birth_date": "1993-11-02",
+      "hire_date": "2025-10-27",
+      "phone": "0974241915",
+      "pay": 55000,
+      "bank": "KBANK",
+      "bank_account": "045-5-55555-5",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 3
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 2
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "director",
+      "gender": "หญิง",
+      "marital": "สมรส",
+      "nationality": "ไทย",
+      "nickname": "ทรรศ",
+      "name_en": "Thatsanawan Naknu",
+      "is_admin": true,
+      "national_id": "0-9000-00000-00-5",
+      "email": "emp900005@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900005-90",
+      "address": "เขตปทุมวัน กรุงเทพมหานคร"
+    },
+    {
+      "id": "e6",
+      "name": "มินตรา แสงทอง",
+      "employee_no": "900006",
+      "role": "บาริสต้า",
+      "dept": "Operations",
+      "branch_id": "b2",
+      "pin": "666666",
+      "birth_date": "2000-08-05",
+      "hire_date": "2025-05-01",
+      "phone": "0866666666",
+      "pay": 15000,
+      "bank": "KTB",
+      "bank_account": "678-6-66666-6",
+      "status": "active",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 3
+        },
+        "personal": {
+          "total": 3,
+          "used": 1
+        },
+        "vacation": {
+          "total": 6,
+          "used": 4
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "staff",
+      "gender": "หญิง",
+      "marital": "โสด",
+      "nationality": "ไทย",
+      "nickname": "มิน",
+      "name_en": "Mintra Saengthong",
+      "is_admin": false,
+      "national_id": "0-9000-00000-00-6",
+      "email": "emp900006@jcbyte-demo.co.th",
+      "tax_no": "0-9000-56789-01-2",
+      "sso_no": "11-900006-90",
+      "address": "อ.บางใหญ่ จ.นนทบุรี"
+    },
+    {
+      "id": "e1787652234390",
+      "name": "ทดสอบ เซฟได้",
+      "employee_no": "",
+      "role": "",
+      "dept": "",
+      "branch_id": "b1",
+      "pin": "542034",
+      "pay": 100,
+      "phone": "",
+      "email": "",
+      "birth_date": null,
+      "hire_date": "2026-08-25",
+      "bank": "กสิกรไทย",
+      "bank_account": "045-1-11117-7",
+      "status": "resigned",
+      "leave": {
+        "sick": {
+          "total": 30,
+          "used": 0
+        },
+        "personal": {
+          "total": 3,
+          "used": 0
+        },
+        "vacation": {
+          "total": 6,
+          "used": 0
+        },
+        "maternity": {
+          "total": 98,
+          "used": 0
+        },
+        "ordination": {
+          "total": 15,
+          "used": 0
+        }
+      },
+      "level": "staff",
+      "contract": "Full Time",
+      "payment_type": "Monthly",
+      "bonus": 0,
+      "allowance_pos": 0,
+      "allowance_living": 0,
+      "is_admin": false,
+      "national_id": "1-1014-0006-28-7"
+    }
+  ],
+  "shifts": [
+    {
+      "id": "sh-e1-2026-08-18",
+      "emp_id": "e1",
+      "date": "2026-08-18",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-18",
+      "emp_id": "e2",
+      "date": "2026-08-18",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-18",
+      "emp_id": "e3",
+      "date": "2026-08-18",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-18",
+      "emp_id": "e4",
+      "date": "2026-08-18",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-18",
+      "emp_id": "e5",
+      "date": "2026-08-18",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-18",
+      "emp_id": "e6",
+      "date": "2026-08-18",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-19",
+      "emp_id": "e1",
+      "date": "2026-08-19",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-19",
+      "emp_id": "e2",
+      "date": "2026-08-19",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-19",
+      "emp_id": "e3",
+      "date": "2026-08-19",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-19",
+      "emp_id": "e4",
+      "date": "2026-08-19",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-19",
+      "emp_id": "e5",
+      "date": "2026-08-19",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-19",
+      "emp_id": "e6",
+      "date": "2026-08-19",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-20",
+      "emp_id": "e1",
+      "date": "2026-08-20",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-20",
+      "emp_id": "e2",
+      "date": "2026-08-20",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-20",
+      "emp_id": "e3",
+      "date": "2026-08-20",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-20",
+      "emp_id": "e4",
+      "date": "2026-08-20",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-20",
+      "emp_id": "e5",
+      "date": "2026-08-20",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-20",
+      "emp_id": "e6",
+      "date": "2026-08-20",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-21",
+      "emp_id": "e1",
+      "date": "2026-08-21",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-21",
+      "emp_id": "e2",
+      "date": "2026-08-21",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-21",
+      "emp_id": "e3",
+      "date": "2026-08-21",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-21",
+      "emp_id": "e4",
+      "date": "2026-08-21",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-21",
+      "emp_id": "e5",
+      "date": "2026-08-21",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-21",
+      "emp_id": "e6",
+      "date": "2026-08-21",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-22",
+      "emp_id": "e1",
+      "date": "2026-08-22",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-22",
+      "emp_id": "e2",
+      "date": "2026-08-22",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-22",
+      "emp_id": "e3",
+      "date": "2026-08-22",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-22",
+      "emp_id": "e4",
+      "date": "2026-08-22",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-22",
+      "emp_id": "e5",
+      "date": "2026-08-22",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-22",
+      "emp_id": "e6",
+      "date": "2026-08-22",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-24",
+      "emp_id": "e1",
+      "date": "2026-08-24",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-24",
+      "emp_id": "e2",
+      "date": "2026-08-24",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-24",
+      "emp_id": "e3",
+      "date": "2026-08-24",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-24",
+      "emp_id": "e4",
+      "date": "2026-08-24",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-24",
+      "emp_id": "e5",
+      "date": "2026-08-24",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-24",
+      "emp_id": "e6",
+      "date": "2026-08-24",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-25",
+      "emp_id": "e1",
+      "date": "2026-08-25",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-25",
+      "emp_id": "e2",
+      "date": "2026-08-25",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-25",
+      "emp_id": "e3",
+      "date": "2026-08-25",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-25",
+      "emp_id": "e4",
+      "date": "2026-08-25",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-25",
+      "emp_id": "e5",
+      "date": "2026-08-25",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-25",
+      "emp_id": "e6",
+      "date": "2026-08-25",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-26",
+      "emp_id": "e1",
+      "date": "2026-08-26",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-26",
+      "emp_id": "e2",
+      "date": "2026-08-26",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-26",
+      "emp_id": "e3",
+      "date": "2026-08-26",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-26",
+      "emp_id": "e4",
+      "date": "2026-08-26",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-26",
+      "emp_id": "e5",
+      "date": "2026-08-26",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-26",
+      "emp_id": "e6",
+      "date": "2026-08-26",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-27",
+      "emp_id": "e1",
+      "date": "2026-08-27",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-27",
+      "emp_id": "e2",
+      "date": "2026-08-27",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-27",
+      "emp_id": "e3",
+      "date": "2026-08-27",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-27",
+      "emp_id": "e4",
+      "date": "2026-08-27",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-27",
+      "emp_id": "e5",
+      "date": "2026-08-27",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-27",
+      "emp_id": "e6",
+      "date": "2026-08-27",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e3-2026-08-28",
+      "emp_id": "e3",
+      "date": "2026-08-28",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-28",
+      "emp_id": "e4",
+      "date": "2026-08-28",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-28",
+      "emp_id": "e5",
+      "date": "2026-08-28",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e1-2026-08-29",
+      "emp_id": "e1",
+      "date": "2026-08-29",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-29",
+      "emp_id": "e2",
+      "date": "2026-08-29",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-29",
+      "emp_id": "e3",
+      "date": "2026-08-29",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-29",
+      "emp_id": "e4",
+      "date": "2026-08-29",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-29",
+      "emp_id": "e5",
+      "date": "2026-08-29",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-29",
+      "emp_id": "e6",
+      "date": "2026-08-29",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-31",
+      "emp_id": "e1",
+      "date": "2026-08-31",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-08-31",
+      "emp_id": "e2",
+      "date": "2026-08-31",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-08-31",
+      "emp_id": "e3",
+      "date": "2026-08-31",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-08-31",
+      "emp_id": "e4",
+      "date": "2026-08-31",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-08-31",
+      "emp_id": "e5",
+      "date": "2026-08-31",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-08-31",
+      "emp_id": "e6",
+      "date": "2026-08-31",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-09-01",
+      "emp_id": "e1",
+      "date": "2026-09-01",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e2-2026-09-01",
+      "emp_id": "e2",
+      "date": "2026-09-01",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e3-2026-09-01",
+      "emp_id": "e3",
+      "date": "2026-09-01",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e4-2026-09-01",
+      "emp_id": "e4",
+      "date": "2026-09-01",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e5-2026-09-01",
+      "emp_id": "e5",
+      "date": "2026-09-01",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00"
+    },
+    {
+      "id": "sh-e6-2026-09-01",
+      "emp_id": "e6",
+      "date": "2026-09-01",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00"
+    },
+    {
+      "id": "sh-e1-2026-08-23",
+      "emp_id": "e1",
+      "date": "2026-08-23",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00",
+      "pattern": "l"
+    },
+    {
+      "id": "sh-e1-2026-08-28",
+      "emp_id": "e1",
+      "date": "2026-08-28",
+      "name": "หยุด",
+      "off": true,
+      "start": null,
+      "end": null
+    },
+    {
+      "id": "sh-e2-2026-08-28",
+      "emp_id": "e2",
+      "date": "2026-08-28",
+      "name": "หยุด",
+      "off": true,
+      "start": null,
+      "end": null
+    },
+    {
+      "id": "sh-e6-2026-08-28",
+      "emp_id": "e6",
+      "date": "2026-08-28",
+      "name": "หยุด",
+      "off": true,
+      "start": null,
+      "end": null
+    },
+    {
+      "id": "sh-e2-2026-08-23",
+      "emp_id": "e2",
+      "date": "2026-08-23",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00",
+      "pattern": "m"
+    },
+    {
+      "id": "sh-e6-2026-08-23",
+      "emp_id": "e6",
+      "date": "2026-08-23",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00",
+      "pattern": "m"
+    }
+  ],
+  "checkins": [
+    {
+      "id": "ck-e1-2026-08-18-i",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-18-o",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-18-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-18-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-18-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-18-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-18-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-18-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-18-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-18-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-18-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T09:22:00.000Z",
+      "late_min": 22
+    },
+    {
+      "id": "ck-e6-2026-08-18-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-18T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-19-i",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-19-o",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-19-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-19-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-19-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-19-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-19-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-19-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-19-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-19-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-19-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-19T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-19-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-19T18:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-20-i",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-20-o",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-20-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-20-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-20-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-20-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-20-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-20-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-20-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-20-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-20-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T09:22:00.000Z",
+      "late_min": 22
+    },
+    {
+      "id": "ck-e6-2026-08-20-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-20T18:05:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-21-i",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-21-o",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-21-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-21-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-21-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-21-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-21-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-21-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-21-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-21-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-21-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-21-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-21T18:04:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-22-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-22T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-22-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-22T18:03:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-22-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-22T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-22-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-22T18:03:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-22-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-22T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-22-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-22T18:03:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-22-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-22T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-22-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-22T18:03:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-22-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "qr",
+      "note": "",
+      "at": "2026-08-22T09:22:00.000Z",
+      "late_min": 22
+    },
+    {
+      "id": "ck-e6-2026-08-22-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-22T18:03:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-24-i",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e1-2026-08-24-o",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-24-i",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e2-2026-08-24-o",
+      "emp_id": "e2",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-24-i",
+      "emp_id": "e3",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e3-2026-08-24-o",
+      "emp_id": "e3",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-24-i",
+      "emp_id": "e4",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e4-2026-08-24-o",
+      "emp_id": "e4",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-24-i",
+      "emp_id": "e5",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:00:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e5-2026-08-24-o",
+      "emp_id": "e5",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck-e6-2026-08-24-i",
+      "emp_id": "e6",
+      "type": "in",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T09:22:00.000Z",
+      "late_min": 22
+    },
+    {
+      "id": "ck-e6-2026-08-24-o",
+      "emp_id": "e6",
+      "type": "out",
+      "method": "gps",
+      "note": "",
+      "at": "2026-08-24T18:01:00.000Z",
+      "late_min": 0
+    },
+    {
+      "id": "ck1787646934633",
+      "emp_id": "e1",
+      "type": "in",
+      "method": "gps",
+      "note": "นอกสถานที่: พาร์ค พารากอน, สยาม, แขวงปทุมวัน · ออกบูธงานอีเวนต์ที่สยามพารากอน",
+      "at": "2026-08-25T08:35:34.633Z",
+      "late_min": 396,
+      "offsite": true,
+      "lat": 13.746,
+      "lng": 100.534
+    },
+    {
+      "id": "ck1787654566309",
+      "emp_id": "e1",
+      "type": "out",
+      "method": "gps",
+      "note": "นอกสถานที่: Amphitheatre Parkway, Mountain View, Santa Clara County · Fff",
+      "at": "2026-08-25T10:42:46.309Z",
+      "late_min": 0,
+      "offsite": true,
+      "lat": 37.421998333333335,
+      "lng": -122.084,
+      "photo": "data:image/jpeg;base64,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"
+    },
+    {
+      "id": "ck1787655747476",
+      "emp_id": "e2",
+      "type": "in",
+      "method": "gps",
+      "note": "0 ม. จาก Central Westgate",
+      "at": "2026-08-25T11:02:27.476Z",
+      "late_min": 542,
+      "photo": "data:image/jpeg;base64,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"
+    }
+  ],
+  "payslips": [
+    {
+      "id": "ps-e1-2026-06",
+      "emp_id": "e1",
+      "month": "2026-06",
+      "base": 15000,
+      "ot": 800,
+      "sso": 750,
+      "tax": 0,
+      "net": 15050
+    },
+    {
+      "id": "ps-e2-2026-06",
+      "emp_id": "e2",
+      "month": "2026-06",
+      "base": 22000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 21250
+    },
+    {
+      "id": "ps-e3-2026-06",
+      "emp_id": "e3",
+      "month": "2026-06",
+      "base": 45000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 950,
+      "net": 43300
+    },
+    {
+      "id": "ps-e4-2026-06",
+      "emp_id": "e4",
+      "month": "2026-06",
+      "base": 28000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 100,
+      "net": 27150
+    },
+    {
+      "id": "ps-e5-2026-06",
+      "emp_id": "e5",
+      "month": "2026-06",
+      "base": 55000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 1450,
+      "net": 52800
+    },
+    {
+      "id": "ps-e6-2026-06",
+      "emp_id": "e6",
+      "month": "2026-06",
+      "base": 15000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 14250
+    },
+    {
+      "id": "ps-e1-2026-07",
+      "emp_id": "e1",
+      "month": "2026-07",
+      "base": 15000,
+      "ot": 800,
+      "sso": 750,
+      "tax": 0,
+      "net": 15050
+    },
+    {
+      "id": "ps-e2-2026-07",
+      "emp_id": "e2",
+      "month": "2026-07",
+      "base": 22000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 21250
+    },
+    {
+      "id": "ps-e3-2026-07",
+      "emp_id": "e3",
+      "month": "2026-07",
+      "base": 45000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 950,
+      "net": 43300
+    },
+    {
+      "id": "ps-e4-2026-07",
+      "emp_id": "e4",
+      "month": "2026-07",
+      "base": 28000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 100,
+      "net": 27150
+    },
+    {
+      "id": "ps-e5-2026-07",
+      "emp_id": "e5",
+      "month": "2026-07",
+      "base": 55000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 1450,
+      "net": 52800
+    },
+    {
+      "id": "ps-e6-2026-07",
+      "emp_id": "e6",
+      "month": "2026-07",
+      "base": 15000,
+      "ot": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 14250
+    },
+    {
+      "id": "ps-e1-2026-09",
+      "emp_id": "e1",
+      "month": "2026-09",
+      "base": 15000,
+      "ot": 938,
+      "ot_h15": 4,
+      "ot_h30": 3,
+      "ded_leave": 1500,
+      "unpaid_days": 2,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 13688
+    },
+    {
+      "id": "ps-e2-2026-09",
+      "emp_id": "e2",
+      "month": "2026-09",
+      "base": 22000,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 733,
+      "unpaid_days": 0,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 20517
+    },
+    {
+      "id": "ps-e3-2026-09",
+      "emp_id": "e3",
+      "month": "2026-09",
+      "base": 45000,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 1500,
+      "unpaid_days": 0,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 750,
+      "tax": 950,
+      "net": 41800
+    },
+    {
+      "id": "ps-e4-2026-09",
+      "emp_id": "e4",
+      "month": "2026-09",
+      "base": 800,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 27,
+      "unpaid_days": 0,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 40,
+      "tax": 0,
+      "net": 733
+    },
+    {
+      "id": "ps-e5-2026-09",
+      "emp_id": "e5",
+      "month": "2026-09",
+      "base": 55000,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 1833,
+      "unpaid_days": 0,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 750,
+      "tax": 1450,
+      "net": 50967
+    },
+    {
+      "id": "ps-e6-2026-09",
+      "emp_id": "e6",
+      "month": "2026-09",
+      "base": 15000,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 500,
+      "unpaid_days": 0,
+      "absent_days": 1,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 750,
+      "tax": 0,
+      "net": 13750
+    },
+    {
+      "id": "ps-e1787652234390-2026-09",
+      "emp_id": "e1787652234390",
+      "month": "2026-09",
+      "base": 100,
+      "ot": 0,
+      "ot_h15": 0,
+      "ot_h30": 0,
+      "ded_leave": 0,
+      "unpaid_days": 0,
+      "absent_days": 0,
+      "allow_pos": 0,
+      "allow_living": 0,
+      "bonus": 0,
+      "sso": 5,
+      "tax": 0,
+      "net": 95
+    }
+  ],
+  "leaves": [
+    {
+      "id": "lv1",
+      "emp_id": "e1",
+      "type": "sick",
+      "from": "2026-08-22",
+      "to": "2026-08-22",
+      "days": 1,
+      "reason": "ไข้หวัด มีใบรับรองแพทย์",
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.102Z",
+      "approved_by": "ฝ่ายบุคคล (HR)",
+      "comment": "",
+      "decided_at": "2026-08-25T08:31:04.002Z"
+    },
+    {
+      "id": "lv2",
+      "emp_id": "e6",
+      "type": "vacation",
+      "from": "2026-08-29",
+      "to": "2026-08-28",
+      "days": 2,
+      "reason": "กลับบ้านต่างจังหวัด",
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.102Z",
+      "approved_by": "ฝ่ายบุคคล (HR)",
+      "comment": "",
+      "decided_at": "2026-08-25T08:31:04.010Z"
+    },
+    {
+      "id": "lv3",
+      "emp_id": "e2",
+      "type": "personal",
+      "from": "2026-08-15",
+      "to": "2026-08-15",
+      "days": 1,
+      "reason": "ติดต่อราชการ",
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.102Z"
+    },
+    {
+      "id": "demo2-lv1",
+      "emp_id": "e1",
+      "type": "unpaid",
+      "from": "2026-09-10",
+      "to": "2026-09-11",
+      "days": 2,
+      "reason": "ธุระส่วนตัว",
+      "status": "approved"
+    }
+  ],
+  "ot": [
+    {
+      "id": "ot1",
+      "emp_id": "e1",
+      "date": "2026-08-24",
+      "hours": 2,
+      "reason": "ปิดยอดสิ้นวัน",
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.102Z",
+      "approved_by": "ฝ่ายบุคคล (HR)",
+      "comment": "",
+      "decided_at": "2026-08-25T08:31:04.014Z"
+    },
+    {
+      "id": "ot2",
+      "emp_id": "e6",
+      "date": "2026-08-23",
+      "hours": 3,
+      "reason": "จัดของเข้าสาขา",
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.102Z"
+    },
+    {
+      "id": "demo2-ot1",
+      "emp_id": "e1",
+      "date": "2026-09-03",
+      "hours": 4,
+      "reason": "ปิดยอดสิ้นเดือน",
+      "status": "approved"
+    },
+    {
+      "id": "demo2-ot2",
+      "emp_id": "e1",
+      "date": "2026-09-06",
+      "hours": 3,
+      "reason": "จัดบูธวันหยุด",
+      "status": "approved"
+    }
+  ],
+  "claims": [
+    {
+      "id": "cl1",
+      "emp_id": "e4",
+      "title": "ค่าเดินทางไปซ่อมเครื่องสาขา",
+      "amount": 350,
+      "status": "approved",
+      "at": "2026-08-25T07:10:06.103Z",
+      "approved_by": "ฝ่ายบุคคล (HR)",
+      "comment": "",
+      "decided_at": "2026-08-25T08:31:04.020Z"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "a1",
+      "title": "ยินดีต้อนรับสู่ JIANCHA DEMO HR (เดโม่)",
+      "body": "ระบบทดลองฟูลฟังก์ชัน แยกจากระบบจริง กดเล่นได้ทุกเมนู ข้อมูลเป็นตัวอย่างทั้งหมด",
+      "at": "2026-08-25T07:10:06.103Z"
+    },
+    {
+      "id": "a2",
+      "title": "เงินเดือนออกวันที่ 28 นี้",
+      "body": "สลิปจะเด้งเข้าแอปอัตโนมัติหลังปิดงวด",
+      "at": "2026-08-25T07:10:06.103Z"
+    }
+  ],
+  "recruitment": [
+    {
+      "id": "rc1",
+      "name": "ปวีณา สุขใจ",
+      "position": "บาริสต้า",
+      "branch": "Central Westgate",
+      "stage": "สัมภาษณ์",
+      "applied": "2026-08-20",
+      "phone": "0891112222",
+      "expected": 15500
+    },
+    {
+      "id": "rc2",
+      "name": "ธนกร วัฒนชัย",
+      "position": "IT Support",
+      "branch": "Head Office",
+      "stage": "คัดกรองใบสมัคร",
+      "applied": "2026-08-23",
+      "phone": "0893334444",
+      "expected": 26000
+    },
+    {
+      "id": "rc3",
+      "name": "อรทัย บุญมาก",
+      "position": "หัวหน้าสาขา",
+      "branch": "Central Westgate",
+      "stage": "เสนอสัญญา",
+      "applied": "2026-08-13",
+      "phone": "0895556666",
+      "expected": 23000
+    },
+    {
+      "id": "rc4",
+      "name": "จิรายุ พงศ์พันธ์",
+      "position": "บาริสต้า",
+      "branch": "Central Westgate",
+      "stage": "ไม่ผ่าน",
+      "applied": "2026-08-05",
+      "phone": "0897778888",
+      "expected": 16000
+    }
+  ],
+  "admin_pw": "byte@2026",
+  "shift_patterns": [
+    {
+      "key": "m",
+      "name": "กะเช้า",
+      "start": "09:00",
+      "end": "18:00",
+      "brk": "12:00 – 13:00"
+    },
+    {
+      "key": "l",
+      "name": "กะบ่าย",
+      "start": "12:00",
+      "end": "21:00",
+      "brk": "16:00 – 17:00"
+    }
+  ],
+  "holidays": [
+    {
+      "date": "2026-01-01",
+      "name": "วันขึ้นปีใหม่"
+    },
+    {
+      "date": "2026-03-03",
+      "name": "วันมาฆบูชา"
+    },
+    {
+      "date": "2026-04-06",
+      "name": "วันจักรี"
+    },
+    {
+      "date": "2026-04-13",
+      "name": "วันสงกรานต์"
+    },
+    {
+      "date": "2026-04-14",
+      "name": "วันสงกรานต์"
+    },
+    {
+      "date": "2026-04-15",
+      "name": "วันสงกรานต์"
+    },
+    {
+      "date": "2026-05-01",
+      "name": "วันแรงงานแห่งชาติ"
+    },
+    {
+      "date": "2026-05-04",
+      "name": "วันฉัตรมงคล"
+    },
+    {
+      "date": "2026-06-01",
+      "name": "ชดเชยวันวิสาขบูชา"
+    },
+    {
+      "date": "2026-06-03",
+      "name": "วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี"
+    },
+    {
+      "date": "2026-07-28",
+      "name": "วันเฉลิมพระชนมพรรษา ร.10"
+    },
+    {
+      "date": "2026-07-29",
+      "name": "วันอาสาฬหบูชา"
+    },
+    {
+      "date": "2026-07-30",
+      "name": "วันเข้าพรรษา"
+    },
+    {
+      "date": "2026-08-12",
+      "name": "วันแม่แห่งชาติ"
+    },
+    {
+      "date": "2026-10-13",
+      "name": "วันนวมินทรมหาราช"
+    },
+    {
+      "date": "2026-10-23",
+      "name": "วันปิยมหาราช"
+    },
+    {
+      "date": "2026-12-07",
+      "name": "ชดเชยวันพ่อแห่งชาติ"
+    },
+    {
+      "date": "2026-12-10",
+      "name": "วันรัฐธรรมนูญ"
+    },
+    {
+      "date": "2026-12-31",
+      "name": "วันสิ้นปี"
+    }
+  ]
+}

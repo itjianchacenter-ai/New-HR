@@ -4,8 +4,19 @@
     {
       "name": "jc-people",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
+      "runtimeArgs": [
+        "server.js"
+      ],
       "port": 3010,
+      "autoPort": true
+    },
+    {
+      "name": "jc-demo2",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/demo2.js"
+      ],
+      "port": 3011,
       "autoPort": true
     }
   ]
