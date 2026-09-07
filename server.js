@@ -473,9 +473,36 @@ td{padding:3px 6px}th{padding:4px}
 </div>
 </body></html>`);
 });
+function companyHolidays(db) {
+  if (!db.holidays || !db.holidays.length) {
+    db.holidays = [
+      { date: '2026-01-01', name: 'วันขึ้นปีใหม่' },
+      { date: '2026-03-03', name: 'วันมาฆบูชา' },
+      { date: '2026-04-06', name: 'วันจักรี' },
+      { date: '2026-04-13', name: 'วันสงกรานต์' },
+      { date: '2026-04-14', name: 'วันสงกรานต์' },
+      { date: '2026-04-15', name: 'วันสงกรานต์' },
+      { date: '2026-05-01', name: 'วันแรงงานแห่งชาติ' },
+      { date: '2026-05-04', name: 'วันฉัตรมงคล' },
+      { date: '2026-06-01', name: 'ชดเชยวันวิสาขบูชา' },
+      { date: '2026-06-03', name: 'วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี' },
+      { date: '2026-07-28', name: 'วันเฉลิมพระชนมพรรษา ร.10' },
+      { date: '2026-07-29', name: 'วันอาสาฬหบูชา' },
+      { date: '2026-07-30', name: 'วันเข้าพรรษา' },
+      { date: '2026-08-12', name: 'วันแม่แห่งชาติ' },
+      { date: '2026-10-13', name: 'วันนวมินทรมหาราช' },
+      { date: '2026-10-23', name: 'วันปิยมหาราช' },
+      { date: '2026-12-07', name: 'ชดเชยวันพ่อแห่งชาติ' },
+      { date: '2026-12-10', name: 'วันรัฐธรรมนูญ' },
+      { date: '2026-12-31', name: 'วันสิ้นปี' },
+    ];
+    save(db);
+  }
+  return db.holidays;
+}
 app.get('/api/me/calendar', (req, res) => {
   const c = me(req, res); if (!c) return;
-  res.json(c.db.shifts.filter(s => s.emp_id === c.emp.id && !s.off));
+  res.json({ shifts: c.db.shifts.filter(s => s.emp_id === c.emp.id && !s.off), holidays: companyHolidays(c.db) });
 });
 app.get('/api/me/timesheet', (req, res) => {
   const c = me(req, res); if (!c) return;

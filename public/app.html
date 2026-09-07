@@ -140,6 +140,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .cal .day{color:var(--gold)}
 .cal .day{position:relative;aspect-ratio:1;display:grid;place-items:center;font-weight:700;font-size:.98rem;border-radius:14px;cursor:pointer}
 .cal .day.off{color:#cfc7b6}
+.cal .day.hol{color:var(--red);font-weight:800}
 .cal .day.sel{background:var(--gold-soft);color:#251c3d}
 .cal .day .dots{position:absolute;bottom:5px;display:flex;gap:3px}
 .cal .day .dots i{width:5px;height:5px;border-radius:50%}
@@ -323,7 +324,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
     <div class="dow"><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span><span>อา</span></div>
     <div id="calGrid"></div>
   </div>
-  <div class="legend"><span><i style="background:var(--green)"></i>ตรงเวลา</span><span><i style="background:var(--red)"></i>สาย / ออกก่อน</span><span>จุดซ้าย = เข้า · จุดขวา = ออก</span></div>
+  <div class="legend"><span><i style="background:var(--green)"></i>ตรงเวลา</span><span><i style="background:var(--red)"></i>สาย / ออกก่อน</span><span style="color:var(--red);font-weight:700">เลขแดง = วันหยุดบริษัท</span><span>จุดซ้าย = เข้า · จุดขวา = ออก</span></div>
   <div class="daycard" id="dayCard"></div>
 </div>
 
@@ -745,8 +746,8 @@ async function submitReq(body) {
 
 // ═══ CALENDAR ═══
 async function loadCal() {
-  const [shifts, cks] = await Promise.all([api('/api/me/calendar'), api('/api/me/timesheet')]);
-  CAL.shifts = shifts; CAL.cks = cks;
+  const [cal, cks] = await Promise.all([api('/api/me/calendar'), api('/api/me/timesheet')]);
+  CAL.shifts = cal.shifts || cal; CAL.hols = cal.holidays || []; CAL.cks = cks;
   renderCal();
 }
 function calNav(n) { CAL.cur = new Date(CAL.cur.getFullYear(), CAL.cur.getMonth() + n, 1); renderCal(); }
@@ -765,7 +766,8 @@ function renderCal() {
     let dots = '';
     if (cin) dots += `<i style="background:${cin.late_min > 15 ? 'var(--red)' : 'var(--green)'}"></i>`;
     if (cout) dots += `<i style="background:var(--green)"></i>`;
-    const cls = ['day']; if (!sh) cls.push('off'); if (CAL.sel === date) cls.push('sel');
+    const hol = (CAL.hols || []).find(h => h.date === date);
+    const cls = ['day']; if (!sh) cls.push('off'); if (hol) cls.push('hol'); if (CAL.sel === date) cls.push('sel');
     html += `<span class="${cls.join(' ')}" onclick="selDay('${date}')">${d}${dots ? `<span class="dots">${dots}</span>` : ''}</span>`;
     if ((lead + d) % 7 === 0 && d !== days) html += '</div><div class="wk">';
   }
@@ -777,6 +779,7 @@ function selDay(d) { CAL.sel = d; renderCal(); }
 function renderDay() {
   const date = CAL.sel;
   const sh = CAL.shifts.find(s => s.date === date);
+  const hol = (CAL.hols || []).find(h => h.date === date);
   const dayCks = CAL.cks.filter(c => iso(c.at) === date);
   const cin = dayCks.find(c => c.type === 'in'), cout = dayCks.filter(c => c.type === 'out').pop();
   const late = cin && cin.late_min > 15;
@@ -784,7 +787,7 @@ function renderDay() {
   if (cin && cout) hours = ((new Date(cout.at) - new Date(cin.at)) / 36e5).toFixed(1) + ' ชม.';
   const row = (k, v) => `<div class="row"><span class="k">${k}</span>${v}</div>`;
   $('#dayCard').innerHTML = `<h3>${thLong(new Date(date + 'T00:00'))}</h3>` +
-    row('กะ', `<b>${sh ? `${sh.start} - ${sh.end}` : 'วันหยุด'}</b>`) +
+    row('กะ', `<b>${sh ? `${sh.start} - ${sh.end}` : (hol ? '' : 'วันหยุด')}</b>${hol ? `<b style="color:var(--red)">วันหยุดบริษัท · ${esc(hol.name)}</b>` : ''}`) +
     row('เข้างาน', cin ? `<span><b>${hm(cin.at)}</b> <span class="tagp ${late ? 'bad' : 'ok'}">${late ? 'สาย ' + cin.late_min + ' น.' : 'ตรงเวลา'}</span></span>` : '<span class="tagp bad">ยังไม่ลงเวลา</span>') +
     row('ออกงาน', cout ? `<b>${hm(cout.at)}</b>` : '<span class="tagp bad">ยังไม่ลงเวลา</span>') +
     row('รวมชั่วโมง', `<b>${hours}</b>`) +
