@@ -11,7 +11,7 @@
     // ═ ทั่วไป ═
     'เข้าสู่ระบบ': 'Sign in', 'ย้อนกลับ': 'Back', 'ถัดไป': 'Next', 'บันทึก': 'Save', 'ยกเลิก': 'Cancel',
     'ทดสอบ': 'Test', 'ตกลง': 'OK', 'แก้ไข': 'Edit', 'ลบ': 'Delete', 'ปิด': 'Close', 'ออกจากระบบ': 'Sign out',
-    'สาขา': 'Branch', 'แผนก': 'Department', 'พนักงาน': 'Staff', 'สถานะ': 'Status', 'เหตุผล': 'Reason',
+    'สาขา': 'Branch', 'สัญญา': 'Contract', 'ชื่อ - นามสกุล (ไทย)': 'Full name (TH)', 'แผนก': 'Department', 'พนักงาน': 'Staff', 'สถานะ': 'Status', 'เหตุผล': 'Reason',
     'วันที่': 'Date', 'รับทราบ': 'Got it', 'รายการ': 'Item', 'ไม่มีพนักงาน': 'No staff',
     '🖥 เซิร์ฟเวอร์ระบบ HR': '🖥 HR Server', '⚙️ ตั้งค่าเซิร์ฟเวอร์': '⚙️ Server settings',
     'กำลังทดสอบ…': 'Testing…', 'กำลังตรวจสอบ…': 'Checking…',

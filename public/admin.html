@@ -4,30 +4,29 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>JC People · Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts/sukhumvit.css">
 <script src="i18n.js"></script>
 <!-- แผนที่ฟรี OpenStreetMap + Leaflet (ไม่ต้องมี API key) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
-  --bg:#ece6da; --surface:#fbf9f4; --surface-2:#ffffff; --ink:#221f19; --soft:#6f6659; --faint:#9a9184;
-  --line:#e0d8c9; --gold:#a5843f; --gold-soft:#c8a25a; --green:#2f6a53; --red:#a43e2e; --blue:#4a5fc4;
-  --shadow:0 1px 2px rgba(45,38,26,.05),0 12px 34px -14px rgba(45,38,26,.22);
+  --bg:#f6f5e6; --surface:#fdfded; --surface-2:#ffffff; --ink:#1c2120; --soft:#6c6157; --faint:#9a938a;
+  --line:#e9e5d4; --gold:#ad93ee; --gold-soft:#ad93ee; --brown:#4e2d23; --green:#2f6a53; --red:#a43e2e; --blue:#4a5fc4;
+  --shadow:0 1px 2px rgba(38,30,24,.05),0 12px 34px -14px rgba(38,30,24,.2);
   --side:250px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Poppins","Sukhumvit Set",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--ink)}
-.mono{font-family:"IBM Plex Mono",monospace}
+.mono{font-family:"Poppins","Sukhumvit Set",sans-serif}
 
 /* ═══ LOGIN ═══ */
 #login{min-height:100vh;display:grid;place-items:center;padding:20px}
 #login .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:44px 40px;width:100%;max-width:420px;text-align:center}
-#login img{height:44px;margin-bottom:2px}
-#login .sub{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin:0 0 26px}
+#login img{height:84px;margin-bottom:2px}
+#login .sub{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.72rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin:0 0 26px}
 #login h1{font-size:1.35rem;margin:0 0 6px}
 #login p.d{color:var(--soft);font-size:.92rem;margin:0 0 24px}
 #login input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);font-size:1rem;margin-bottom:14px}
@@ -41,7 +40,7 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .side .brand{font-size:1.06rem;font-weight:700;margin-top:8px}
 .side .brand span{color:var(--gold);font-weight:400}
 .side .tag{font-size:.72rem;color:var(--faint);line-height:1.35;margin-top:2px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.side .grp{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:20px 8px 8px}
+.side .grp{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:20px 8px 8px}
 .side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;color:var(--soft);text-decoration:none;font-size:.93rem;border:1px solid transparent;margin-bottom:2px}
 .side a svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .side a.on{background:var(--surface-2);color:var(--ink);font-weight:700;border-color:var(--line);box-shadow:0 1px 4px rgba(45,38,26,.08)}
@@ -76,7 +75,7 @@ main{margin-left:var(--side);min-height:100vh}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px}
 .stat{position:relative;background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:13px;padding:16px 18px 14px 20px;box-shadow:var(--shadow);overflow:hidden}
 .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac,var(--gold))}
-.stat .k{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);font-weight:500}
+.stat .k{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);font-weight:500}
 .stat b{display:block;font-size:1.9rem;line-height:1.15;margin-top:4px}
 .stat b small{font-size:1.05rem;color:var(--faint);font-weight:600}
 .stat .s{font-size:.78rem;color:var(--faint);margin-top:2px}
@@ -91,7 +90,7 @@ main{margin-left:var(--side);min-height:100vh}
 .panel .ph h3{margin:0;font-size:1.05rem;font-weight:800}
 .panel .ph .r{margin-left:auto;font-size:.8rem;color:var(--faint);font-weight:600;display:flex;gap:10px;align-items:center}
 .tbl{width:100%;border-collapse:collapse;font-size:.9rem}
-.tbl th{font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--soft);text-align:left;padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--soft);text-align:left;padding:11px 14px;background:var(--surface);border-bottom:1px solid var(--line);white-space:nowrap}
 .tbl td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:0}
 .tbl tr.click{cursor:pointer}
@@ -121,7 +120,7 @@ main{margin-left:var(--side);min-height:100vh}
 .seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px}
 .seg button{border:0;background:none;border-radius:99px;padding:7px 16px;font-weight:700;font-size:.86rem;color:var(--soft)}
 .seg button.on{background:var(--ink);color:#fff}
-.flabel{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:5px}
+.flabel{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);display:block;margin-bottom:5px}
 
 /* dashboard extras */
 .grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
@@ -148,12 +147,12 @@ main{margin-left:var(--side);min-height:100vh}
 .mcard{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .mcard .mh{background:linear-gradient(180deg,#2a251c,#1d1a14);color:#fff;padding:16px 18px 14px}
 .mcard .mh .t{display:flex;justify-content:space-between;align-items:center;font-size:1.05rem;font-weight:800}
-.mcard .mh .t .st{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.14em;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:99px}
+.mcard .mh .t .st{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.6rem;letter-spacing:.14em;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:99px}
 .mcard .mh .d{font-size:.78rem;color:#b6ac99;margin-top:2px}
 .mcard .mh .track{height:5px;background:rgba(255,255,255,.16);border-radius:99px;margin-top:12px;overflow:hidden}
 .mcard .mh .track i{display:block;height:100%;background:#fff;border-radius:99px}
 .mcard .mb{padding:12px 18px 14px}
-.mcard .mb .cap{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.mcard .mb .cap{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
 .mcard .mb .pr{display:flex;gap:9px;align-items:baseline;padding:6px 0;font-size:.9rem}
 .click-person{cursor:pointer;border-radius:8px}
 .click-person:hover{background:var(--surface)}
@@ -184,12 +183,12 @@ main{margin-left:var(--side);min-height:100vh}
 #drawer .dh .chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 #drawer .dh .chips .pill{background:rgba(255,255,255,.12);border-color:transparent;color:#fff}
 #drawer .db{flex:1;overflow-y:auto;padding:20px 24px}
-#drawer .sec-t{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;font-weight:600}
+#drawer .sec-t{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;font-weight:600}
 #drawer .sec-t:first-child{margin-top:0}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
 .kv .f{min-width:0}
 .kv .f.w{grid-column:1/-1}
-.kv .k{font-family:"IBM Plex Mono",monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.kv .k{font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
 .kv .v{font-weight:700;font-size:.94rem;overflow-wrap:break-word}
 .kv .v small{color:var(--faint);font-weight:400}
 .kv input,.kv select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);font-size:.92rem}
@@ -228,7 +227,7 @@ main{margin-left:var(--side);min-height:100vh}
 .slip2 th{border-bottom:1px solid #1a1712;padding:5px;font-size:.7rem;text-align:center;color:#000}
 .slip2 th i{font-size:.58rem;color:#555;font-style:normal;font-weight:400}
 .slip2 td{padding:5px 8px;vertical-align:top}
-.slip2 td.amt{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:.72rem;white-space:nowrap;color:#000}
+.slip2 td.amt{text-align:right;font-family:"Poppins","Sukhumvit Set",sans-serif;font-size:.72rem;white-space:nowrap;color:#000}
 .slip2 .l1{font-size:.7rem;color:#000}
 .slip2 .l2{font-size:.56rem;color:#555}
 .slip2 tr.sep td{border-top:1px solid #1a1712}
@@ -246,7 +245,7 @@ main{margin-left:var(--side);min-height:100vh}
 .slip .shead h3{margin:0;font-size:1.2rem}
 .slip table{width:100%;border-collapse:collapse}
 .slip td{padding:6px 4px;border-bottom:1px dashed var(--line)}
-.slip td:last-child{text-align:right;font-family:"IBM Plex Mono",monospace}
+.slip td:last-child{text-align:right;font-family:"Poppins","Sukhumvit Set",sans-serif}
 .slip .net td{border-top:2px solid var(--ink);border-bottom:0;font-weight:800;font-size:1.05rem}
 @media print{ @page{size:A4 landscape;margin:8mm} body>*{display:none !important} #modal{display:grid !important;position:static;background:#fff} #modal .mbox{box-shadow:none;max-width:100%;padding:6px} .noprint{display:none !important}
 .slip2{font-size:.74rem} .slip2 td{padding:3px 6px} .slip2 th{padding:4px} .slip2 .s2foot{margin-top:8px} .slip2 .sig .line{margin-top:16px} .slip2 .s2legal{margin-top:8px;padding-top:5px} }
@@ -257,7 +256,7 @@ main{margin-left:var(--side);min-height:100vh}
 <!-- ═══════════ LOGIN ═══════════ -->
 <div id="login">
   <div class="card">
-    <img src="/logo-wide.png" alt="JIANCHA"/>
+    <img src="/brand-mark-dark.png" alt="JIANCHA"/>
     <p class="sub">People</p>
     <h1>เข้าสู่ระบบหลังบ้าน</h1>
     <p class="d">Human Resource Management System</p>
@@ -275,7 +274,7 @@ main{margin-left:var(--side);min-height:100vh}
 <button id="burger" onclick="document.querySelector('.side').classList.toggle('open');document.querySelector('#sideOvl').classList.toggle('open')">☰</button>
 <div id="sideOvl" onclick="this.classList.remove('open');document.querySelector('.side').classList.remove('open')"></div>
 <nav class="side">
-  <div class="logo"><img src="/logo-wide.png" alt="JIANCHA"/></div>
+  <div class="logo"><img src="/brand-mark-dark.png" alt="JIANCHA"/></div>
   <div class="brand">JC <span>People</span></div>
   <div class="tag">Human Resource Management System</div>
   <div class="grp">Overview</div>
@@ -576,7 +575,7 @@ const api = async (url, opt) => {
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const THB = n => '฿' + (+n || 0).toLocaleString(TL);
 const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2400); };
-const AV = ['#221f19', '#a5843f', '#2f6a53', '#4a5fc4', '#7a5c46', '#3d7d8a'];
+const AV = ['#221f19', '#ad93ee', '#2f6a53', '#4a5fc4', '#4e2d23', '#3d7d8a'];
 const avColor = n => AV[[...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV.length];
 const initials = e => { const en = e.name_en || ''; if (en.trim()) return en.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(); return String(e.name || '?').trim().slice(0, 2); };
 const avatar = e => e.photo
@@ -654,7 +653,7 @@ async function loadDash() {
      <span class="t">${hm(a.at)}</span></div>`).join('')
     : `<div class="empty">ยังไม่มีความเคลื่อนไหววันนี้<br/><small>รายการจะขึ้นเมื่อพนักงานลงเวลาผ่านแอป</small></div>`;
   const tot = o.by_branch.reduce((n, b) => n + b.count, 0) || 1;
-  const COLORS = ['#221f19', '#a5843f', '#4a5fc4', '#2f6a53', '#7a5c46'];
+  const COLORS = ['#221f19', '#ad93ee', '#4a5fc4', '#2f6a53', '#4e2d23'];
   $('#dashHB').innerHTML = o.by_branch.map((b, i) => {
     const p = Math.round(b.count / tot * 100);
     return `<div class="row"><div class="l"><b>${esc(b.name)}</b><span>${b.count} staff · ${p}%</span></div><div class="track"><i style="width:${p}%;background:${COLORS[i % COLORS.length]}"></i></div></div>`;
@@ -1366,7 +1365,7 @@ function renderBrMap(branches) {
   branches.forEach(b => {
     pts.push([b.lat, b.lng]);
     L.marker([b.lat, b.lng]).addTo(LLAYER).bindPopup(`<b>${esc(b.name)}</b><br/>รัศมี ${b.radius} ม.`);
-    L.circle([b.lat, b.lng], { radius: b.radius, color: '#a5843f', weight: 1.5, fillOpacity: .12 }).addTo(LLAYER);
+    L.circle([b.lat, b.lng], { radius: b.radius, color: '#ad93ee', weight: 1.5, fillOpacity: .12 }).addTo(LLAYER);
   });
   if (pts.length) LMAP.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
   setTimeout(() => LMAP.invalidateSize(), 150); // เผื่อ div เพิ่งแสดงผล

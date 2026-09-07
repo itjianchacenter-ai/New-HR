@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "mobile:sync": "cp public/app.html www/index.html && cp public/logo-wide.png public/logo-icon.png public/i18n.js www/ && npx cap sync"
+    "mobile:sync": "cp public/app.html www/index.html && cp public/logo-wide.png public/logo-icon.png public/i18n.js public/brand-mark-cream.png public/brand-mark-dark.png public/brand-wordmark.png public/brand-wordmark-dark.png public/flag-en.png www/ && rm -rf www/fonts && cp -R public/fonts www/fonts && npx cap sync"
   },
   "keywords": [],
   "author": "",
