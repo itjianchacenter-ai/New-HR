@@ -398,7 +398,7 @@ app.get('/api/me/payslip-print', (req, res) => {
 <title>Pay Slip ${month} · ${esc(emp.name)}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px}
+body{margin:0;background:#e9e4d8;font-family:"IBM Plex Sans Thai",sans-serif;color:#1a1712;padding:14px;overflow-x:hidden}
 .sheet{background:#fff;max-width:860px;margin:0 auto;padding:22px;border-radius:10px;box-shadow:0 8px 30px -12px rgba(0,0,0,.25);font-size:.74rem;position:relative}
 .s2head{display:grid;grid-template-columns:1.35fr auto 1fr;gap:18px;align-items:start;margin-bottom:14px}
 .s2co b{font-size:.85rem;color:#000}.s2logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none}.s2logo img{height:80px;opacity:.4}
@@ -423,12 +423,12 @@ tr.net2 td{font-weight:800}tr.net2 .l1{font-size:.8rem}
 .s2legal{border-top:1px solid #ccc;margin-top:12px;padding-top:6px;text-align:center;font-size:.56rem;color:#444}
 .s2legal i{font-style:normal;color:#666}
 .bar{max-width:860px;margin:0 auto 12px;padding-top:calc(env(safe-area-inset-top,0px));display:flex;gap:10px;justify-content:space-between}
-.bar button{font:inherit;font-weight:700;padding:11px 18px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer}
+.bar button{font:inherit;font-weight:700;padding:10px 14px;border-radius:12px;border:1px solid #d5cdbc;background:#fff;cursor:pointer;font-size:.92rem;white-space:nowrap}
 .bar .p{background:#221f19;color:#fff;border-color:#221f19}
 #fit{transform-origin:top left}
 @media print{
 @page{size:A5 landscape;margin:6mm}
-body{background:#fff;padding:0}.bar{display:none}#fit{transform:none !important;width:auto !important;height:auto !important;margin:0 !important}
+body{background:#fff;padding:0}.bar{display:none}#fit{zoom:1 !important;transform:none !important;width:auto !important;height:auto !important;margin:0 !important}
 .sheet{box-shadow:none;border-radius:0;max-width:100%;padding:2px;font-size:.62rem}
 .kv2{font-size:.6rem}.wm img{height:150px}
 .s2cols{grid-template-columns:1fr 1fr 1fr !important}
@@ -476,21 +476,17 @@ td{padding:3px 6px}th{padding:4px}
 (function(){
   var f = document.getElementById('fit');
   function fit(){
-    f.style.transform = 'none'; f.style.height = 'auto'; f.style.marginLeft = '0';
-    var natural = 910;                             // ความกว้างมาตรฐานใบสลิป (860 + ระยะขอบ)
-    var s = Math.min(1, (window.innerWidth - 12) / natural);
-    f.style.width = natural + 'px';
-    f.style.transform = 'scale(' + s + ')';
-    var h = f.scrollHeight * s;
-    f.style.height = h + 'px';
-    f.style.marginLeft = Math.max(0, (window.innerWidth - natural * s) / 2) + 'px';
-    // จัดใบสลิปกลางจอแนวตั้ง (เว้นพื้นที่แถบปุ่มด้านบน)
+    var natural = 910;
+    var avail = document.documentElement.clientWidth - 28;
+    var z = Math.min(1, avail / natural);
+    f.style.zoom = z;                                   // ย่อทั้งเลย์เอาต์ ไม่มีล้นขอบ
     var bar = document.querySelector('.bar');
-    var barH = bar ? bar.offsetHeight + 24 : 0;
-    f.style.marginTop = Math.max(6, (window.innerHeight - barH - h) / 2) + 'px';
+    var barB = bar ? bar.getBoundingClientRect().bottom : 0;
+    var h = f.getBoundingClientRect().height;
+    f.style.marginTop = (Math.max(6, (window.innerHeight - barB - h) / 2) / z) + 'px';
   }
-  if (!matchMedia('print').matches) { fit(); addEventListener('resize', fit); }
-  addEventListener('beforeprint', function(){ f.style.transform = 'none'; f.style.height = 'auto'; f.style.width = 'auto'; f.style.marginLeft = '0'; });
+  fit(); addEventListener('resize', fit);
+  addEventListener('beforeprint', function(){ f.style.zoom = 1; f.style.marginTop = '0'; });
 })();
 </script>
 </body></html>`);
