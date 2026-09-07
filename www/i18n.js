@@ -4,6 +4,10 @@
   window.LANG = localStorage.getItem('jc_lang') || 'th';
   window.LOCALE = window.LANG === 'th' ? 'th-TH' : 'en-GB';
   window.setLang = l => { localStorage.setItem('jc_lang', l); location.reload(); };
+  // ── ธงบนปุ่มสลับภาษา: โหมด EN แสดงธงไทย (สลับกลับไทย) ──
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.LANG === 'en') document.querySelectorAll('img[src="flag-en.png"]').forEach(i => { i.src = 'flag-th.png'; });
+  });
   if (window.LANG !== 'en') return;
 
   // ── พจนานุกรม (ข้อความตรงตัว) ──
@@ -21,8 +25,8 @@
     'เข้าสู่ระบบพนักงาน': 'Employee Sign-in',
     'ล็อกอินครั้งแรกใช้ 2 ขั้นตอน': 'First sign-in takes 2 steps',
     'ระบบจะจำการเข้าสู่ระบบไว้ให้': 'You will stay signed in',
-    'ขั้นที่ 1 · เลข 4 ตัวท้ายบัตรประชาชน': 'Step 1 · Last 4 digits of National ID',
-    'ขั้นที่ 2 · PIN (รหัสพนักงาน)': 'Step 2 · PIN (your employee ID)',
+    'ขั้นที่ 1 เลข 4 ตัวท้ายบัตรประชาชน': 'Step 1 Last 4 digits of National ID',
+    'ขั้นที่ 2 PIN (รหัสพนักงาน)': 'Step 2 PIN (your employee ID)',
     'เดโม่: เลขท้ายบัตร ': 'Demo: ID last-4 ', ' · PIN ': ' · PIN ',
     'PIN ไม่ถูกต้อง': 'Incorrect PIN',
     'ไม่พบเลขท้ายบัตรนี้ในระบบ — ติดต่อ HR เพื่อลงทะเบียน': 'ID not found — contact HR to register',
@@ -31,7 +35,7 @@
     '🖥️ Role Admin · หลังบ้าน HR': '🖥️ Role Admin · Back office',
     '👤 Role Employee · แอปพนักงาน': '👤 Role Employee · Employee app',
     // ═ หน้าหลัก ═
-    'กะวันนี้ · TODAY\'S SHIFT': "Today's shift", 'ไม่มีกะวันนี้': 'No shift today', 'วันหยุด': 'Day off',
+    'กะวันนี้ ( Today\'s Shift )': "Today's Shift", 'ไม่มีกะวันนี้': 'No shift today', 'วันหยุด': 'Day off',
     'สแกนนิ้ว ลงเวลาเข้า': 'Scan to Clock In', 'สแกนนิ้ว ลงเวลาออก': 'Scan to Clock Out',
     'ลงเวลาครบแล้ววันนี้': 'All done today',
     'แตะปุ่ม → ถ่ายรูปยืนยันตัวตน → บันทึกเวลา': 'Tap → identity photo → time recorded',
@@ -71,7 +75,7 @@
     // ═ ปฏิทิน ═
     'จ': 'Mo', 'อ': 'Tu', 'พ': 'We', 'พฤ': 'Th', 'ศ': 'Fr', 'ส': 'Sa', 'อา': 'Su',
     'สาย / ออกก่อน': 'Late / early out', 'จุดซ้าย = เข้า · จุดขวา = ออก': 'Left dot = in · right = out',
-    'กะ': 'Shift', 'เข้างาน': 'Clock in', 'ออกงาน': 'Clock out', 'รวมชั่วโมง': 'Total hours', 'สถานที่': 'Location',
+    'กะ': 'Shift', 'เข้างาน': 'Clock in', 'เข้างาน ( IN )': 'Clock in ( IN )', 'ออกงาน ( OUT )': 'Clock out ( OUT )', 'ออกงาน': 'Clock out', 'รวมชั่วโมง': 'Total hours', 'สถานที่': 'Location',
     // ═ โปรไฟล์ ═
     'ชื่อ (ไทย)': 'Name (TH)', 'ชื่อเล่น': 'Nickname', 'เบอร์โทร': 'Phone', 'อีเมล': 'Email',
     'เลขบัตร ปชช.': 'National ID', 'รหัสพนักงาน': 'Employee ID', 'เริ่มงาน': 'Start date',
