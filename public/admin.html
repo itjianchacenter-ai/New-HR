@@ -286,11 +286,15 @@ main{margin-left:var(--side);min-height:100vh}
   <div class="grp">Workforce</div>
   <a data-p="empdb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 17c.8-2 2-3 3.5-3s2.7 1 3.5 3M15 9h4M15 13h4"/></svg>Employee Database</a>
   <a data-p="recruit"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.9-3 2.9-4.5 5.5-4.5s4.6 1.5 5.5 4.5M16 8h5M18.5 5.5v5"/></svg>รับสมัครงาน<span class="bdg" id="apBdg" style="display:none">0</span></a>
+  <a data-p="onboard"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 4v3M15 4v3M8.5 13l2.5 2.5 4.5-5"/></svg>รับเข้าทำงาน</a>
+  <a data-p="docs"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M13 3v6h6M10 13h6M10 17h4"/></svg>เอกสาร HR</a>
+  <a data-p="offboard"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.2"/><path d="M4.5 19c.9-3 2.9-4.5 5.5-4.5 1.4 0 2.6.4 3.6 1.1M15 12l6 6M21 12l-6 6"/></svg>พ้นสภาพ</a>
   <a data-p="hqman"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>HQ Manning</a>
   <a data-p="brman"><svg viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M9 20v-6h6v6"/></svg>Branches Manning</a>
   <div class="grp">Records &amp; Pay</div>
   <a data-p="ot"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M8 3c0 8 8 8 8 18M16 3c0 8-8 8-8 18"/></svg>OT Review</a>
   <a data-p="payroll"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M6 6V4h12v2"/></svg>Payroll</a>
+  <a data-p="gov"><svg viewBox="0 0 24 24"><path d="M4 9l8-5 8 5M5 9v10M9.5 9v10M14.5 9v10M19 9v10M3 19h18"/></svg>เอกสารราชการ</a>
   <a data-p="reports"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M13 3v6h6M10 14h6M10 17h6"/></svg>Reports</a>
   <div class="grp">System</div>
   <a data-p="ann"><svg viewBox="0 0 24 24"><path d="M4 11v3l5 1 8 4V5L9 9l-5 1z"/><path d="M18 9a4 4 0 010 6"/></svg>ประกาศ</a>
@@ -496,6 +500,30 @@ main{margin-left:var(--side);min-height:100vh}
       </div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่สมัคร</th><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>ตำแหน่ง</th><th>สาขา</th><th>เรซูเม่</th><th>สถานะ</th><th></th></tr></thead><tbody id="apRows"></tbody></table></div>
     </section>
+    <section class="page" id="p-onboard">
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>พนักงานใหม่</th><th>เริ่มงาน</th><th>ความคืบหน้า</th><th>เช็คลิสต์เอกสารวันแรก</th></tr></thead><tbody id="obRows"></tbody></table></div>
+    </section>
+    <section class="page" id="p-docs">
+      <div class="tools" style="flex-wrap:wrap;gap:10px">
+        <select id="dcEmp" class="in" style="width:auto;min-width:220px"></select>
+        <select id="dcType" class="in" style="width:auto"><option>สัญญาจ้าง</option><option>สำเนาบัตรประชาชน</option><option>สำเนาทะเบียนบ้าน</option><option>วุฒิการศึกษา</option><option>ใบรับรองแพทย์</option><option>อื่นๆ</option></select>
+        <input type="file" id="dcFile" accept="application/pdf" style="font-size:.84rem"/>
+        <button class="btn dark" onclick="dcUpload()">⬆ อัปโหลด PDF</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ประเภท</th><th>ไฟล์</th><th></th></tr></thead><tbody id="dcRows"></tbody></table></div>
+    </section>
+    <section class="page" id="p-offboard">
+      <div class="tools" style="flex-wrap:wrap;gap:10px">
+        <select id="obEmp" class="in" style="width:auto;min-width:220px"></select>
+        <button class="btn" style="color:var(--red)" onclick="obDo('resign')">บันทึกลาออก…</button>
+        <button class="btn" style="color:var(--red)" onclick="obDo('terminate')">เลิกจ้าง (คิดค่าชดเชย ม.118)…</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันสุดท้าย</th><th>พนักงาน</th><th>ประเภท</th><th>อายุงาน</th><th>ค่าชดเชย</th><th>ค่าบอกกล่าว</th><th>พักร้อนคงเหลือ</th><th>จ่ายภายใน</th><th>เอกสาร</th></tr></thead><tbody id="offRows"></tbody></table></div>
+    </section>
+    <section class="page" id="p-gov">
+      <div class="tools"><div><span class="flabel">งวดเดือน</span><input class="in" type="month" id="govMonth"/></div></div>
+      <div id="govCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px"></div>
+    </section>
     <section class="page" id="p-reports">
       <div class="bar">
         <div><span class="flabel">Month</span><input class="in" type="month" id="rpMonth"/></div>
@@ -629,12 +657,16 @@ document.addEventListener('DOMContentLoaded', () => { const l = document.getElem
 const TITLES = {
   dash: ['Dashboard', () => thDate(iso(new Date()))], tna: ['Time & Attendance', () => 'บันทึกเวลาเรียลไทม์'],
   shifts: ['Shifts', () => 'Shift Scheduling'], approvals: ['Approvals', () => 'คิวคำขอรออนุมัติ'],
-  empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], recruit: ['รับสมัครงาน', () => 'ผู้สมัคร · Recruitment'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
+  empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], recruit: ['รับสมัครงาน', () => 'ผู้สมัคร · Recruitment'],
+  onboard: ['รับเข้าทำงาน', () => 'เช็คลิสต์เอกสารวันแรก · Onboarding'],
+  docs: ['เอกสาร HR', () => 'คลังเอกสาร PDF ออนไลน์ · รายพนักงาน'],
+  offboard: ['พ้นสภาพ', () => 'ลาออก / เลิกจ้าง · ค่าชดเชย ม.118'],
+  gov: ['เอกสารราชการ', () => 'ภ.ง.ด.1 · สปส.1-10 · ทะเบียนลูกจ้าง · ธนาคาร · GL'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
   brman: ['Branches Manning', () => 'Store manning by branch'], ot: ['OT Review', () => 'Overtime review & approval · by period'],
   payroll: ['Payroll', () => 'เงินเดือนและสลิป'], reports: ['Reports', () => 'Reports · export Excel / PDF'],
   ann: ['ประกาศ', () => 'Announcements'], settings: ['ตั้งค่า', () => 'System preferences'],
 };
-const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, recruit: loadRecruit, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
+const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, recruit: loadRecruit, onboard: loadOnboard, docs: loadDocsPage, offboard: loadOffboard, gov: loadGov, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
 function go(p) {
   $('.side')?.classList?.remove('open'); $('#sideOvl')?.classList?.remove('open'); // ปิดเมนูบนมือถือ
   $$('.side a').forEach(a => a.classList.toggle('on', a.dataset.p === p));
@@ -644,6 +676,73 @@ function go(p) {
 }
 $$('.side a').forEach(a => a.onclick = () => go(a.dataset.p));
 
+// ═══ หน้าเมนูแยก: รับเข้า / เอกสาร / พ้นสภาพ / ราชการ ═══
+async function loadOnboard() {
+  const rows = await api('/api/admin/onboarding');
+  $('#obRows').innerHTML = rows.map(e => {
+    const done = e.onboarding.filter(o => o.done).length;
+    return `<tr><td><b>${esc(e.name)}</b> <span class="mono" style="color:var(--faint)">${esc(e.employee_no)}</span></td>
+    <td>${e.hire_date || '—'}</td>
+    <td><b style="color:${done === e.onboarding.length ? 'var(--green)' : 'var(--gold)'}">${done}/${e.onboarding.length}</b></td>
+    <td>${e.onboarding.map(o => `<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0;font-size:.84rem;white-space:nowrap"><input type="checkbox" ${o.done ? 'checked' : ''} onchange="obToggle('${e.id}','${o.key}',this.checked)"/>${esc(o.name)}</label>`).join('')}</td></tr>`;
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--faint);padding:22px">ยังไม่มีพนักงานใหม่ที่มีเช็คลิสต์ — รับผู้สมัครเข้าทำงานจากเมนู "รับสมัครงาน"</td></tr>';
+}
+async function empOptions(sel) {
+  const list = await api('/api/admin/employees');
+  $(sel).innerHTML = list.filter(e => e.status !== 'resigned').map(e => `<option value="${e.id}">${esc(e.name)} · ${esc(e.employee_no)}</option>`).join('');
+}
+async function loadDocsPage() {
+  await empOptions('#dcEmp');
+  const docs = await api('/api/admin/docs');
+  $('#dcRows').innerHTML = docs.map(d => `<tr><td>${d.at}</td><td><b>${esc(d.emp_name)}</b> <span class="mono" style="color:var(--faint)">${esc(d.employee_no)}</span></td>
+    <td>${esc(d.type)}</td><td><a href="${d.file}${URLTOK ? '?t=' + URLTOK : ''}" target="_blank">📄 ${esc(d.name)}</a></td>
+    <td><button class="btn" style="padding:4px 10px;color:var(--red)" onclick="dcDel('${d.id}')">ลบ</button></td></tr>`).join('')
+    || '<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:22px">ยังไม่มีเอกสาร — เลือกพนักงานแล้วอัปโหลด PDF ด้านบน</td></tr>';
+}
+async function dcUpload() {
+  const f = $('#dcFile').files[0];
+  if (!f) return toast('เลือกไฟล์ PDF ก่อน');
+  if (f.size > 8 * 1024 * 1024) return toast('ไฟล์เกิน 8MB');
+  const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
+  await api(`/api/admin/employees/${$('#dcEmp').value}/docs`, { method: 'POST', body: { name: f.name, type: $('#dcType').value, data } });
+  toast('อัปโหลดเอกสารแล้ว'); $('#dcFile').value = ''; loadDocsPage();
+}
+async function dcDel(id) { if (!confirm('ลบเอกสารนี้?')) return; await api('/api/admin/docs/' + id, { method: 'DELETE' }); loadDocsPage(); }
+async function loadOffboard() {
+  await empOptions('#obEmp');
+  const rows = await api('/api/admin/offboards');
+  $('#offRows').innerHTML = rows.map(o => `<tr><td>${o.end_date}</td><td><b>${esc(o.emp_name)}</b></td>
+    <td>${o.kind === 'terminate' ? '<span style="color:var(--red);font-weight:700">เลิกจ้าง</span>' : 'ลาออก'}</td>
+    <td>${o.years} ปี</td><td class="mono">${(o.severance || 0).toLocaleString()}</td><td class="mono">${(o.notice_pay || 0).toLocaleString()}</td>
+    <td>${o.vacation_days} วัน = ${(o.vacation_pay || 0).toLocaleString()}</td><td><b>${o.final_due}</b></td>
+    <td><a href="/api/admin/employees/${o.emp_id}/offboard-letter${URLTOK ? '?t=' + URLTOK : ''}" target="_blank">📄 หนังสือรับรอง</a></td></tr>`).join('')
+    || '<tr><td colspan="9" style="text-align:center;color:var(--faint);padding:22px">ยังไม่มีรายการพ้นสภาพ</td></tr>';
+}
+async function obDo(kind) {
+  const id = $('#obEmp').value; if (!id) return;
+  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', new Date().toISOString().slice(0, 10)); if (!date) return;
+  const reason = prompt('เหตุผล', kind === 'terminate' ? 'ปรับโครงสร้าง' : 'ลาออกโดยสมัครใจ'); if (reason === null) return;
+  const r = await api(`/api/admin/employees/${id}/offboard`, { method: 'POST', body: { date, kind, reason } });
+  alert(`บันทึกแล้ว ✓\nอายุงาน ${r.years} ปี · ค่าชดเชย ${r.severance.toLocaleString()} บาท (${r.severance_days} วัน)\nค่าบอกกล่าว ${r.notice_pay.toLocaleString()} · พักร้อนคงเหลือ ${r.vacation_pay.toLocaleString()} บาท\n⚠ จ่ายภายใน ${r.final_due}`);
+  loadOffboard();
+}
+function loadGov() {
+  $('#govMonth').value ||= iso(new Date()).slice(0, 7);
+  const C = [
+    ['🧾', 'ภ.ง.ด.1 — ใบแนบรายเดือน', 'ภาษีหัก ณ ที่จ่าย ยื่นสรรพากร', 'gov/pnd1', 0],
+    ['🧾', 'สปส.1-10 — เงินสมทบ', 'ประกันสังคม ลูกจ้าง+นายจ้าง', 'gov/sso110', 0],
+    ['📋', 'ทะเบียนลูกจ้าง (ม.112)', 'สำหรับพนักงานตรวจแรงงาน', 'gov/register', 0],
+    ['🏦', 'Bank File (CSV)', 'ไฟล์โอนเงินเดือนเข้าธนาคาร', 'bankfile.csv', 1],
+    ['📒', 'GL Journal (CSV)', 'ตัวเลขลงบัญชี เดบิต/เครดิต', 'gov/gl.csv', 1],
+  ];
+  $('#govCards').innerHTML = C.map(([ic, t, sub, p, dl]) => `<div class="card" style="padding:16px;cursor:pointer" onclick="govOpen('${p}',${dl})">
+    <div style="font-size:1.6rem">${ic}</div><b style="display:block;margin:6px 0 2px">${t}</b>
+    <div style="font-size:.82rem;color:var(--soft)">${sub}</div></div>`).join('');
+}
+function govOpen(p, dl) {
+  const u = `/api/admin/${p}?month=${$('#govMonth').value}` + (URLTOK ? `&t=${URLTOK}` : '');
+  if (dl) location.href = u; else window.open(u, '_blank');
+}
 // ═══ เอกสาร HR / เช็คลิสต์ / พ้นสภาพ ═══
 async function docLoad(id) {
   const docs = await api(`/api/admin/employees/${id}/docs`);

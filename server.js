@@ -942,6 +942,17 @@ app.get('/api/admin/employees/:id/offboard-letter', (req, res) => { if (!admin(r
      <tr><td><b>กำหนดจ่ายงวดสุดท้าย</b></td><td><b>ภายใน ${ob.final_due} (3 วันนับแต่วันเลิกจ้าง)</b></td></tr>`,
     '<td colspan="2">บริษัทขอรับรองว่าบุคคลดังกล่าวเคยเป็นพนักงานของบริษัทจริงตามรายละเอียดข้างต้น</td>')); });
 
+// ── รายการรวมสำหรับเมนูแยก: เอกสาร / พ้นสภาพ / รับเข้า ──
+app.get('/api/admin/docs', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  res.json((db.documents || []).map(d => ({ ...d, emp_name: nm(db, d.emp_id), employee_no: db.employees.find(e => e.id === d.emp_id)?.employee_no || '' })).reverse()); });
+app.get('/api/admin/offboards', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  res.json((db.offboards || []).map(o => ({ ...o, emp_name: nm(db, o.emp_id) })).reverse()); });
+app.get('/api/admin/onboarding', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  res.json(db.employees.filter(e => e.status !== 'resigned' && e.onboarding)
+    .map(e => ({ id: e.id, name: e.name, employee_no: e.employee_no, hire_date: e.hire_date, onboarding: e.onboarding }))); });
 // ═══ ชุดส่งออกราชการ (เดโม่ครบวงจรตาม flow) ═══
 function govDoc(title, sub, headRow, bodyRows, footRow) {
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
