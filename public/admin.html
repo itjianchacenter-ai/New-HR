@@ -782,10 +782,12 @@ function rpRender() {
     const c = y.cats[d.cat] = y.cats[d.cat] || { n: 0, deps: {} };
     c.n++; c.deps[rpDp(d)] = (c.deps[rpDp(d)] || 0) + 1;
   }
-  // โฟลเดอร์ตั้งต้น: ปีปัจจุบัน → ครบทุกหมวดมาตรฐาน (แสดงตั้งแต่ยังไม่มีเอกสาร)
+  // โฟลเดอร์ตั้งต้น: ปีปัจจุบัน → ครบทุกหมวดมาตรฐาน → ครบทุกแผนกในระบบ (แสดงตั้งแต่ยังไม่มีเอกสาร)
   const y0 = String(new Date().getFullYear());
   const yr0 = tree[y0] = tree[y0] || { n: 0, cats: {} };
   for (const c of RP_CATS) yr0.cats[c] = yr0.cats[c] || { n: 0, deps: {} };
+  const dps = rpDepts();
+  for (const cv of Object.values(yr0.cats)) for (const dp of dps) cv.deps[dp] = cv.deps[dp] || 0;
   // โฟลเดอร์ที่เลือกอาจหายไปหลังแก้ไข/ลบเอกสาร — ถ้าไม่มีในผังแล้ว ให้กลับมาแสดงทั้งหมด
   const hasNode = n => !n || (tree[n.y] && (!('c' in n) || tree[n.y].cats[n.c]) && (!('dp' in n) || n.dp in tree[n.y].cats[n.c].deps));
   if (!hasNode(RP_NODE)) RP_NODE = null;
