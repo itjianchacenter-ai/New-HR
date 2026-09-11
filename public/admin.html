@@ -767,8 +767,6 @@ function rpFiltered() {
     (!yr || String(rpBE(d.year)) === yr) && (!lv || d.level === lv) && rpMatch(d));
 }
 function rpRender() {
-  // โฟลเดอร์ที่เลือกอาจหายไปหลังแก้ไข/ลบเอกสาร — ถ้าไม่มีเอกสารในโฟลเดอร์นั้นแล้ว ให้กลับมาแสดงทั้งหมด
-  if (RP_NODE && !RP_DOCS.some(rpMatch)) RP_NODE = null;
   // โฟลเดอร์: สังกัด → ปี → หมวด (สร้างอัตโนมัติจากข้อมูลกำกับเอกสาร)
   const tree = {};
   for (const d of RP_DOCS) {
@@ -777,6 +775,14 @@ function rpRender() {
     b.years[d.year] = b.years[d.year] || { n: 0, cats: {} };
     b.years[d.year].n++; b.years[d.year].cats[d.cat] = (b.years[d.year].cats[d.cat] || 0) + 1;
   }
+  // โฟลเดอร์ตั้งต้น: ส่วนกลาง (บริษัท) → ปีปัจจุบัน → ครบทุกหมวดมาตรฐาน (แสดงตั้งแต่ยังไม่มีเอกสาร)
+  const bn0 = 'ส่วนกลาง (บริษัท)', y0 = String(new Date().getFullYear());
+  tree[bn0] = tree[bn0] || { n: 0, years: {} };
+  const yr0 = tree[bn0].years[y0] = tree[bn0].years[y0] || { n: 0, cats: {} };
+  for (const c of RP_CATS) yr0.cats[c] = yr0.cats[c] || 0;
+  // โฟลเดอร์ที่เลือกอาจหายไปหลังแก้ไข/ลบเอกสาร — ถ้าไม่มีในผังแล้ว ให้กลับมาแสดงทั้งหมด
+  const hasNode = n => !n || (tree[n.b] && (!('y' in n) || tree[n.b].years[n.y]) && (!('c' in n) || n.c in tree[n.b].years[n.y].cats));
+  if (!hasNode(RP_NODE)) RP_NODE = null;
   // key ของโหนดเก็บเป็น object ใน RP_KEYS แล้วอ้างด้วย index — ไม่ฝังชื่อสาขา/หมวดลงใน onclick (กันอักขระพิเศษเจาะหน้า)
   RP_KEYS = [];
   const nd = (key, label, n, pad) => { const i = RP_KEYS.push(key) - 1; return `<div class="nd ${rpEq(RP_NODE, key) ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode(RP_KEYS[${i}])"><span>${label}</span><span class="n">${n}</span></div>`; };
@@ -823,7 +829,10 @@ function rpForm(d) { // ฟอร์มข้อมูลกำกับเอ�
 }
 const rpB64 = f => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
 function rpNew() {
-  openModal(`<h3>เพิ่มเอกสารเข้าคลัง</h3>${rpForm({})}
+  // เติมหมวด/สังกัดจากโฟลเดอร์ที่เลือกอยู่ให้อัตโนมัติ
+  const n = RP_NODE || {};
+  const pre = { cat: n.c, branch_id: n.b && n.b !== 'ส่วนกลาง (บริษัท)' ? (BRANCHES.find(x => x.name === n.b)?.id || '') : '' };
+  openModal(`<h3>เพิ่มเอกสารเข้าคลัง</h3>${rpForm(pre)}
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn dark" onclick="rpSave()">บันทึกเข้าคลัง</button></div>`);
 }
 async function rpSave() {
