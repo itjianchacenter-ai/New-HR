@@ -931,14 +931,14 @@ app.get('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
   res.json((db.repo_docs || []).map(d => ({ ...d,
     branch_name: d.branch_id ? (db.branches.find(b => b.id === d.branch_id)?.name || '—') : 'ส่วนกลาง (บริษัท)' })).reverse()); });
 app.post('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
-  const { name, cat, branch_id, doc_date, ref_no, tags, level, desc, data, filename } = req.body || {};
+  const { name, cat, dept, branch_id, doc_date, ref_no, tags, level, desc, data, filename } = req.body || {};
   if (!name) return res.status(400).json({ error: 'ระบุชื่อเอกสาร' });
   const fm = fileCheck(data, 10, ['pdf', 'jpg', 'png']); if (fm.error) return res.status(400).json({ error: fm.error });
   const db = load();
   const id = 'rp' + Date.now();
   fs.writeFileSync(path.join(DOC_DIR, `${id}_v1.${fm.ext}`), fm.buf);
   const dd = /^\d{4}-\d{2}-\d{2}$/.test(String(doc_date || '')) ? String(doc_date) : iso(new Date());
-  const rec = { id, name: String(name), cat: String(cat || 'อื่น ๆ'), branch_id: String(branch_id || ''),
+  const rec = { id, name: String(name), cat: String(cat || 'อื่น ๆ'), dept: String(dept || '').trim().slice(0, 100), branch_id: String(branch_id || ''),
     doc_date: dd, year: dd.slice(0, 4), ref_no: String(ref_no || '').trim() || repoNo(db),
     tags: String(tags || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 10),
     level: RP_LEVELS.includes(level) ? level : 'ภายใน', desc: String(desc || ''), at: iso(new Date()),
@@ -959,6 +959,7 @@ app.put('/api/admin/repo/:id', (req, res) => { if (!admin(req, res)) return; // 
   const b = req.body || {};
   if (b.name) d.name = String(b.name);
   if (b.cat) d.cat = String(b.cat);
+  if ('dept' in b) d.dept = String(b.dept || '').trim().slice(0, 100);
   if ('branch_id' in b) d.branch_id = String(b.branch_id || '');
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(b.doc_date || ''))) { d.doc_date = String(b.doc_date); d.year = d.doc_date.slice(0, 4); }
   if ('ref_no' in b && String(b.ref_no).trim()) d.ref_no = String(b.ref_no).trim();
@@ -975,15 +976,16 @@ app.get('/api/admin/repo/register.csv', (req, res) => { if (!admin(req, res)) re
   const db = load();
   // กันค่าที่ขึ้นต้นด้วย = + - @ ถูกตีเป็นสูตรตอนเปิดใน Excel (CSV injection)
   const cell = v => { let s = String(v ?? ''); if (/^[=+\-@\t]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
-  const rows = [['ทะเบียน', 'เลขที่เอกสาร', 'วันที่เอกสาร', 'ชื่อเอกสาร', 'หมวด', 'สังกัด / พนักงาน', 'แท็ก', 'ชั้นความลับ', 'เวอร์ชันล่าสุด', 'อัปโหลดเมื่อ']];
+  const rows = [['ทะเบียน', 'เลขที่เอกสาร', 'วันที่เอกสาร', 'ชื่อเอกสาร', 'หมวด', 'แผนก', 'สังกัด / พนักงาน', 'แท็ก', 'ชั้นความลับ', 'เวอร์ชันล่าสุด', 'อัปโหลดเมื่อ']];
   for (const d of db.repo_docs || []) {
     const last = d.versions[d.versions.length - 1] || {};
-    rows.push(['คลังเอกสารกลาง', d.ref_no, d.doc_date, d.name, d.cat,
+    rows.push(['คลังเอกสารกลาง', d.ref_no, d.doc_date, d.name, d.cat, d.dept || '—',
       d.branch_id ? (db.branches.find(b => b.id === d.branch_id)?.name || '—') : 'ส่วนกลาง (บริษัท)',
       (d.tags || []).join(' / '), d.level, 'v' + (last.v || 1), last.at || d.at]);
   }
   // เอกสารพนักงานไม่มีเลขที่/ชั้นความลับ/เวอร์ชันในระบบ — แสดง "—" ตามจริง ไม่แต่งค่าให้
-  for (const d of db.documents || []) rows.push(['เอกสารพนักงาน', '—', d.at, d.name, d.type, nm(db, d.emp_id), '', '—', '—', d.at]);
+  for (const d of db.documents || []) rows.push(['เอกสารพนักงาน', '—', d.at, d.name, d.type,
+    db.employees.find(e => e.id === d.emp_id)?.dept || '—', nm(db, d.emp_id), '', '—', '—', d.at]);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="document-register.csv"');
   res.send('﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')); });

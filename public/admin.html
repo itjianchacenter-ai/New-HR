@@ -529,15 +529,17 @@ main{margin-left:var(--side);min-height:100vh}
       <div class="tools" style="flex-wrap:wrap;gap:10px">
         <input class="in" id="rpQ" placeholder="ค้นหา ชื่อ / เลขที่ / แท็ก / รายละเอียด…" style="width:250px" oninput="rpRender()"/>
         <select class="in" id="rpCat" style="width:auto" onchange="rpRender()"></select>
+        <select class="in" id="rpDeptF" style="width:auto" onchange="rpRender()"></select>
         <select class="in" id="rpBrF" style="width:auto" onchange="rpRender()"></select>
         <select class="in" id="rpYearF" style="width:auto" onchange="rpRender()"></select>
+        <datalist id="rpDeptList"></datalist>
         <select class="in" id="rpLevel" style="width:auto" onchange="rpRender()"><option value="">ชั้นความลับ: ทั้งหมด</option><option>ทั่วไป</option><option>ภายใน</option><option>ลับ</option></select>
         <span class="sp"></span>
         <button class="btn dark" onclick="rpNew()">➕ เพิ่มเอกสาร</button>
       </div>
       <div id="rpGrid">
         <div id="rpTree"></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>เลขที่</th><th>วันที่เอกสาร</th><th>ชื่อเอกสาร</th><th>หมวด</th><th>สังกัด</th><th>แท็ก</th><th>ชั้นความลับ</th><th>ไฟล์</th><th></th></tr></thead><tbody id="rpRows"></tbody></table></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>เลขที่</th><th>วันที่เอกสาร</th><th>ชื่อเอกสาร</th><th>หมวด</th><th>แผนก</th><th>สังกัด</th><th>แท็ก</th><th>ชั้นความลับ</th><th>ไฟล์</th><th></th></tr></thead><tbody id="rpRows"></tbody></table></div>
       </div>
     </section>
     <section class="page" id="p-offboard">
@@ -690,7 +692,7 @@ const TITLES = {
   empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], recruit: ['รับสมัครงาน', () => 'ผู้สมัคร · Recruitment'],
   onboard: ['รับเข้าทำงาน', () => 'เช็คลิสต์เอกสารวันแรก · Onboarding'],
   docs: ['เอกสาร HR', () => 'คลังเอกสาร PDF ออนไลน์ · รายพนักงาน'],
-  repo: ['คลังเอกสารกลาง', () => 'Document Repository · สังกัด → ปี → หมวด · เวอร์ชันเอกสาร'],
+  repo: ['คลังเอกสารกลาง', () => 'Document Repository · ปี → หัวข้อเอกสาร → แผนก · เวอร์ชันเอกสาร'],
   offboard: ['พ้นสภาพ', () => 'ลาออก / เลิกจ้าง · ค่าชดเชย ม.118'],
   gov: ['เอกสารราชการ', () => 'ภ.ง.ด.1 · สปส.1-10 · ทะเบียนลูกจ้าง · ธนาคาร · GL'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
   brman: ['Branches Manning', () => 'Store manning by branch'], ot: ['OT Review', () => 'Overtime review & approval · by period'],
@@ -742,56 +744,60 @@ async function dcDel(id) { if (!confirm('ลบเอกสารนี้?')) r
 
 // ═══ คลังเอกสารกลาง (Document Repository) ═══
 const RP_CATS = ['สัญญา', 'หนังสือบริษัท', 'ประกาศ / คำสั่ง', 'การเงิน-บัญชี', 'เอกสารราชการ', 'คู่มือ / นโยบาย', 'อื่น ๆ'];
-let RP_DOCS = [], RP_NODE = null, RP_KEYS = []; // RP_NODE = null | {b} | {b,y} | {b,y,c} (โฟลเดอร์ที่เลือก)
+let RP_DOCS = [], RP_NODE = null, RP_KEYS = []; // RP_NODE = null | {y} | {y,c} | {y,c,dp} (โฟลเดอร์ที่เลือก: ปี → หมวด → แผนก)
+const RP_DP0 = 'ไม่ระบุแผนก';
 const rpBE = y => +y + 543;
 const rpEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const rpMatch = d => { const n = RP_NODE; return !n || ((!('b' in n) || n.b === d.branch_name) && (!('y' in n) || n.y === d.year) && (!('c' in n) || n.c === d.cat)); };
+const rpDp = d => d.dept || RP_DP0;
+const rpMatch = d => { const n = RP_NODE; return !n || ((!('y' in n) || n.y === d.year) && (!('c' in n) || n.c === d.cat) && (!('dp' in n) || n.dp === rpDp(d))); };
 const rpLvl = l => `<span class="lvl ${l === 'ทั่วไป' ? 'l1' : l === 'ลับ' ? 'l3' : 'l2'}">${l === 'ลับ' ? '🔒 ' : ''}${l}</span>`;
+const rpDepts = () => [...new Set([...EMPS.map(e => e.dept), ...RP_DOCS.map(d => d.dept)].map(x => (x || '').trim()).filter(Boolean))].sort();
 async function loadRepo() {
   RP_DOCS = await api('/api/admin/repo');
   // สร้างตัวเลือกใหม่โดยคงค่าที่ผู้ใช้เลือกไว้ (ไม่รีเซ็ตตัวกรองทุกครั้งที่บันทึก/ลบ)
-  const keep = { cat: $('#rpCat').value, br: $('#rpBrF').value, yr: $('#rpYearF').value };
+  const keep = { cat: $('#rpCat').value, dp: $('#rpDeptF').value, br: $('#rpBrF').value, yr: $('#rpYearF').value };
   const opts = (list, all) => `<option value="">${all}</option>` + list.map(c => `<option>${esc(c)}</option>`).join('');
   $('#rpCat').innerHTML = opts([...new Set([...RP_CATS, ...RP_DOCS.map(d => d.cat)])], 'หมวด: ทั้งหมด');
+  $('#rpDeptF').innerHTML = opts(rpDepts(), 'แผนก: ทั้งหมด');
   $('#rpBrF').innerHTML = `<option value="">สังกัด: ทั้งหมด</option><option value="_hq">ส่วนกลาง (บริษัท)</option>` + BRANCHES.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
   $('#rpYearF').innerHTML = opts([...new Set(RP_DOCS.map(d => d.year))].sort().reverse().map(y => rpBE(y)), 'ปี: ทั้งหมด');
-  $('#rpCat').value = keep.cat || ''; $('#rpBrF').value = keep.br || ''; $('#rpYearF').value = keep.yr || '';
+  $('#rpDeptList').innerHTML = rpDepts().map(x => `<option>${esc(x)}</option>`).join('');
+  $('#rpCat').value = keep.cat || ''; $('#rpDeptF').value = keep.dp || ''; $('#rpBrF').value = keep.br || ''; $('#rpYearF').value = keep.yr || '';
   if ($('#rpYearF').value !== (keep.yr || '')) $('#rpYearF').value = '';
   rpRender();
 }
 function rpFiltered() {
-  const q = $('#rpQ').value.trim().toLowerCase(), cat = $('#rpCat').value, br = $('#rpBrF').value, yr = $('#rpYearF').value, lv = $('#rpLevel').value;
+  const q = $('#rpQ').value.trim().toLowerCase(), cat = $('#rpCat').value, dp = $('#rpDeptF').value, br = $('#rpBrF').value, yr = $('#rpYearF').value, lv = $('#rpLevel').value;
   return RP_DOCS.filter(d =>
-    (!q || [d.name, d.ref_no, d.desc, d.cat, ...(d.tags || [])].join(' ').toLowerCase().includes(q)) &&
-    (!cat || d.cat === cat) && (!br || (br === '_hq' ? !d.branch_id : d.branch_id === br)) &&
+    (!q || [d.name, d.ref_no, d.desc, d.cat, d.dept, ...(d.tags || [])].join(' ').toLowerCase().includes(q)) &&
+    (!cat || d.cat === cat) && (!dp || (d.dept || '') === dp) && (!br || (br === '_hq' ? !d.branch_id : d.branch_id === br)) &&
     (!yr || String(rpBE(d.year)) === yr) && (!lv || d.level === lv) && rpMatch(d));
 }
 function rpRender() {
-  // โฟลเดอร์: สังกัด → ปี → หมวด (สร้างอัตโนมัติจากข้อมูลกำกับเอกสาร)
+  // โฟลเดอร์: ปี → หัวข้อเอกสาร (หมวด) → แผนก (สร้างอัตโนมัติจากข้อมูลกำกับเอกสาร)
   const tree = {};
   for (const d of RP_DOCS) {
-    tree[d.branch_name] = tree[d.branch_name] || { n: 0, years: {} };
-    const b = tree[d.branch_name]; b.n++;
-    b.years[d.year] = b.years[d.year] || { n: 0, cats: {} };
-    b.years[d.year].n++; b.years[d.year].cats[d.cat] = (b.years[d.year].cats[d.cat] || 0) + 1;
+    const y = tree[d.year] = tree[d.year] || { n: 0, cats: {} };
+    y.n++;
+    const c = y.cats[d.cat] = y.cats[d.cat] || { n: 0, deps: {} };
+    c.n++; c.deps[rpDp(d)] = (c.deps[rpDp(d)] || 0) + 1;
   }
-  // โฟลเดอร์ตั้งต้น: ส่วนกลาง (บริษัท) → ปีปัจจุบัน → ครบทุกหมวดมาตรฐาน (แสดงตั้งแต่ยังไม่มีเอกสาร)
-  const bn0 = 'ส่วนกลาง (บริษัท)', y0 = String(new Date().getFullYear());
-  tree[bn0] = tree[bn0] || { n: 0, years: {} };
-  const yr0 = tree[bn0].years[y0] = tree[bn0].years[y0] || { n: 0, cats: {} };
-  for (const c of RP_CATS) yr0.cats[c] = yr0.cats[c] || 0;
+  // โฟลเดอร์ตั้งต้น: ปีปัจจุบัน → ครบทุกหมวดมาตรฐาน (แสดงตั้งแต่ยังไม่มีเอกสาร)
+  const y0 = String(new Date().getFullYear());
+  const yr0 = tree[y0] = tree[y0] || { n: 0, cats: {} };
+  for (const c of RP_CATS) yr0.cats[c] = yr0.cats[c] || { n: 0, deps: {} };
   // โฟลเดอร์ที่เลือกอาจหายไปหลังแก้ไข/ลบเอกสาร — ถ้าไม่มีในผังแล้ว ให้กลับมาแสดงทั้งหมด
-  const hasNode = n => !n || (tree[n.b] && (!('y' in n) || tree[n.b].years[n.y]) && (!('c' in n) || n.c in tree[n.b].years[n.y].cats));
+  const hasNode = n => !n || (tree[n.y] && (!('c' in n) || tree[n.y].cats[n.c]) && (!('dp' in n) || n.dp in tree[n.y].cats[n.c].deps));
   if (!hasNode(RP_NODE)) RP_NODE = null;
-  // key ของโหนดเก็บเป็น object ใน RP_KEYS แล้วอ้างด้วย index — ไม่ฝังชื่อสาขา/หมวดลงใน onclick (กันอักขระพิเศษเจาะหน้า)
+  // key ของโหนดเก็บเป็น object ใน RP_KEYS แล้วอ้างด้วย index — ไม่ฝังชื่อหมวด/แผนกลงใน onclick (กันอักขระพิเศษเจาะหน้า)
   RP_KEYS = [];
   const nd = (key, label, n, pad) => { const i = RP_KEYS.push(key) - 1; return `<div class="nd ${rpEq(RP_NODE, key) ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode(RP_KEYS[${i}])"><span>${label}</span><span class="n">${n}</span></div>`; };
   let h = nd(null, '🗂️ เอกสารทั้งหมด', RP_DOCS.length, 9);
-  for (const [bn, b] of Object.entries(tree)) {
-    h += nd({ b: bn }, '📁 ' + esc(bn), b.n, 18);
-    for (const [y, yv] of Object.entries(b.years).sort((a, c) => c[0].localeCompare(a[0]))) {
-      h += nd({ b: bn, y }, '📂 ปี ' + rpBE(y), yv.n, 30);
-      for (const [c, n] of Object.entries(yv.cats)) h += nd({ b: bn, y, c }, '📄 ' + esc(c), n, 44);
+  for (const [y, yv] of Object.entries(tree).sort((a, b) => b[0].localeCompare(a[0]))) {
+    h += nd({ y }, '🗓️ ปี ' + rpBE(y), yv.n, 18);
+    for (const [c, cv] of Object.entries(yv.cats)) {
+      h += nd({ y, c }, '📁 ' + esc(c), cv.n, 30);
+      for (const [dp, n] of Object.entries(cv.deps).sort((a, b) => a[0].localeCompare(b[0], 'th'))) h += nd({ y, c, dp }, '👥 ' + esc(dp), n, 44);
     }
   }
   $('#rpTree').innerHTML = h;
@@ -800,14 +806,14 @@ function rpRender() {
     const last = d.versions[d.versions.length - 1] || { file: '#', v: 1 };
     return `<tr><td class="mono" style="white-space:nowrap">${esc(d.ref_no)}</td><td style="white-space:nowrap">${d.doc_date}</td>
     <td><b>${esc(d.name)}</b>${d.desc ? `<div style="color:var(--faint);font-size:.8rem">${esc(d.desc)}</div>` : ''}</td>
-    <td>${esc(d.cat)}</td><td>${esc(d.branch_name)}</td>
+    <td>${esc(d.cat)}</td><td>${esc(d.dept || '—')}</td><td>${esc(d.branch_name)}</td>
     <td>${(d.tags || []).map(t => `<span class="rptag">${esc(t)}</span>`).join('') || '—'}</td>
     <td>${rpLvl(d.level)}</td>
     <td style="white-space:nowrap"><a href="${last.file}${URLTOK ? '?t=' + URLTOK : ''}" target="_blank">📄 เปิด (v${last.v})</a></td>
     <td style="white-space:nowrap"><button class="btn" style="padding:4px 10px" onclick="rpVer('${d.id}')">เวอร์ชัน</button>
       <button class="btn" style="padding:4px 10px" onclick="rpEdit('${d.id}')">แก้ไข</button>
       <button class="btn" style="padding:4px 10px;color:var(--red)" onclick="rpDel('${d.id}')">ลบ</button></td></tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--faint);padding:22px">ไม่พบเอกสาร — กด "เพิ่มเอกสาร" เพื่ออัปโหลดเข้าคลัง (PDF / JPG / PNG ไม่เกิน 10MB)</td></tr>';
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--faint);padding:22px">ไม่พบเอกสาร — กด "เพิ่มเอกสาร" เพื่ออัปโหลดเข้าคลัง (PDF / JPG / PNG ไม่เกิน 10MB)</td></tr>';
 }
 function rpNode(k) { RP_NODE = rpEq(RP_NODE, k) ? null : k; rpRender(); }
 function rpForm(d) { // ฟอร์มข้อมูลกำกับเอกสาร ใช้ทั้งเพิ่มใหม่และแก้ไข
@@ -816,7 +822,8 @@ function rpForm(d) { // ฟอร์มข้อมูลกำกับเอ�
   return `<div style="display:grid;gap:10px">
     <input class="in" id="rfName" placeholder="ชื่อเอกสาร *" value="${esc(d.name || '')}"/>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><span class="flabel">หมวดเอกสาร</span><select class="in" id="rfCat">${catSel}</select></div>
+      <div><span class="flabel">หมวดเอกสาร (หัวข้อ)</span><select class="in" id="rfCat">${catSel}</select></div>
+      <div><span class="flabel">แผนก (เลือกหรือพิมพ์ใหม่)</span><input class="in" id="rfDept" list="rpDeptList" value="${esc(d.dept || '')}" placeholder="เช่น บัญชี, HR, IT"/></div>
       <div><span class="flabel">สังกัด</span><select class="in" id="rfBr">${brSel}</select></div>
       <div><span class="flabel">วันที่เอกสาร</span><input class="in" type="date" id="rfDate" value="${d.doc_date || iso(new Date())}"/></div>
       <div><span class="flabel">เลขที่เอกสาร (เว้นว่าง = ออกเลขอัตโนมัติ)</span><input class="in" id="rfRef" value="${esc(d.ref_no || '')}" placeholder="เช่น JC-สญ-001/2569"/></div>
@@ -829,9 +836,9 @@ function rpForm(d) { // ฟอร์มข้อมูลกำกับเอ�
 }
 const rpB64 = f => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
 function rpNew() {
-  // เติมหมวด/สังกัดจากโฟลเดอร์ที่เลือกอยู่ให้อัตโนมัติ
+  // เติมหมวด/แผนกจากโฟลเดอร์ที่เลือกอยู่ให้อัตโนมัติ
   const n = RP_NODE || {};
-  const pre = { cat: n.c, branch_id: n.b && n.b !== 'ส่วนกลาง (บริษัท)' ? (BRANCHES.find(x => x.name === n.b)?.id || '') : '' };
+  const pre = { cat: n.c, dept: n.dp && n.dp !== RP_DP0 ? n.dp : '' };
   openModal(`<h3>เพิ่มเอกสารเข้าคลัง</h3>${rpForm(pre)}
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn dark" onclick="rpSave()">บันทึกเข้าคลัง</button></div>`);
 }
@@ -841,7 +848,7 @@ async function rpSave() {
   if (!f) return toast('แนบไฟล์ PDF / JPG / PNG');
   if (f.size > 10 * 1024 * 1024) return toast('ไฟล์เกิน 10MB');
   try {
-    await api('/api/admin/repo', { method: 'POST', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value, filename: f.name, data: await rpB64(f) } });
+    await api('/api/admin/repo', { method: 'POST', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, dept: $('#rfDept').value.trim(), branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value, filename: f.name, data: await rpB64(f) } });
     toast('บันทึกเอกสารเข้าคลังแล้ว'); closeModal(); loadRepo();
   } catch (e) { toast(e.message); }
 }
@@ -852,7 +859,7 @@ function rpEdit(id) {
 }
 async function rpEditSave(id) {
   try {
-    await api('/api/admin/repo/' + id, { method: 'PUT', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value } });
+    await api('/api/admin/repo/' + id, { method: 'PUT', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, dept: $('#rfDept').value.trim(), branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value } });
     toast('บันทึกการแก้ไขแล้ว'); closeModal(); loadRepo();
   } catch (e) { toast(e.message); }
 }
