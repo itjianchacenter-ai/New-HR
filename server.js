@@ -22,7 +22,7 @@ fs.mkdirSync(DOC_DIR, { recursive: true });
 app.set('trust proxy', 1); // อยู่หลัง nginx/Cloudflare
 const clientIp = req => req.headers['cf-connecting-ip'] || req.ip || 'unknown';
 
-app.use(express.json({ limit: '10mb' })); // รูปลงเวลา + เอกสาร PDF (base64)
+app.use(express.json({ limit: '16mb' })); // รูปลงเวลา + เอกสาร PDF (base64 ของไฟล์สูงสุด 10MB)
 app.use(cookieParser(SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 // ── CORS: ให้แอปมือถือ (bundle ในเครื่อง) เรียก API ข้าม origin ได้ ──
@@ -898,6 +898,84 @@ app.delete('/api/admin/docs/:id', (req, res) => { if (!admin(req, res)) return;
 app.get('/api/me/docs', (req, res) => {
   const c = me(req, res); if (!c) return;
   res.json((c.db.documents || []).filter(d => d.emp_id === c.emp.id)); });
+
+// ═══ คลังเอกสารกลาง (Document Repository — สังกัด → ปี → หมวด · เลขที่อัตโนมัติ · แท็ก · ชั้นความลับ · เวอร์ชัน) ═══
+const RP_LEVELS = ['ทั่วไป', 'ภายใน', 'ลับ'];
+function repoFile(data) { // ตรวจชนิดไฟล์จาก magic bytes: PDF / PNG / JPG · ไม่เกิน 10MB
+  const buf = Buffer.from(String(data || ''), 'base64');
+  if (!buf.length) return { error: 'ไม่พบข้อมูลไฟล์' };
+  if (buf.length > 10 * 1024 * 1024) return { error: 'ไฟล์เกิน 10MB' };
+  let ext = null;
+  if (buf.slice(0, 4).toString() === '%PDF') ext = 'pdf';
+  else if (buf[0] === 0x89 && buf[1] === 0x50) ext = 'png';
+  else if (buf[0] === 0xff && buf[1] === 0xd8) ext = 'jpg';
+  if (!ext) return { error: 'รองรับเฉพาะไฟล์ PDF / JPG / PNG' };
+  return { buf, ext };
+}
+function repoNo(db) { // เลขที่เอกสารอัตโนมัติ เช่น DOC-6902-0001 (ปี พ.ศ. 2 หลัก + เดือน + เลขลำดับ)
+  db.repo_seq = (db.repo_seq || 0) + 1;
+  const d = new Date();
+  return `DOC-${String(d.getFullYear() + 543).slice(-2)}${String(d.getMonth() + 1).padStart(2, '0')}-${String(db.repo_seq).padStart(4, '0')}`;
+}
+app.get('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
+  const db = load();
+  res.json((db.repo_docs || []).map(d => ({ ...d,
+    branch_name: d.branch_id ? (db.branches.find(b => b.id === d.branch_id)?.name || '—') : 'ส่วนกลาง (บริษัท)' })).reverse()); });
+app.post('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
+  const { name, cat, branch_id, doc_date, ref_no, tags, level, desc, data, filename } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'ระบุชื่อเอกสาร' });
+  const fm = repoFile(data); if (fm.error) return res.status(400).json({ error: fm.error });
+  const db = load();
+  const id = 'rp' + Date.now();
+  fs.writeFileSync(path.join(DOC_DIR, `${id}_v1.${fm.ext}`), fm.buf);
+  const dd = /^\d{4}-\d{2}-\d{2}$/.test(String(doc_date || '')) ? String(doc_date) : iso(new Date());
+  const rec = { id, name: String(name), cat: String(cat || 'อื่น ๆ'), branch_id: String(branch_id || ''),
+    doc_date: dd, year: dd.slice(0, 4), ref_no: String(ref_no || '').trim() || repoNo(db),
+    tags: String(tags || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 10),
+    level: RP_LEVELS.includes(level) ? level : 'ภายใน', desc: String(desc || ''), at: iso(new Date()),
+    versions: [{ v: 1, file: `/uploads/docs/${id}_v1.${fm.ext}`, filename: String(filename || name), size: fm.buf.length, at: iso(new Date()) }] };
+  db.repo_docs = db.repo_docs || []; db.repo_docs.push(rec);
+  save(db); res.json({ ok: true, id, ref_no: rec.ref_no }); });
+app.post('/api/admin/repo/:id/version', (req, res) => { if (!admin(req, res)) return; // อัปโหลดไฟล์เวอร์ชันใหม่ (เก็บของเดิมไว้ทุกเวอร์ชัน)
+  const fm = repoFile((req.body || {}).data); if (fm.error) return res.status(400).json({ error: fm.error });
+  const db = load(); const d = (db.repo_docs || []).find(x => x.id === req.params.id);
+  if (!d) return res.status(404).json({ error: 'not found' });
+  const v = d.versions.length + 1;
+  fs.writeFileSync(path.join(DOC_DIR, `${d.id}_v${v}.${fm.ext}`), fm.buf);
+  d.versions.push({ v, file: `/uploads/docs/${d.id}_v${v}.${fm.ext}`, filename: String((req.body || {}).filename || d.name), size: fm.buf.length, at: iso(new Date()) });
+  save(db); res.json({ ok: true, v }); });
+app.put('/api/admin/repo/:id', (req, res) => { if (!admin(req, res)) return; // แก้ไขเฉพาะข้อมูลกำกับเอกสาร
+  const db = load(); const d = (db.repo_docs || []).find(x => x.id === req.params.id);
+  if (!d) return res.status(404).json({ error: 'not found' });
+  const b = req.body || {};
+  if (b.name) d.name = String(b.name);
+  if (b.cat) d.cat = String(b.cat);
+  if ('branch_id' in b) d.branch_id = String(b.branch_id || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(b.doc_date || ''))) { d.doc_date = String(b.doc_date); d.year = d.doc_date.slice(0, 4); }
+  if ('ref_no' in b && String(b.ref_no).trim()) d.ref_no = String(b.ref_no).trim();
+  if ('tags' in b) d.tags = String(b.tags || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 10);
+  if (RP_LEVELS.includes(b.level)) d.level = b.level;
+  if ('desc' in b) d.desc = String(b.desc || '');
+  save(db); res.json({ ok: true }); });
+app.delete('/api/admin/repo/:id', (req, res) => { if (!admin(req, res)) return;
+  const db = load(); const i = (db.repo_docs || []).findIndex(x => x.id === req.params.id);
+  if (i < 0) return res.status(404).json({ error: 'not found' });
+  for (const v of db.repo_docs[i].versions) { try { fs.unlinkSync(path.join(DOC_DIR, path.basename(v.file))); } catch {} }
+  db.repo_docs.splice(i, 1); save(db); res.json({ ok: true }); });
+app.get('/api/admin/repo/register.csv', (req, res) => { if (!admin(req, res)) return; // ทะเบียนเอกสาร: คลังกลาง + เอกสารพนักงาน
+  const db = load();
+  const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['ทะเบียน', 'เลขที่เอกสาร', 'วันที่เอกสาร', 'ชื่อเอกสาร', 'หมวด', 'สังกัด / พนักงาน', 'แท็ก', 'ชั้นความลับ', 'เวอร์ชันล่าสุด', 'อัปโหลดเมื่อ']];
+  for (const d of db.repo_docs || []) {
+    const last = d.versions[d.versions.length - 1];
+    rows.push(['คลังเอกสารกลาง', d.ref_no, d.doc_date, d.name, d.cat,
+      d.branch_id ? (db.branches.find(b => b.id === d.branch_id)?.name || '—') : 'ส่วนกลาง (บริษัท)',
+      (d.tags || []).join(' / '), d.level, 'v' + last.v, last.at]);
+  }
+  for (const d of db.documents || []) rows.push(['เอกสารพนักงาน', d.id, d.at, d.name, d.type, nm(db, d.emp_id), '', 'ภายใน', 'v1', d.at]);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="document-register.csv"');
+  res.send('﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')); });
 
 // ═══ พ้นสภาพ (Offboarding) — ค่าชดเชย ม.118 + พักร้อนคงเหลือ + หนังสือรับรอง ═══
 function severanceDays(years) {

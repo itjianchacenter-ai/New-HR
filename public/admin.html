@@ -196,6 +196,18 @@ main{margin-left:var(--side);min-height:100vh}
 #drawer .df .btn{flex:none}
 #drawer .df .grow{flex:1}
 
+/* คลังเอกสารกลาง (repository) */
+#rpGrid{display:grid;grid-template-columns:236px 1fr;gap:14px;align-items:start}
+#rpTree{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:10px 8px;font-size:.86rem;max-height:70vh;overflow-y:auto}
+#rpTree .nd{padding:5px 9px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:6px;color:var(--soft)}
+#rpTree .nd:hover{background:var(--bg)}
+#rpTree .nd.on{background:var(--brown);color:#fff;font-weight:600}
+#rpTree .nd .n{color:var(--faint);font-size:.78rem}
+#rpTree .nd.on .n{color:#e6ddd6}
+.lvl{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.74rem;font-weight:600;white-space:nowrap}
+.lvl.l1{background:#e7f0ea;color:var(--green)}.lvl.l2{background:#efe9ff;color:#5b3fae}.lvl.l3{background:#f7e5e0;color:var(--red)}
+.rptag{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:1px 8px;font-size:.74rem;margin:1px 2px 1px 0;color:var(--soft)}
+@media(max-width:960px){#rpGrid{grid-template-columns:1fr}#rpTree{max-height:34vh}}
 /* modal */
 #modal{position:fixed;inset:0;background:rgba(30,25,15,.5);z-index:50;display:none;place-items:center;padding:20px}
 #modal.on{display:grid}
@@ -288,6 +300,7 @@ main{margin-left:var(--side);min-height:100vh}
   <a data-p="recruit"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.9-3 2.9-4.5 5.5-4.5s4.6 1.5 5.5 4.5M16 8h5M18.5 5.5v5"/></svg>รับสมัครงาน<span class="bdg" id="apBdg" style="display:none">0</span></a>
   <a data-p="onboard"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 4v3M15 4v3M8.5 13l2.5 2.5 4.5-5"/></svg>รับเข้าทำงาน</a>
   <a data-p="docs"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M13 3v6h6M10 13h6M10 17h4"/></svg>เอกสาร HR</a>
+  <a data-p="repo"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 12h18"/></svg>คลังเอกสารกลาง</a>
   <a data-p="offboard"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.2"/><path d="M4.5 19c.9-3 2.9-4.5 5.5-4.5 1.4 0 2.6.4 3.6 1.1M15 12l6 6M21 12l-6 6"/></svg>พ้นสภาพ</a>
   <a data-p="hqman"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>HQ Manning</a>
   <a data-p="brman"><svg viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5M4 9v11h16V9M9 20v-6h6v6"/></svg>Branches Manning</a>
@@ -512,6 +525,21 @@ main{margin-left:var(--side);min-height:100vh}
       </div>
       <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่</th><th>พนักงาน</th><th>ประเภท</th><th>ไฟล์</th><th></th></tr></thead><tbody id="dcRows"></tbody></table></div>
     </section>
+    <section class="page" id="p-repo">
+      <div class="tools" style="flex-wrap:wrap;gap:10px">
+        <input class="in" id="rpQ" placeholder="ค้นหา ชื่อ / เลขที่ / แท็ก / รายละเอียด…" style="width:250px" oninput="rpRender()"/>
+        <select class="in" id="rpCat" style="width:auto" onchange="rpRender()"></select>
+        <select class="in" id="rpBrF" style="width:auto" onchange="rpRender()"></select>
+        <select class="in" id="rpYearF" style="width:auto" onchange="rpRender()"></select>
+        <select class="in" id="rpLevel" style="width:auto" onchange="rpRender()"><option value="">ชั้นความลับ: ทั้งหมด</option><option>ทั่วไป</option><option>ภายใน</option><option>ลับ</option></select>
+        <span class="sp"></span>
+        <button class="btn dark" onclick="rpNew()">➕ เพิ่มเอกสาร</button>
+      </div>
+      <div id="rpGrid">
+        <div id="rpTree"></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>เลขที่</th><th>วันที่เอกสาร</th><th>ชื่อเอกสาร</th><th>หมวด</th><th>สังกัด</th><th>แท็ก</th><th>ชั้นความลับ</th><th>ไฟล์</th><th></th></tr></thead><tbody id="rpRows"></tbody></table></div>
+      </div>
+    </section>
     <section class="page" id="p-offboard">
       <div class="tools" style="flex-wrap:wrap;gap:10px">
         <select id="obEmp" class="in" style="width:auto;min-width:220px"></select>
@@ -542,6 +570,8 @@ main{margin-left:var(--side);min-height:100vh}
           <div class="acts"><button class="btn sm" onclick="rp50bis()">PDF</button></div></div>
         <div class="rcard"><div class="ic">👥</div><h3>Headcount &amp; Labor Cost</h3><p>กำลังพลและต้นทุนแรงงานตามสาขา / แผนก</p>
           <div class="acts"><button class="btn sm green" onclick="rpHeadcount()">Excel</button></div></div>
+        <div class="rcard"><div class="ic">🗂️</div><h3>ทะเบียนเอกสาร</h3><p>รายการเอกสารทั้งระบบ เลขที่ หมวด สังกัด ชั้นความลับ เวอร์ชัน</p>
+          <div class="acts"><button class="btn sm green" onclick="rpRegister()">Excel</button><button class="btn sm" onclick="go('repo')">เปิดคลังเอกสาร</button></div></div>
       </div>
     </section>
 
@@ -660,13 +690,14 @@ const TITLES = {
   empdb: ['Employee Database', () => 'ทะเบียนพนักงาน'], recruit: ['รับสมัครงาน', () => 'ผู้สมัคร · Recruitment'],
   onboard: ['รับเข้าทำงาน', () => 'เช็คลิสต์เอกสารวันแรก · Onboarding'],
   docs: ['เอกสาร HR', () => 'คลังเอกสาร PDF ออนไลน์ · รายพนักงาน'],
+  repo: ['คลังเอกสารกลาง', () => 'Document Repository · สังกัด → ปี → หมวด · เวอร์ชันเอกสาร'],
   offboard: ['พ้นสภาพ', () => 'ลาออก / เลิกจ้าง · ค่าชดเชย ม.118'],
   gov: ['เอกสารราชการ', () => 'ภ.ง.ด.1 · สปส.1-10 · ทะเบียนลูกจ้าง · ธนาคาร · GL'], hqman: ['HQ Manning', () => 'Department manning · Head Office'],
   brman: ['Branches Manning', () => 'Store manning by branch'], ot: ['OT Review', () => 'Overtime review & approval · by period'],
   payroll: ['Payroll', () => 'เงินเดือนและสลิป'], reports: ['Reports', () => 'Reports · export Excel / PDF'],
   ann: ['ประกาศ', () => 'Announcements'], settings: ['ตั้งค่า', () => 'System preferences'],
 };
-const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, recruit: loadRecruit, onboard: loadOnboard, docs: loadDocsPage, offboard: loadOffboard, gov: loadGov, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
+const LOADERS = { dash: loadDash, tna: loadTna, shifts: loadShifts, approvals: loadAppr, empdb: loadEmp, recruit: loadRecruit, onboard: loadOnboard, docs: loadDocsPage, repo: loadRepo, offboard: loadOffboard, gov: loadGov, hqman: loadHq, brman: loadBr, ot: loadOt, payroll: loadPayroll, reports: () => { $('#rpMonth').value ||= iso(new Date()).slice(0, 7); }, ann: loadAnn, settings: loadSettings };
 function go(p) {
   $('.side')?.classList?.remove('open'); $('#sideOvl')?.classList?.remove('open'); // ปิดเมนูบนมือถือ
   $$('.side a').forEach(a => a.classList.toggle('on', a.dataset.p === p));
@@ -708,6 +739,127 @@ async function dcUpload() {
   toast('อัปโหลดเอกสารแล้ว'); $('#dcFile').value = ''; loadDocsPage();
 }
 async function dcDel(id) { if (!confirm('ลบเอกสารนี้?')) return; await api('/api/admin/docs/' + id, { method: 'DELETE' }); loadDocsPage(); }
+
+// ═══ คลังเอกสารกลาง (Document Repository) ═══
+const RP_CATS = ['สัญญา', 'หนังสือบริษัท', 'ประกาศ / คำสั่ง', 'การเงิน-บัญชี', 'เอกสารราชการ', 'คู่มือ / นโยบาย', 'อื่น ๆ'];
+let RP_DOCS = [], RP_NODE = '';
+const rpBE = y => +y + 543;
+const rpLvl = l => `<span class="lvl ${l === 'ทั่วไป' ? 'l1' : l === 'ลับ' ? 'l3' : 'l2'}">${l === 'ลับ' ? '🔒 ' : ''}${l}</span>`;
+async function loadRepo() {
+  RP_DOCS = await api('/api/admin/repo');
+  const opts = (list, all) => `<option value="">${all}</option>` + list.map(c => `<option>${esc(c)}</option>`).join('');
+  $('#rpCat').innerHTML = opts([...new Set([...RP_CATS, ...RP_DOCS.map(d => d.cat)])], 'หมวด: ทั้งหมด');
+  $('#rpBrF').innerHTML = `<option value="">สังกัด: ทั้งหมด</option><option value="_hq">ส่วนกลาง (บริษัท)</option>` + BRANCHES.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  $('#rpYearF').innerHTML = opts([...new Set(RP_DOCS.map(d => d.year))].sort().reverse().map(y => rpBE(y)), 'ปี: ทั้งหมด');
+  rpRender();
+}
+function rpFiltered() {
+  const q = $('#rpQ').value.trim().toLowerCase(), cat = $('#rpCat').value, br = $('#rpBrF').value, yr = $('#rpYearF').value, lv = $('#rpLevel').value;
+  return RP_DOCS.filter(d =>
+    (!q || [d.name, d.ref_no, d.desc, d.cat, ...(d.tags || [])].join(' ').toLowerCase().includes(q)) &&
+    (!cat || d.cat === cat) && (!br || (br === '_hq' ? !d.branch_id : d.branch_id === br)) &&
+    (!yr || String(rpBE(d.year)) === yr) && (!lv || d.level === lv) &&
+    (!RP_NODE || `${d.branch_name}|${d.year}|${d.cat}`.startsWith(RP_NODE)));
+}
+function rpRender() {
+  // โฟลเดอร์: สังกัด → ปี → หมวด (สร้างอัตโนมัติจากข้อมูลกำกับเอกสาร)
+  const tree = {};
+  for (const d of RP_DOCS) {
+    tree[d.branch_name] = tree[d.branch_name] || { n: 0, years: {} };
+    const b = tree[d.branch_name]; b.n++;
+    b.years[d.year] = b.years[d.year] || { n: 0, cats: {} };
+    b.years[d.year].n++; b.years[d.year].cats[d.cat] = (b.years[d.year].cats[d.cat] || 0) + 1;
+  }
+  const nd = (key, label, n, pad) => `<div class="nd ${RP_NODE === key ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode('${key.replace(/'/g, "\\'")}')"><span>${label}</span><span class="n">${n}</span></div>`;
+  let h = nd('', '🗂️ เอกสารทั้งหมด', RP_DOCS.length, 9);
+  for (const [bn, b] of Object.entries(tree)) {
+    h += nd(bn + '|', '📁 ' + esc(bn), b.n, 18);
+    for (const [y, yv] of Object.entries(b.years).sort((a, c) => c[0].localeCompare(a[0]))) {
+      h += nd(`${bn}|${y}|`, '📂 ปี ' + rpBE(y), yv.n, 30);
+      for (const [c, n] of Object.entries(yv.cats)) h += nd(`${bn}|${y}|${c}`, '📄 ' + esc(c), n, 44);
+    }
+  }
+  $('#rpTree').innerHTML = h;
+  const rows = rpFiltered();
+  $('#rpRows').innerHTML = rows.map(d => {
+    const last = d.versions[d.versions.length - 1];
+    return `<tr><td class="mono" style="white-space:nowrap">${esc(d.ref_no)}</td><td style="white-space:nowrap">${d.doc_date}</td>
+    <td><b>${esc(d.name)}</b>${d.desc ? `<div style="color:var(--faint);font-size:.8rem">${esc(d.desc)}</div>` : ''}</td>
+    <td>${esc(d.cat)}</td><td>${esc(d.branch_name)}</td>
+    <td>${(d.tags || []).map(t => `<span class="rptag">${esc(t)}</span>`).join('') || '—'}</td>
+    <td>${rpLvl(d.level)}</td>
+    <td style="white-space:nowrap"><a href="${last.file}${URLTOK ? '?t=' + URLTOK : ''}" target="_blank">📄 เปิด (v${last.v})</a></td>
+    <td style="white-space:nowrap"><button class="btn" style="padding:4px 10px" onclick="rpVer('${d.id}')">เวอร์ชัน</button>
+      <button class="btn" style="padding:4px 10px" onclick="rpEdit('${d.id}')">แก้ไข</button>
+      <button class="btn" style="padding:4px 10px;color:var(--red)" onclick="rpDel('${d.id}')">ลบ</button></td></tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--faint);padding:22px">ไม่พบเอกสาร — กด "เพิ่มเอกสาร" เพื่ออัปโหลดเข้าคลัง (PDF / JPG / PNG ไม่เกิน 10MB)</td></tr>';
+}
+function rpNode(k) { RP_NODE = (RP_NODE === k) ? '' : k; rpRender(); }
+function rpForm(d) { // ฟอร์มข้อมูลกำกับเอกสาร ใช้ทั้งเพิ่มใหม่และแก้ไข
+  const catSel = [...new Set([...RP_CATS, ...(d.cat ? [d.cat] : [])])].map(c => `<option ${c === d.cat ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  const brSel = `<option value="" ${!d.branch_id ? 'selected' : ''}>ส่วนกลาง (บริษัท)</option>` + BRANCHES.map(b => `<option value="${b.id}" ${b.id === d.branch_id ? 'selected' : ''}>${esc(b.name)}</option>`).join('');
+  return `<div style="display:grid;gap:10px">
+    <input class="in" id="rfName" placeholder="ชื่อเอกสาร *" value="${esc(d.name || '')}"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><span class="flabel">หมวดเอกสาร</span><select class="in" id="rfCat">${catSel}</select></div>
+      <div><span class="flabel">สังกัด</span><select class="in" id="rfBr">${brSel}</select></div>
+      <div><span class="flabel">วันที่เอกสาร</span><input class="in" type="date" id="rfDate" value="${d.doc_date || new Date().toISOString().slice(0, 10)}"/></div>
+      <div><span class="flabel">เลขที่เอกสาร (เว้นว่าง = ออกเลขอัตโนมัติ)</span><input class="in" id="rfRef" value="${esc(d.ref_no || '')}" placeholder="เช่น JC-สญ-001/2569"/></div>
+      <div><span class="flabel">ชั้นความลับ</span><select class="in" id="rfLvl">${['ทั่วไป', 'ภายใน', 'ลับ'].map(l => `<option ${l === (d.level || 'ภายใน') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div><span class="flabel">แท็ก (คั่นด้วย , )</span><input class="in" id="rfTags" value="${esc((d.tags || []).join(', '))}" placeholder="เช่น สัญญาเช่า, เวสต์เกต"/></div>
+    </div>
+    <textarea class="in" id="rfDesc" rows="2" placeholder="คำอธิบายเพิ่มเติม (ถ้ามี)">${esc(d.desc || '')}</textarea>
+    ${d.id ? '' : '<input type="file" id="rfFile" accept="application/pdf,image/png,image/jpeg" style="font-size:.84rem"/>'}
+  </div>`;
+}
+const rpB64 = f => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result.split(',')[1]); fr.readAsDataURL(f); });
+function rpNew() {
+  openModal(`<h3>เพิ่มเอกสารเข้าคลัง</h3>${rpForm({})}
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn dark" onclick="rpSave()">บันทึกเข้าคลัง</button></div>`);
+}
+async function rpSave() {
+  const f = $('#rfFile').files[0];
+  if (!$('#rfName').value.trim()) return toast('ระบุชื่อเอกสาร');
+  if (!f) return toast('แนบไฟล์ PDF / JPG / PNG');
+  if (f.size > 10 * 1024 * 1024) return toast('ไฟล์เกิน 10MB');
+  await api('/api/admin/repo', { method: 'POST', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value, filename: f.name, data: await rpB64(f) } });
+  toast('บันทึกเอกสารเข้าคลังแล้ว'); closeModal(); loadRepo();
+}
+function rpEdit(id) {
+  const d = RP_DOCS.find(x => x.id === id); if (!d) return;
+  openModal(`<h3>แก้ไขข้อมูลเอกสาร</h3>${rpForm(d)}
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn dark" onclick="rpEditSave('${id}')">บันทึก</button></div>`);
+}
+async function rpEditSave(id) {
+  await api('/api/admin/repo/' + id, { method: 'PUT', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value } });
+  toast('บันทึกการแก้ไขแล้ว'); closeModal(); loadRepo();
+}
+function rpVer(id) {
+  const d = RP_DOCS.find(x => x.id === id); if (!d) return;
+  const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.ceil(n / 1024) + ' KB';
+  openModal(`<h3>เวอร์ชันเอกสาร · ${esc(d.name)}</h3>
+    <table class="tbl"><thead><tr><th>เวอร์ชัน</th><th>ไฟล์</th><th>ขนาด</th><th>อัปโหลดเมื่อ</th></tr></thead><tbody>
+    ${d.versions.slice().reverse().map(v => `<tr><td><b>v${v.v}</b>${v.v === d.versions.length ? ' <span class="lvl l1">ล่าสุด</span>' : ''}</td>
+      <td><a href="${v.file}${URLTOK ? '?t=' + URLTOK : ''}" target="_blank">📄 ${esc(v.filename)}</a></td><td>${kb(v.size)}</td><td>${v.at}</td></tr>`).join('')}
+    </tbody></table>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap">
+      <input type="file" id="rvFile" accept="application/pdf,image/png,image/jpeg" style="font-size:.84rem;flex:1"/>
+      <button class="btn dark" onclick="rpVerUp('${id}')">⬆ อัปโหลดเวอร์ชันใหม่</button><button class="btn" onclick="closeModal()">ปิด</button>
+    </div>
+    <p style="color:var(--faint);font-size:.8rem;margin:10px 0 0">ระบบเก็บไฟล์ทุกเวอร์ชันไว้ — เวอร์ชันเก่ายังเปิดย้อนหลังได้</p>`);
+}
+async function rpVerUp(id) {
+  const f = $('#rvFile').files[0];
+  if (!f) return toast('เลือกไฟล์ก่อน');
+  if (f.size > 10 * 1024 * 1024) return toast('ไฟล์เกิน 10MB');
+  await api(`/api/admin/repo/${id}/version`, { method: 'POST', body: { filename: f.name, data: await rpB64(f) } });
+  toast('อัปโหลดเวอร์ชันใหม่แล้ว'); closeModal(); loadRepo();
+}
+async function rpDel(id) {
+  if (!confirm('ลบเอกสารนี้ทั้งหมดทุกเวอร์ชัน?')) return;
+  await api('/api/admin/repo/' + id, { method: 'DELETE' }); toast('ลบเอกสารแล้ว'); loadRepo();
+}
+function rpRegister() { location.href = '/api/admin/repo/register.csv' + (URLTOK ? '?t=' + URLTOK : ''); }
 async function loadOffboard() {
   await empOptions('#obEmp');
   const rows = await api('/api/admin/offboards');
