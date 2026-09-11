@@ -22,7 +22,9 @@ fs.mkdirSync(DOC_DIR, { recursive: true });
 app.set('trust proxy', 1); // อยู่หลัง nginx/Cloudflare
 const clientIp = req => req.headers['cf-connecting-ip'] || req.ip || 'unknown';
 
-app.use(express.json({ limit: '16mb' })); // รูปลงเวลา + เอกสาร PDF (base64 ของไฟล์สูงสุด 10MB)
+// body limit: ทั่วไป 10mb (รูปลงเวลา/เอกสารพนักงาน) · เฉพาะคลังเอกสารกลาง 16mb (ไฟล์ 10MB เป็น base64)
+const jsonStd = express.json({ limit: '10mb' }), jsonBig = express.json({ limit: '16mb' });
+app.use((req, res, next) => (req.path.startsWith('/api/admin/repo') ? jsonBig : jsonStd)(req, res, next));
 app.use(cookieParser(SECRET));
 app.use(express.static(path.join(__dirname, 'public')));
 // ── CORS: ให้แอปมือถือ (bundle ในเครื่อง) เรียก API ข้าม origin ได้ ──
@@ -845,8 +847,14 @@ app.post('/api/apply', (req, res) => {
   if (!name || !phone || !position) return res.status(400).json({ error: 'กรอกข้อมูลให้ครบ' });
   const db = load(); db.applicants = db.applicants || [];
   const id = 'ap' + Date.now();
-  const rec = { id, name: String(name), phone: String(phone), position: String(position), branch_id, note: String(note || ''), status: 'new', applied_at: iso(new Date()) };
-  if (resume) { try { fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), Buffer.from(String(resume), 'base64')); rec.resume = '/uploads/docs/' + id + '.pdf'; } catch {} }
+  // กันสูตรสเปรดชีต (=,+,-,@) นำหน้าข้อความจากคนนอก — ชื่อ/ตำแหน่งไหลไปออกไฟล์ CSV หลายตัว
+  const txt = v => String(v || '').replace(/^[=+\-@\t]+/, '').slice(0, 200);
+  const rec = { id, name: txt(name), phone: String(phone), position: txt(position), branch_id, note: txt(note), status: 'new', applied_at: iso(new Date()) };
+  if (resume) {
+    const fm = fileCheck(resume, 5, ['pdf']);
+    if (fm.error) return res.status(400).json({ error: 'เรซูเม่: ' + fm.error });
+    fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), fm.buf); rec.resume = '/uploads/docs/' + id + '.pdf';
+  }
   db.applicants.push(rec); save(db); res.json({ ok: true }); });
 app.get('/api/admin/applicants', (req, res) => { if (!admin(req, res)) return;
   const db = load(); res.json((db.applicants || []).map(a => ({ ...a, branch: db.branches.find(b => b.id === a.branch_id)?.name })).reverse()); });
@@ -874,18 +882,30 @@ app.put('/api/admin/employees/:id/onboarding', (req, res) => { if (!admin(req, r
   if (it) it.done = !!(req.body || {}).done;
   save(db); res.json({ ok: true, onboarding: e.onboarding }); });
 
+// ── ตรวจไฟล์อัปโหลด (base64) จาก magic bytes — ใช้ร่วมกันทุกจุดอัปโหลด ──
+const FILE_SIG = { pdf: b => b.slice(0, 4).toString() === '%PDF', png: b => b[0] === 0x89 && b[1] === 0x50, jpg: b => b[0] === 0xff && b[1] === 0xd8 };
+function fileCheck(data, maxMB, exts) {
+  const s = String(data || '');
+  if (!s) return { error: 'ไม่พบข้อมูลไฟล์' };
+  if (s.length * 3 / 4 > maxMB * 1024 * 1024 + 4) return { error: `ไฟล์เกิน ${maxMB}MB` };
+  const buf = Buffer.from(s, 'base64');
+  if (!buf.length) return { error: 'ไม่พบข้อมูลไฟล์' };
+  if (buf.length > maxMB * 1024 * 1024) return { error: `ไฟล์เกิน ${maxMB}MB` };
+  const ext = exts.find(x => FILE_SIG[x](buf));
+  if (!ext) return { error: 'รองรับเฉพาะไฟล์ ' + exts.map(x => x.toUpperCase()).join(' / ') };
+  return { buf, ext };
+}
 // ═══ คลังเอกสาร PDF ออนไลน์ (ข้อมูลพนักงาน/เอกสาร HR) ═══
 app.post('/api/admin/employees/:id/docs', (req, res) => { if (!admin(req, res)) return;
   const { name, type, data } = req.body || {};
   if (!name || !data) return res.status(400).json({ error: 'ระบุชื่อไฟล์และแนบไฟล์' });
   const db = load(); const e = db.employees.find(x => x.id === req.params.id);
   if (!e) return res.status(404).json({ error: 'not found' });
-  const buf = Buffer.from(String(data), 'base64');
-  if (buf.length > 8 * 1024 * 1024) return res.status(400).json({ error: 'ไฟล์เกิน 8MB' });
-  if (buf.slice(0, 4).toString() !== '%PDF') return res.status(400).json({ error: 'รองรับเฉพาะไฟล์ PDF' });
+  const fm = fileCheck(data, 8, ['pdf']);
+  if (fm.error) return res.status(400).json({ error: fm.error });
   db.documents = db.documents || [];
   const id = 'doc' + Date.now();
-  fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), buf);
+  fs.writeFileSync(path.join(DOC_DIR, id + '.pdf'), fm.buf);
   db.documents.push({ id, emp_id: e.id, name: String(name), type: String(type || 'อื่นๆ'), file: '/uploads/docs/' + id + '.pdf', at: iso(new Date()) });
   save(db); res.json({ ok: true, id }); });
 app.get('/api/admin/employees/:id/docs', (req, res) => { if (!admin(req, res)) return;
@@ -901,17 +921,6 @@ app.get('/api/me/docs', (req, res) => {
 
 // ═══ คลังเอกสารกลาง (Document Repository — สังกัด → ปี → หมวด · เลขที่อัตโนมัติ · แท็ก · ชั้นความลับ · เวอร์ชัน) ═══
 const RP_LEVELS = ['ทั่วไป', 'ภายใน', 'ลับ'];
-function repoFile(data) { // ตรวจชนิดไฟล์จาก magic bytes: PDF / PNG / JPG · ไม่เกิน 10MB
-  const buf = Buffer.from(String(data || ''), 'base64');
-  if (!buf.length) return { error: 'ไม่พบข้อมูลไฟล์' };
-  if (buf.length > 10 * 1024 * 1024) return { error: 'ไฟล์เกิน 10MB' };
-  let ext = null;
-  if (buf.slice(0, 4).toString() === '%PDF') ext = 'pdf';
-  else if (buf[0] === 0x89 && buf[1] === 0x50) ext = 'png';
-  else if (buf[0] === 0xff && buf[1] === 0xd8) ext = 'jpg';
-  if (!ext) return { error: 'รองรับเฉพาะไฟล์ PDF / JPG / PNG' };
-  return { buf, ext };
-}
 function repoNo(db) { // เลขที่เอกสารอัตโนมัติ เช่น DOC-6902-0001 (ปี พ.ศ. 2 หลัก + เดือน + เลขลำดับ)
   db.repo_seq = (db.repo_seq || 0) + 1;
   const d = new Date();
@@ -924,7 +933,7 @@ app.get('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
 app.post('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
   const { name, cat, branch_id, doc_date, ref_no, tags, level, desc, data, filename } = req.body || {};
   if (!name) return res.status(400).json({ error: 'ระบุชื่อเอกสาร' });
-  const fm = repoFile(data); if (fm.error) return res.status(400).json({ error: fm.error });
+  const fm = fileCheck(data, 10, ['pdf', 'jpg', 'png']); if (fm.error) return res.status(400).json({ error: fm.error });
   const db = load();
   const id = 'rp' + Date.now();
   fs.writeFileSync(path.join(DOC_DIR, `${id}_v1.${fm.ext}`), fm.buf);
@@ -937,7 +946,7 @@ app.post('/api/admin/repo', (req, res) => { if (!admin(req, res)) return;
   db.repo_docs = db.repo_docs || []; db.repo_docs.push(rec);
   save(db); res.json({ ok: true, id, ref_no: rec.ref_no }); });
 app.post('/api/admin/repo/:id/version', (req, res) => { if (!admin(req, res)) return; // อัปโหลดไฟล์เวอร์ชันใหม่ (เก็บของเดิมไว้ทุกเวอร์ชัน)
-  const fm = repoFile((req.body || {}).data); if (fm.error) return res.status(400).json({ error: fm.error });
+  const fm = fileCheck((req.body || {}).data, 10, ['pdf', 'jpg', 'png']); if (fm.error) return res.status(400).json({ error: fm.error });
   const db = load(); const d = (db.repo_docs || []).find(x => x.id === req.params.id);
   if (!d) return res.status(404).json({ error: 'not found' });
   const v = d.versions.length + 1;
@@ -964,15 +973,17 @@ app.delete('/api/admin/repo/:id', (req, res) => { if (!admin(req, res)) return;
   db.repo_docs.splice(i, 1); save(db); res.json({ ok: true }); });
 app.get('/api/admin/repo/register.csv', (req, res) => { if (!admin(req, res)) return; // ทะเบียนเอกสาร: คลังกลาง + เอกสารพนักงาน
   const db = load();
-  const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  // กันค่าที่ขึ้นต้นด้วย = + - @ ถูกตีเป็นสูตรตอนเปิดใน Excel (CSV injection)
+  const cell = v => { let s = String(v ?? ''); if (/^[=+\-@\t]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
   const rows = [['ทะเบียน', 'เลขที่เอกสาร', 'วันที่เอกสาร', 'ชื่อเอกสาร', 'หมวด', 'สังกัด / พนักงาน', 'แท็ก', 'ชั้นความลับ', 'เวอร์ชันล่าสุด', 'อัปโหลดเมื่อ']];
   for (const d of db.repo_docs || []) {
-    const last = d.versions[d.versions.length - 1];
+    const last = d.versions[d.versions.length - 1] || {};
     rows.push(['คลังเอกสารกลาง', d.ref_no, d.doc_date, d.name, d.cat,
       d.branch_id ? (db.branches.find(b => b.id === d.branch_id)?.name || '—') : 'ส่วนกลาง (บริษัท)',
-      (d.tags || []).join(' / '), d.level, 'v' + last.v, last.at]);
+      (d.tags || []).join(' / '), d.level, 'v' + (last.v || 1), last.at || d.at]);
   }
-  for (const d of db.documents || []) rows.push(['เอกสารพนักงาน', d.id, d.at, d.name, d.type, nm(db, d.emp_id), '', 'ภายใน', 'v1', d.at]);
+  // เอกสารพนักงานไม่มีเลขที่/ชั้นความลับ/เวอร์ชันในระบบ — แสดง "—" ตามจริง ไม่แต่งค่าให้
+  for (const d of db.documents || []) rows.push(['เอกสารพนักงาน', '—', d.at, d.name, d.type, nm(db, d.emp_id), '', '—', '—', d.at]);
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="document-register.csv"');
   res.send('﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')); });
@@ -1214,8 +1225,19 @@ h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:28px}p,li{font-size:.95rem}.e
 <p class="en">Last updated: August 2026</p>
 </body></html>`));
 // รูปลงเวลา: ต้องล็อกอินก่อนดู (คุ้มครองข้อมูลส่วนบุคคล)
-app.use('/uploads', (req, res, next) => { if (!sess(req)) return res.status(401).end(); next(); },
-  express.static(path.join(__dirname, 'uploads')));
+// โฟลเดอร์ docs คุมสิทธิ์เพิ่ม: คลังเอกสารกลาง (rp*) และเรซูเม่ (ap*) = ผู้ดูแลเท่านั้น · เอกสารพนักงาน (doc*) = เจ้าของหรือผู้ดูแล
+app.use('/uploads', (req, res, next) => {
+  const s = sess(req); if (!s) return res.status(401).end();
+  if (s.role !== 'admin' && req.path.startsWith('/docs/')) {
+    const fn = path.basename(req.path);
+    if (fn.startsWith('doc')) {
+      const db = load();
+      const d = (db.documents || []).find(x => fn === x.id + '.pdf');
+      if (!d || d.emp_id !== s.id) return res.status(403).end();
+    } else return res.status(403).end();
+  }
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 // ลบรูปลงเวลาที่เกิน 90 วัน (PDPA) — ตรวจวันละครั้ง
 setInterval(() => {
   try {

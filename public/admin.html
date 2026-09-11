@@ -742,15 +742,21 @@ async function dcDel(id) { if (!confirm('ลบเอกสารนี้?')) r
 
 // ═══ คลังเอกสารกลาง (Document Repository) ═══
 const RP_CATS = ['สัญญา', 'หนังสือบริษัท', 'ประกาศ / คำสั่ง', 'การเงิน-บัญชี', 'เอกสารราชการ', 'คู่มือ / นโยบาย', 'อื่น ๆ'];
-let RP_DOCS = [], RP_NODE = '';
+let RP_DOCS = [], RP_NODE = null, RP_KEYS = []; // RP_NODE = null | {b} | {b,y} | {b,y,c} (โฟลเดอร์ที่เลือก)
 const rpBE = y => +y + 543;
+const rpEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const rpMatch = d => { const n = RP_NODE; return !n || ((!('b' in n) || n.b === d.branch_name) && (!('y' in n) || n.y === d.year) && (!('c' in n) || n.c === d.cat)); };
 const rpLvl = l => `<span class="lvl ${l === 'ทั่วไป' ? 'l1' : l === 'ลับ' ? 'l3' : 'l2'}">${l === 'ลับ' ? '🔒 ' : ''}${l}</span>`;
 async function loadRepo() {
   RP_DOCS = await api('/api/admin/repo');
+  // สร้างตัวเลือกใหม่โดยคงค่าที่ผู้ใช้เลือกไว้ (ไม่รีเซ็ตตัวกรองทุกครั้งที่บันทึก/ลบ)
+  const keep = { cat: $('#rpCat').value, br: $('#rpBrF').value, yr: $('#rpYearF').value };
   const opts = (list, all) => `<option value="">${all}</option>` + list.map(c => `<option>${esc(c)}</option>`).join('');
   $('#rpCat').innerHTML = opts([...new Set([...RP_CATS, ...RP_DOCS.map(d => d.cat)])], 'หมวด: ทั้งหมด');
   $('#rpBrF').innerHTML = `<option value="">สังกัด: ทั้งหมด</option><option value="_hq">ส่วนกลาง (บริษัท)</option>` + BRANCHES.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
   $('#rpYearF').innerHTML = opts([...new Set(RP_DOCS.map(d => d.year))].sort().reverse().map(y => rpBE(y)), 'ปี: ทั้งหมด');
+  $('#rpCat').value = keep.cat || ''; $('#rpBrF').value = keep.br || ''; $('#rpYearF').value = keep.yr || '';
+  if ($('#rpYearF').value !== (keep.yr || '')) $('#rpYearF').value = '';
   rpRender();
 }
 function rpFiltered() {
@@ -758,10 +764,11 @@ function rpFiltered() {
   return RP_DOCS.filter(d =>
     (!q || [d.name, d.ref_no, d.desc, d.cat, ...(d.tags || [])].join(' ').toLowerCase().includes(q)) &&
     (!cat || d.cat === cat) && (!br || (br === '_hq' ? !d.branch_id : d.branch_id === br)) &&
-    (!yr || String(rpBE(d.year)) === yr) && (!lv || d.level === lv) &&
-    (!RP_NODE || `${d.branch_name}|${d.year}|${d.cat}`.startsWith(RP_NODE)));
+    (!yr || String(rpBE(d.year)) === yr) && (!lv || d.level === lv) && rpMatch(d));
 }
 function rpRender() {
+  // โฟลเดอร์ที่เลือกอาจหายไปหลังแก้ไข/ลบเอกสาร — ถ้าไม่มีเอกสารในโฟลเดอร์นั้นแล้ว ให้กลับมาแสดงทั้งหมด
+  if (RP_NODE && !RP_DOCS.some(rpMatch)) RP_NODE = null;
   // โฟลเดอร์: สังกัด → ปี → หมวด (สร้างอัตโนมัติจากข้อมูลกำกับเอกสาร)
   const tree = {};
   for (const d of RP_DOCS) {
@@ -770,19 +777,21 @@ function rpRender() {
     b.years[d.year] = b.years[d.year] || { n: 0, cats: {} };
     b.years[d.year].n++; b.years[d.year].cats[d.cat] = (b.years[d.year].cats[d.cat] || 0) + 1;
   }
-  const nd = (key, label, n, pad) => `<div class="nd ${RP_NODE === key ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode('${key.replace(/'/g, "\\'")}')"><span>${label}</span><span class="n">${n}</span></div>`;
-  let h = nd('', '🗂️ เอกสารทั้งหมด', RP_DOCS.length, 9);
+  // key ของโหนดเก็บเป็น object ใน RP_KEYS แล้วอ้างด้วย index — ไม่ฝังชื่อสาขา/หมวดลงใน onclick (กันอักขระพิเศษเจาะหน้า)
+  RP_KEYS = [];
+  const nd = (key, label, n, pad) => { const i = RP_KEYS.push(key) - 1; return `<div class="nd ${rpEq(RP_NODE, key) ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode(RP_KEYS[${i}])"><span>${label}</span><span class="n">${n}</span></div>`; };
+  let h = nd(null, '🗂️ เอกสารทั้งหมด', RP_DOCS.length, 9);
   for (const [bn, b] of Object.entries(tree)) {
-    h += nd(bn + '|', '📁 ' + esc(bn), b.n, 18);
+    h += nd({ b: bn }, '📁 ' + esc(bn), b.n, 18);
     for (const [y, yv] of Object.entries(b.years).sort((a, c) => c[0].localeCompare(a[0]))) {
-      h += nd(`${bn}|${y}|`, '📂 ปี ' + rpBE(y), yv.n, 30);
-      for (const [c, n] of Object.entries(yv.cats)) h += nd(`${bn}|${y}|${c}`, '📄 ' + esc(c), n, 44);
+      h += nd({ b: bn, y }, '📂 ปี ' + rpBE(y), yv.n, 30);
+      for (const [c, n] of Object.entries(yv.cats)) h += nd({ b: bn, y, c }, '📄 ' + esc(c), n, 44);
     }
   }
   $('#rpTree').innerHTML = h;
   const rows = rpFiltered();
   $('#rpRows').innerHTML = rows.map(d => {
-    const last = d.versions[d.versions.length - 1];
+    const last = d.versions[d.versions.length - 1] || { file: '#', v: 1 };
     return `<tr><td class="mono" style="white-space:nowrap">${esc(d.ref_no)}</td><td style="white-space:nowrap">${d.doc_date}</td>
     <td><b>${esc(d.name)}</b>${d.desc ? `<div style="color:var(--faint);font-size:.8rem">${esc(d.desc)}</div>` : ''}</td>
     <td>${esc(d.cat)}</td><td>${esc(d.branch_name)}</td>
@@ -794,7 +803,7 @@ function rpRender() {
       <button class="btn" style="padding:4px 10px;color:var(--red)" onclick="rpDel('${d.id}')">ลบ</button></td></tr>`;
   }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--faint);padding:22px">ไม่พบเอกสาร — กด "เพิ่มเอกสาร" เพื่ออัปโหลดเข้าคลัง (PDF / JPG / PNG ไม่เกิน 10MB)</td></tr>';
 }
-function rpNode(k) { RP_NODE = (RP_NODE === k) ? '' : k; rpRender(); }
+function rpNode(k) { RP_NODE = rpEq(RP_NODE, k) ? null : k; rpRender(); }
 function rpForm(d) { // ฟอร์มข้อมูลกำกับเอกสาร ใช้ทั้งเพิ่มใหม่และแก้ไข
   const catSel = [...new Set([...RP_CATS, ...(d.cat ? [d.cat] : [])])].map(c => `<option ${c === d.cat ? 'selected' : ''}>${esc(c)}</option>`).join('');
   const brSel = `<option value="" ${!d.branch_id ? 'selected' : ''}>ส่วนกลาง (บริษัท)</option>` + BRANCHES.map(b => `<option value="${b.id}" ${b.id === d.branch_id ? 'selected' : ''}>${esc(b.name)}</option>`).join('');
@@ -803,7 +812,7 @@ function rpForm(d) { // ฟอร์มข้อมูลกำกับเอ�
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><span class="flabel">หมวดเอกสาร</span><select class="in" id="rfCat">${catSel}</select></div>
       <div><span class="flabel">สังกัด</span><select class="in" id="rfBr">${brSel}</select></div>
-      <div><span class="flabel">วันที่เอกสาร</span><input class="in" type="date" id="rfDate" value="${d.doc_date || new Date().toISOString().slice(0, 10)}"/></div>
+      <div><span class="flabel">วันที่เอกสาร</span><input class="in" type="date" id="rfDate" value="${d.doc_date || iso(new Date())}"/></div>
       <div><span class="flabel">เลขที่เอกสาร (เว้นว่าง = ออกเลขอัตโนมัติ)</span><input class="in" id="rfRef" value="${esc(d.ref_no || '')}" placeholder="เช่น JC-สญ-001/2569"/></div>
       <div><span class="flabel">ชั้นความลับ</span><select class="in" id="rfLvl">${['ทั่วไป', 'ภายใน', 'ลับ'].map(l => `<option ${l === (d.level || 'ภายใน') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       <div><span class="flabel">แท็ก (คั่นด้วย , )</span><input class="in" id="rfTags" value="${esc((d.tags || []).join(', '))}" placeholder="เช่น สัญญาเช่า, เวสต์เกต"/></div>
@@ -822,8 +831,10 @@ async function rpSave() {
   if (!$('#rfName').value.trim()) return toast('ระบุชื่อเอกสาร');
   if (!f) return toast('แนบไฟล์ PDF / JPG / PNG');
   if (f.size > 10 * 1024 * 1024) return toast('ไฟล์เกิน 10MB');
-  await api('/api/admin/repo', { method: 'POST', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value, filename: f.name, data: await rpB64(f) } });
-  toast('บันทึกเอกสารเข้าคลังแล้ว'); closeModal(); loadRepo();
+  try {
+    await api('/api/admin/repo', { method: 'POST', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value, filename: f.name, data: await rpB64(f) } });
+    toast('บันทึกเอกสารเข้าคลังแล้ว'); closeModal(); loadRepo();
+  } catch (e) { toast(e.message); }
 }
 function rpEdit(id) {
   const d = RP_DOCS.find(x => x.id === id); if (!d) return;
@@ -831,8 +842,10 @@ function rpEdit(id) {
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn dark" onclick="rpEditSave('${id}')">บันทึก</button></div>`);
 }
 async function rpEditSave(id) {
-  await api('/api/admin/repo/' + id, { method: 'PUT', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value } });
-  toast('บันทึกการแก้ไขแล้ว'); closeModal(); loadRepo();
+  try {
+    await api('/api/admin/repo/' + id, { method: 'PUT', body: { name: $('#rfName').value.trim(), cat: $('#rfCat').value, branch_id: $('#rfBr').value, doc_date: $('#rfDate').value, ref_no: $('#rfRef').value, tags: $('#rfTags').value, level: $('#rfLvl').value, desc: $('#rfDesc').value } });
+    toast('บันทึกการแก้ไขแล้ว'); closeModal(); loadRepo();
+  } catch (e) { toast(e.message); }
 }
 function rpVer(id) {
   const d = RP_DOCS.find(x => x.id === id); if (!d) return;
@@ -852,12 +865,15 @@ async function rpVerUp(id) {
   const f = $('#rvFile').files[0];
   if (!f) return toast('เลือกไฟล์ก่อน');
   if (f.size > 10 * 1024 * 1024) return toast('ไฟล์เกิน 10MB');
-  await api(`/api/admin/repo/${id}/version`, { method: 'POST', body: { filename: f.name, data: await rpB64(f) } });
-  toast('อัปโหลดเวอร์ชันใหม่แล้ว'); closeModal(); loadRepo();
+  try {
+    await api(`/api/admin/repo/${id}/version`, { method: 'POST', body: { filename: f.name, data: await rpB64(f) } });
+    toast('อัปโหลดเวอร์ชันใหม่แล้ว'); closeModal(); loadRepo();
+  } catch (e) { toast(e.message); }
 }
 async function rpDel(id) {
   if (!confirm('ลบเอกสารนี้ทั้งหมดทุกเวอร์ชัน?')) return;
-  await api('/api/admin/repo/' + id, { method: 'DELETE' }); toast('ลบเอกสารแล้ว'); loadRepo();
+  try { await api('/api/admin/repo/' + id, { method: 'DELETE' }); toast('ลบเอกสารแล้ว'); loadRepo(); }
+  catch (e) { toast(e.message); }
 }
 function rpRegister() { location.href = '/api/admin/repo/register.csv' + (URLTOK ? '?t=' + URLTOK : ''); }
 async function loadOffboard() {
@@ -872,7 +888,7 @@ async function loadOffboard() {
 }
 async function obDo(kind) {
   const id = $('#obEmp').value; if (!id) return;
-  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', new Date().toISOString().slice(0, 10)); if (!date) return;
+  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', iso(new Date())); if (!date) return;
   const reason = prompt('เหตุผล', kind === 'terminate' ? 'ปรับโครงสร้าง' : 'ลาออกโดยสมัครใจ'); if (reason === null) return;
   const r = await api(`/api/admin/employees/${id}/offboard`, { method: 'POST', body: { date, kind, reason } });
   alert(`บันทึกแล้ว ✓\nอายุงาน ${r.years} ปี · ค่าชดเชย ${r.severance.toLocaleString()} บาท (${r.severance_days} วัน)\nค่าบอกกล่าว ${r.notice_pay.toLocaleString()} · พักร้อนคงเหลือ ${r.vacation_pay.toLocaleString()} บาท\n⚠ จ่ายภายใน ${r.final_due}`);
@@ -915,7 +931,7 @@ async function docUpload(id) {
 async function docDel(docId, empId) { if (!confirm('ลบเอกสารนี้?')) return; await api(`/api/admin/docs/${docId}`, { method: 'DELETE' }); docLoad(empId); }
 async function obToggle(id, key, done) { await api(`/api/admin/employees/${id}/onboarding`, { method: 'PUT', body: { key, done } }); }
 async function offboard(id, kind) {
-  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', new Date().toISOString().slice(0, 10)); if (!date) return;
+  const date = prompt('วันสุดท้ายของการทำงาน (ปี-เดือน-วัน)', iso(new Date())); if (!date) return;
   const reason = prompt('เหตุผล', kind === 'terminate' ? 'ปรับโครงสร้าง' : 'ลาออกโดยสมัครใจ'); if (reason === null) return;
   const r = await api(`/api/admin/employees/${id}/offboard`, { method: 'POST', body: { date, kind, reason } });
   alert(`บันทึกพ้นสภาพแล้ว ✓\nอายุงาน: ${r.years} ปี\nค่าชดเชย ม.118: ${r.severance.toLocaleString()} บาท (${r.severance_days} วัน)\nค่าบอกกล่าว: ${r.notice_pay.toLocaleString()} บาท\nพักร้อนคงเหลือ ${r.vacation_days} วัน: ${r.vacation_pay.toLocaleString()} บาท\n⚠ ต้องจ่ายภายใน ${r.final_due}`);
