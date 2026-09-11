@@ -744,6 +744,10 @@ async function dcDel(id) { if (!confirm('ลบเอกสารนี้?')) r
 
 // ═══ คลังเอกสารกลาง (Document Repository) ═══
 const RP_CATS = ['สัญญา', 'หนังสือบริษัท', 'ประกาศ / คำสั่ง', 'การเงิน-บัญชี', 'เอกสารราชการ', 'คู่มือ / นโยบาย', 'อื่น ๆ'];
+// แผนกมาตรฐานของบริษัท — รวมกับแผนกที่มีจริงในทะเบียนพนักงานและในเอกสาร
+const RP_DEPTS = ['Executive / บริหาร', 'Operations', 'Human Resource', 'Finance & Accounting', 'Information Technology',
+  'Marketing', 'Supply Chain (SCM)', 'Purchasing / จัดซื้อ', 'R&D / พัฒนาผลิตภัณฑ์', 'QA / QC',
+  'Maintenance / ซ่อมบำรุง', 'Business Development', 'Legal / กฎหมาย'];
 let RP_DOCS = [], RP_NODE = null, RP_KEYS = []; // RP_NODE = null | {y} | {y,c} | {y,c,dp} (โฟลเดอร์ที่เลือก: ปี → หมวด → แผนก)
 const RP_DP0 = 'ไม่ระบุแผนก';
 const rpBE = y => +y + 543;
@@ -751,7 +755,7 @@ const rpEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const rpDp = d => d.dept || RP_DP0;
 const rpMatch = d => { const n = RP_NODE; return !n || ((!('y' in n) || n.y === d.year) && (!('c' in n) || n.c === d.cat) && (!('dp' in n) || n.dp === rpDp(d))); };
 const rpLvl = l => `<span class="lvl ${l === 'ทั่วไป' ? 'l1' : l === 'ลับ' ? 'l3' : 'l2'}">${l === 'ลับ' ? '🔒 ' : ''}${l}</span>`;
-const rpDepts = () => [...new Set([...EMPS.map(e => e.dept), ...RP_DOCS.map(d => d.dept)].map(x => (x || '').trim()).filter(Boolean))].sort();
+const rpDepts = () => [...new Set([...RP_DEPTS, ...EMPS.map(e => e.dept), ...RP_DOCS.map(d => d.dept)].map(x => (x || '').trim()).filter(Boolean))];
 async function loadRepo() {
   RP_DOCS = await api('/api/admin/repo');
   // สร้างตัวเลือกใหม่โดยคงค่าที่ผู้ใช้เลือกไว้ (ไม่รีเซ็ตตัวกรองทุกครั้งที่บันทึก/ลบ)
@@ -795,11 +799,18 @@ function rpRender() {
   RP_KEYS = [];
   const nd = (key, label, n, pad) => { const i = RP_KEYS.push(key) - 1; return `<div class="nd ${rpEq(RP_NODE, key) ? 'on' : ''}" style="padding-left:${pad}px" onclick="rpNode(RP_KEYS[${i}])"><span>${label}</span><span class="n">${n}</span></div>`; };
   let h = nd(null, '🗂️ เอกสารทั้งหมด', RP_DOCS.length, 9);
+  const dpOrder = rpDepts();
+  const dpIdx = dp => { const i = dpOrder.indexOf(dp); return i < 0 ? 999 : i; };
   for (const [y, yv] of Object.entries(tree).sort((a, b) => b[0].localeCompare(a[0]))) {
     h += nd({ y }, '🗓️ ปี ' + rpBE(y), yv.n, 18);
     for (const [c, cv] of Object.entries(yv.cats)) {
-      h += nd({ y, c }, '📁 ' + esc(c), cv.n, 30);
-      for (const [dp, n] of Object.entries(cv.deps).sort((a, b) => a[0].localeCompare(b[0], 'th'))) h += nd({ y, c, dp }, '👥 ' + esc(dp), n, 44);
+      // แผนกที่มีเอกสารแสดงเสมอ · แผนกว่างกางออกเมื่อคลิกเลือกหมวดนั้น (กันผังยาวเกิน)
+      const open = !!(RP_NODE && RP_NODE.y === y && RP_NODE.c === c);
+      const deps = Object.entries(cv.deps).filter(([dp, n]) => n > 0 || open)
+        .sort((a, b) => dpIdx(a[0]) - dpIdx(b[0]) || a[0].localeCompare(b[0], 'th'));
+      const chev = open ? '▾ ' : (deps.length < Object.keys(cv.deps).length ? '▸ ' : '');
+      h += nd({ y, c }, chev + '📁 ' + esc(c), cv.n, 30);
+      for (const [dp, n] of deps) h += nd({ y, c, dp }, '👥 ' + esc(dp), n, 44);
     }
   }
   $('#rpTree').innerHTML = h;
